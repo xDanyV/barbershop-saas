@@ -18,5 +18,21 @@ model User{
   email     String   @unique
   password  String
   role      String   @default("USER")
+  appointments Appointment[]
   createdAt DateTime @default(now())
+}
+
+model Appointment {
+  id        String   @id @default(uuid())
+  date      DateTime
+  service   String
+  status    String   @default("PENDING")
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
 }
