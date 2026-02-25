@@ -12,27 +12,60 @@ datasource db {
   provider = "postgresql"
 }
 
-model User{
-  id        String   @id @default(uuid())
-  name      String?
-  email     String   @unique
-  password  String
-  role      String   @default("USER")
-  appointments Appointment[]
-  createdAt DateTime @default(now())
+model User {
+  id            String        @id @default(uuid())
+  name          String?
+  email         String        @unique
+  phone         String        @unique
+  password      String
+  role          Role          @default(CUSTOMER)
+  barberProfile Barber?
+  appointments  Appointment[]
+  createdAt     DateTime      @default(now())
+}
+
+enum Role {
+  CUSTOMER
+  BARBER
 }
 
 model Appointment {
   id        String   @id @default(uuid())
   date      DateTime
-  service   String
-  status    String   @default("PENDING")
+  //relations
+  serviceId String
+  service   Service  @relation(fields: [serviceId], references: [id])
   userId    String
   user      User     @relation(fields: [userId], references: [id])
+  barberId  String
+  barber    Barber   @relation(fields: [barberId], references: [id])
+  status    AppointmentStatus   @default(PENDING)
   createdAt DateTime @default(now())
 }
+
 enum AppointmentStatus {
   PENDING
   CONFIRMED
   CANCELLED
+}
+
+model Barber {
+  id           String        @id @default(uuid())
+  //userId is unique because each barber has one user profile, but a user can only be a barber or a customer, not both
+  userId       String        @unique
+  user         User          @relation(fields: [userId], references: [id])
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  appointments Appointment[]
+}
+
+model Service {
+  id        String   @id @default(uuid())
+  name      String
+  price     Float
+  duration  Int
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  appointments Appointment[]
 }

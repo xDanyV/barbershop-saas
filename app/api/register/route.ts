@@ -1,4 +1,4 @@
-import { prisma } from "@/app/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 
@@ -8,7 +8,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
     const body = await req.json();
-    const { name, email, password } = body;
+    const { name, email, password, phone } = body;
 
     if (!email || !password) {
         return NextResponse.json(
@@ -34,6 +34,7 @@ export async function POST(req: Request) {
         data: {
             name,
             email,
+            phone,
             password: hashedPassword,
         },
     });
