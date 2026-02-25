@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/app/lib/prisma";
+import { createAppointment, getAllAppointments } from "@/lib/services/appointment.service";
 
 // Create a new appointment for the authenticated user
 export async function POST(request: NextRequest) {
@@ -11,73 +11,48 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
+        // Parse the request body to get appointment details
         const body = await request.json();
-        const { date, service } = body;
 
-        if (!date || !service) {
-            return NextResponse.json(
-                { error: "Date and service are required" },
-                { status: 400 }
-            );
-        }
-        // Check if the time slot is already booked
-        const existing = await prisma.appointment.findFirst({
-            where: {
-                date: new Date(date),
-                status: {
-                    in: ["PENDING", "CONFIRMED"],
-                },
-            },
-        });
-
-        // If the time slot is already booked, return an error
-        if (existing) {
-            return NextResponse.json(
-                { error: "Time slot not available" },
-                { status: 409 }
-            );
-        }
-
-        // Create a new appointment in the database
-        const appointment = await prisma.appointment.create({
-            data: {
-                date: new Date(date),
-                service,
-                userId,
-            },
-        });
+        // Create the appointment using the service function
+        const appointment = await createAppointment(body);
 
         // Return the created appointment
         return NextResponse.json(appointment, { status: 201 });
 
     } catch (error) {
+        const message =
+            error instanceof Error
+                ? error.message
+                : "Internal server error";
+
         return NextResponse.json(
-            { error: "Internal server error" },
-            { status: 500 }
+            { error: message },
+            { status: 400 }
         );
     }
 }
 
 // Get all appointments for the authenticated user
 export async function GET(request: NextRequest) {
-    try {
-        const userId = request.headers.get("x-user-id");
+  try {
+    const userId = request.headers.get("x-user-id");
 
-        if (!userId) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const appointments = await prisma.appointment.findMany({
-            where: { userId, status: { not: "CANCELLED" } },
-            orderBy: { date: "asc" },
-        });
-
-        return NextResponse.json(appointments);
-
-    } catch (error) {
-        return NextResponse.json(
-            { error: "Internal server error" },
-            { status: 500 }
-        );
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
+
+    const appointments = await getAllAppointments();
+
+    return NextResponse.json(appointments);
+
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
 }

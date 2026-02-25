@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/app/lib/prisma";
+import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
         // Check if user is authenticated (you can implement proper authentication here)
@@ -13,9 +13,10 @@ export async function DELETE(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
+        const { id } = await context.params;
         // Check if the appointment exists and belongs to the user
         const appointment = await prisma.appointment.findUnique({
-            where: { id: params.id },
+            where: { id: id },
         });
 
         // If appointment doesn't exist or doesn't belong to the user, return error
@@ -27,7 +28,7 @@ export async function DELETE(
         }
 
         const updatedAppointment = await prisma.appointment.update({
-            where: { id: params.id },
+            where: { id: id },
             data: {
                 status: "CANCELLED",
             },
