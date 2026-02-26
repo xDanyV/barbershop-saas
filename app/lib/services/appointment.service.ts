@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { validateAppointmentDate } from "@/lib/validations/appointment.validation";
+import { AppointmentStatus } from "@prisma/client/edge";
 
 export async function createAppointment(data: {
     userId: string;
@@ -116,4 +117,45 @@ export async function getBarberAppointments(barberId: string) {
             date: "asc"
         }
     })
+}
+
+const allowedTransitions: Record<
+    AppointmentStatus,
+    AppointmentStatus[]
+> = {
+    PENDING: ["CONFIRMED", "CANCELLED"],
+    CONFIRMED: ["CANCELLED"],
+    CANCELLED: [],
+};
+
+export async function updateAppointmentStatus(
+    appointmentId: string,
+    newStatus: AppointmentStatus
+) {
+    if (!appointmentId) {
+        throw new Error("Appointment ID is required");
+    }
+
+    const appointment = await prisma.appointment.findUnique({
+        where: { id: appointmentId },
+    });
+
+    if (!appointment) {
+        throw new Error("Appointment not found");
+    }
+
+    const currentStatus = appointment.status;
+
+    const isAllowed = allowedTransitions[currentStatus].includes(newStatus);
+
+    if (!isAllowed) {
+        throw new Error(
+            `Cannot change status from ${currentStatus} to ${newStatus}`
+        );
+    }
+
+    return prisma.appointment.update({
+        where: { id: appointmentId },
+        data: { status: newStatus },
+    });
 }

@@ -19,3 +19,5 @@ export function validateAppointmentDate(startDate: Date) {
 
     return null;
 }
+
+
