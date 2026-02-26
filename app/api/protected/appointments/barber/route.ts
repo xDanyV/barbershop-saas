@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getBarberAppointments } from "@/lib/services/appointment.service";
 import { prisma } from "@/lib/prisma";
 
+// Get all appointments for the authenticated barber
 export async function GET(request: NextRequest) {
     try {
         const userId = request.headers.get("x-user-id");
