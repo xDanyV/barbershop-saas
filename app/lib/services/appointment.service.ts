@@ -129,33 +129,43 @@ const allowedTransitions: Record<
 };
 
 export async function updateAppointmentStatus(
-    appointmentId: string,
-    newStatus: AppointmentStatus
+  appointmentId: string,
+  newStatus: AppointmentStatus,
+  userId: string,
+  role: string
 ) {
-    if (!appointmentId) {
-        throw new Error("Appointment ID is required");
+  if (!appointmentId) {
+    throw new Error("Appointment ID is required");
+  }
+
+  const appointment = await prisma.appointment.findUnique({
+    where: { id: appointmentId },
+    include: { barber: true },
+  });
+
+  if (!appointment) {
+    throw new Error("Appointment not found");
+  }
+
+  if (role === "BARBER") {
+    if (appointment.barber.userId !== userId) {
+      throw new Error("Not authorized");
     }
+  }
 
-    const appointment = await prisma.appointment.findUnique({
-        where: { id: appointmentId },
-    });
+  const currentStatus = appointment.status;
 
-    if (!appointment) {
-        throw new Error("Appointment not found");
-    }
+  const isAllowed =
+    allowedTransitions[currentStatus].includes(newStatus);
 
-    const currentStatus = appointment.status;
+  if (!isAllowed) {
+    throw new Error(
+      `Cannot change status from ${currentStatus} to ${newStatus}`
+    );
+  }
 
-    const isAllowed = allowedTransitions[currentStatus].includes(newStatus);
-
-    if (!isAllowed) {
-        throw new Error(
-            `Cannot change status from ${currentStatus} to ${newStatus}`
-        );
-    }
-
-    return prisma.appointment.update({
-        where: { id: appointmentId },
-        data: { status: newStatus },
-    });
+  return prisma.appointment.update({
+    where: { id: appointmentId },
+    data: { status: newStatus },
+  });
 }
