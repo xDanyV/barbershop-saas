@@ -4,9 +4,17 @@ import { jwtVerify } from "jose";
 
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
+  const { pathname } = request.nextUrl;
 
   if (!token) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (pathname.startsWith("/api")) {// If it's an API route, return a 401 response
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    return NextResponse.redirect(new URL("/login", request.url));// Redirect to login page if no token is present
   }
 
   // Ensure JWT_SECRET is defined
@@ -46,5 +54,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/api/protected/:path*"],
+  matcher: [
+    "/api/protected/:path*",
+    "/dashboard/:path*",
+  ],
 };

@@ -3,7 +3,7 @@ import { updateCatalogService, deleteCatalogService } from "@/lib/services/catal
 
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
         const role = request.headers.get("x-user-role");
@@ -15,10 +15,11 @@ export async function PATCH(
             );
         }
 
+        const { id } = await context.params;
         const body = await request.json();
 
         const updated = await updateCatalogService(
-            params.id,
+            id,
             {
                 name: body.name,
                 price: body.price !== undefined ? Number(body.price) : undefined,
@@ -44,7 +45,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const role = request.headers.get("x-user-role");
@@ -56,8 +57,9 @@ export async function DELETE(
       );
     }
 
+    const { id } = await context.params;
     const deleted = await deleteCatalogService(
-      params.id,
+      id,
       role
     );
 
