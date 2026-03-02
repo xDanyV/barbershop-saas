@@ -4,7 +4,7 @@ import { AppointmentStatus } from "@prisma/client";
 
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
         const userId = request.headers.get("x-user-id");
@@ -27,7 +27,8 @@ export async function PATCH(
             );
         }
 
-        const updated = await updateAppointmentStatus(params.id, status, userId, role);
+        const { id } = await context.params;
+        const updated = await updateAppointmentStatus(id, status, userId, role);
 
         return NextResponse.json(updated);
 

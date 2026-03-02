@@ -4,25 +4,28 @@ import { AppointmentStatus } from "@prisma/client";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const userId = request.headers.get("x-user-id");
+    const role = request.headers.get("x-user-role");
 
-    if (!userId) {
+    if (!userId || !role) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    const { id } = params;
+    const { id } = await context.params;
     const body = await request.json();
     const { status } = body;
 
     const updatedAppointment = await updateAppointmentStatus(
       id,
-      status as AppointmentStatus
+      status as AppointmentStatus,
+      userId,
+      role
     );
 
     return NextResponse.json(updatedAppointment);
