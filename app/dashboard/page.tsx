@@ -1,12 +1,21 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { jwtVerify } from "jose";
+import BarberDashboard from "./components/BarberDashboard";
+import CustomerDashboard from "./components/CustomerDashboard";
+
+type JWTPayload = {
+  id: string;
+  email: string;
+  role: "BARBER" | "CUSTOMER";
+};
 
 export default async function DashboardPage() {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
   if (!token) {
-    return <div>No token found</div>;
+    redirect("/login");
   }
 
   if (!process.env.JWT_SECRET) {
@@ -17,23 +26,18 @@ export default async function DashboardPage() {
 
   try {
     const { payload } = await jwtVerify(token, secret);
+    const user = payload as JWTPayload;
 
-    const role = payload.role as string;
+    if (!user.role) {
+      redirect("/login");
+    }
 
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        {role === "BARBER" ? (
-          <h1 className="text-3xl text-gray-500 font-bold">
-            Welcome Barber Dashboard
-          </h1>
-        ) : (
-          <h1 className="text-3xl font-bold">
-            Welcome Customer Dashboard
-          </h1>
-        )}
-      </div>
-    );
+    if (user.role === "BARBER") {
+      return <BarberDashboard user={user} />;
+    }
+
+    return <CustomerDashboard user={user} />;
   } catch {
-    return <div>Invalid token</div>;
+    redirect("/login");
   }
 }
