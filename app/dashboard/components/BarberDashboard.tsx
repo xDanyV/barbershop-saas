@@ -1,4 +1,7 @@
-// app/dashboard/components/BarberDashboard.tsx
+"use client";
+
+import { useRouter } from "next/navigation";
+
 
 type Props = {
   user: {
@@ -9,6 +12,20 @@ type Props = {
 };
 
 export default function BarberDashboard({ user }: Props) {
+  const router = useRouter();
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", {
+        method: "POST",
+      });
+
+      router.push("/login");
+      router.refresh();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="flex justify-between items-center px-8 py-4 bg-black text-white">
@@ -17,7 +34,11 @@ export default function BarberDashboard({ user }: Props) {
         </h1>
 
         <form action="/api/auth/logout" method="POST">
-          <button className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-full text-sm">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-full text-sm"
+          >
             Logout
           </button>
         </form>
