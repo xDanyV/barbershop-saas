@@ -1,14 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
-
-export async function GET() {
-    return new Response("API working");
-}
+import { createBarberFromUser } from "@/lib/services/barber.service";
 
 export async function POST(req: Request) {
     const body = await req.json();
-    const { name, email, password, phone } = body;
+    const { name, email, password, phone, role } = body;
 
     if (!email || !password) {
         return NextResponse.json(
@@ -30,7 +27,7 @@ export async function POST(req: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
+    const newUser = await prisma.user.create({
         data: {
             name,
             email,
@@ -39,7 +36,15 @@ export async function POST(req: Request) {
         },
     });
 
-    const { password: _, ...safeUser } = user;
-    
-    return NextResponse.json(safeUser);
+    if (role === "BARBER") {
+        await createBarberFromUser(newUser.id);
+    }
+
+
+    const { password: _, ...safeUser } = newUser;
+
+    return NextResponse.json(
+      { message: "User created successfully" },
+      { status: 201 }
+    );
 }
