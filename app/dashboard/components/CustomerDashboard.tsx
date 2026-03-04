@@ -1,4 +1,6 @@
-// app/dashboard/components/CustomerDashboard.tsx
+"use client";
+
+import { useRouter } from "next/navigation";
 
 type Props = {
   user: {
@@ -9,6 +11,19 @@ type Props = {
 };
 
 export default function CustomerDashboard({ user }: Props) {
+  const router = useRouter();
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", {
+        method: "POST",
+      });
+
+      router.push("/login");
+      router.refresh(); // opcional pero recomendado
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="flex justify-between items-center px-8 py-4 bg-indigo-900 text-white">
@@ -17,7 +32,11 @@ export default function CustomerDashboard({ user }: Props) {
         </h1>
 
         <form action="/api/auth/logout" method="POST">
-          <button className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-full text-sm">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-full text-sm"
+          >
             Logout
           </button>
         </form>
