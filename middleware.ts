@@ -13,7 +13,6 @@ export async function middleware(request: NextRequest) {
         { status: 401 }
       );
     }
-
     return NextResponse.redirect(new URL("/login", request.url));// Redirect to login page if no token is present
   }
 
@@ -41,6 +40,7 @@ export async function middleware(request: NextRequest) {
     // Add user information from the token payload to the request headers
     requestHeaders.set("x-user-id", String(payload.userId));
     requestHeaders.set("x-user-role", String(payload.role));
+    console.log("PAYLOAD:", payload);
 
     return NextResponse.next({
       request: {

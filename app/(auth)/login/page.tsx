@@ -25,7 +25,7 @@ export default function LoginPage() {
                                 headers: {
                                     "Content-Type": "application/json",
                                 },
-                                credentials: "include", // importante
+                                credentials: "include",
                                 body: JSON.stringify(form),
                             });
 
