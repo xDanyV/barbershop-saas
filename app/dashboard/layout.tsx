@@ -11,6 +11,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const handleLogout = async () => {
     await fetch("/api/logout", { method: "POST" });
+    router.push("/login");
   };
   return (
     <div className="min-h-screen bg-gray-100">
