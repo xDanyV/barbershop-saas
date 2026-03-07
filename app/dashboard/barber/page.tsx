@@ -15,12 +15,18 @@ export default function BarberDashboard() {
 
       <DashboardHeader />
 
-      <CalendarPicker
-        selectedDate={date}
-        onChange={setDate}
-      />
+      <div className="grid grid-cols-2 gap-8 items-start">
 
-      <AppointmentList appointments={appointments} />
+        <CalendarPicker
+          selectedDate={date}
+          onChange={setDate}
+        />
+
+        <AppointmentList
+          appointments={appointments}
+        />
+
+      </div>
 
     </div>
   );
