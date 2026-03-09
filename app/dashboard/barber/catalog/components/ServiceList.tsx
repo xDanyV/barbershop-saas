@@ -1,15 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
+import { Service } from "@prisma/client";
 
-type Service = {
-    id: string;
-    name: string;
-    price: number;
-    duration: number;
+type Props = {
+    onEdit: (service: Service) => void;
 };
 
-export default function ServiceList() {
+export default function ServiceList({ onEdit }: Props) {
 
     const [services, setServices] = useState<Service[]>([]);
     const [loading, setLoading] = useState(true);
@@ -47,6 +46,29 @@ export default function ServiceList() {
         );
     }
 
+    async function handleDelete(id: string) {
+        try {
+
+            const res = await fetch(`/api/protected/catalog/${id}`, {
+                method: "DELETE",
+                headers: {
+                    "x-user-role": "BARBER",
+                },
+            });
+
+            if (!res.ok) {
+                throw new Error("Failed to delete service");
+            }
+
+            setServices((prev) => prev.filter((service) => service.id !== id));
+
+            toast.success("Service deleted");
+
+        } catch (error) {
+            toast.error("Delete failed");
+        }
+    }
+
     return (
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
 
@@ -69,9 +91,55 @@ export default function ServiceList() {
 
                         </div>
 
-                        <button className="text-indigo-600 text-sm hover:underline">
-                            Edit
-                        </button>
+                        <div className="flex gap-4">
+
+                            <button
+                                onClick={() => onEdit(service)}
+                                className="text-indigo-600 text-sm hover:underline"
+                            >
+                                Edit
+                            </button>
+
+                            <button
+                                onClick={() =>
+                                    toast(
+                                        (t) => (
+                                            <div className="flex flex-col gap-2">
+                                                <p className="text-sm">Delete this service?</p>
+
+                                                <div className="flex gap-2">
+
+                                                    <button
+                                                        onClick={() => {
+                                                            handleDelete(service.id);
+                                                            toast.dismiss(t.id);
+                                                        }}
+                                                        className="bg-red-600 text-white px-2 py-1 rounded text-xs"
+                                                    >
+                                                        Delete
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => toast.dismiss(t.id)}
+                                                        className="bg-gray-200 px-2 py-1 rounded text-xs"
+                                                    >
+                                                        Cancel
+                                                    </button>
+
+                                                </div>
+                                            </div>
+                                        ),
+                                        {
+                                            id: "confirm-delete",
+                                        }
+                                    )
+                                }
+                                className="text-red-600 text-sm hover:underline"
+                            >
+                                Delete
+                            </button>
+
+                        </div>
 
                     </div>
 

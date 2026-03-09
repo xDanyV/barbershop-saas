@@ -3,10 +3,13 @@
 import { useState } from "react";
 import ServiceList from "./components/ServiceList";
 import CreateServiceForm from "./components/CreateServiceForm";
+import { Service } from "@prisma/client";
+import EditServiceForm from "./components/EditServiceForm";
 
 export default function CatalogPage() {
 
-  const [view, setView] = useState<"list" | "create">("list");
+  const [view, setView] = useState<"list" | "create" | "edit">("list");
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
 
   return (
     <div className="space-y-6">
@@ -37,9 +40,25 @@ export default function CatalogPage() {
 
       </div>
 
-      {view === "list" && <ServiceList />}
+      {view === "list" && (
+        <ServiceList
+          onEdit={(service) => {
+            setSelectedService(service);
+            setView("edit");
+          }}
+        />
+      )}
 
       {view === "create" && <CreateServiceForm setView={setView} />}
+
+      {view === "edit" && selectedService && (
+        <EditServiceForm
+          service={selectedService}
+          onCancel={() => setView("list")}
+          onSuccess={() => setView("list")}
+        />
+      )}
+
 
     </div>
   );

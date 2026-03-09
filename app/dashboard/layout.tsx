@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { ReactNode } from "react";
+import { Toaster } from "react-hot-toast"
 
 export default function DashboardLayout({
   children,
@@ -38,6 +39,8 @@ export default function DashboardLayout({
       <main className="p-8 max-w-7xl mx-auto">
         {children}
       </main>
+
+      <Toaster position="top-right" />
 
     </div>
   );

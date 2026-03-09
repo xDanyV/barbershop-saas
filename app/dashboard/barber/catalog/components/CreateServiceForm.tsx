@@ -14,23 +14,33 @@ export default function CreateServiceForm({ setView }: Props) {
     const [price, setPrice] = useState("");
     const [duration, setDuration] = useState("");
 
-    async function handleSubmit(e: any) {
+    async function handleSubmit(e: React.FormEvent) {
+
         e.preventDefault();
 
-        const res = await fetch("/api/catalog", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                name,
-                price,
-                duration,
-            }),
-        });
+        try {
 
-        if (res.ok) {
-            setView("list");//Go back to list view after successful creation
+            const res = await fetch("/api/protected/catalog", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-user-role": "BARBER",
+                },
+                body: JSON.stringify({
+                    name,
+                    price: Number(price),
+                    duration: Number(duration),
+                }),
+            });
+
+            if (!res.ok) {
+                throw new Error("Failed to create service");
+            }
+
+            setView("list");
+
+        } catch (error) {
+            console.error("Error creating service:", error);
         }
     }
 
