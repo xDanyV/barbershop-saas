@@ -4,19 +4,23 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function DashboardHeader() {
-    const router = useRouter();
 
-    const [time, setTime] = useState(new Date());
+    const router = useRouter();
+    const [time, setTime] = useState<Date | null>(null);
 
     useEffect(() => {
 
-        const interval = setInterval(() => {
-            setTime(new Date());
-        }, 1000);
+        const update = () => setTime(new Date());
+
+        update(); // set first value
+
+        const interval = setInterval(update, 1000);
 
         return () => clearInterval(interval);
 
     }, []);
+
+    if (!time) return null;
 
     const date = time.toLocaleDateString("en-US", {
         day: "2-digit",
@@ -31,12 +35,9 @@ export default function DashboardHeader() {
     });
 
     return (
-
         <header className="flex items-start justify-between mb-10">
 
-            {/* LEFT SIDE */}
             <div className="space-y-2">
-
                 <h1 className="text-4xl font-bold text-gray-800">
                     {date}
                 </h1>
@@ -48,11 +49,8 @@ export default function DashboardHeader() {
                 <p className="text-xl text-gray-500">
                     Select a day to view appointments
                 </p>
-
             </div>
 
-
-            {/* RIGHT SIDE BUTTONS */}
             <div className="flex gap-4">
 
                 <button className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-medium shadow-sm hover:bg-indigo-700 transition">
@@ -65,7 +63,7 @@ export default function DashboardHeader() {
 
                 <button
                     onClick={() => router.push("/dashboard/barber/catalog")}
-                    className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-medium shadow-sm hover:bg-indigo-700 transition">
+                    className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-medium shadow-sm hover:bg-indigo-700 transition cursor-pointer">
                     Services
                 </button>
 
