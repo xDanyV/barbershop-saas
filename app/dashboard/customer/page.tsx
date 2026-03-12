@@ -20,6 +20,7 @@ export default function CustomerDashboard() {
         </h2>
 
         <CalendarPicker
+          barberId="2db47b73-5cd5-4726-a6d2-c91e70684ed6" //temporary hardcoded barber ID
           selectedDate={selectedDate}
           setSelectedDate={setSelectedDate}
         />
