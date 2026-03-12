@@ -30,17 +30,17 @@ enum Role {
 }
 
 model Appointment {
-  id        String   @id @default(uuid())
+  id        String            @id @default(uuid())
   date      DateTime
   //relations
   serviceId String
-  service   Service  @relation(fields: [serviceId], references: [id])
+  service   Service           @relation(fields: [serviceId], references: [id])
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User              @relation(fields: [userId], references: [id])
   barberId  String
-  barber    Barber   @relation(fields: [barberId], references: [id])
-  status    AppointmentStatus   @default(PENDING)
-  createdAt DateTime @default(now())
+  barber    Barber            @relation(fields: [barberId], references: [id])
+  status    AppointmentStatus @default(PENDING)
+  createdAt DateTime          @default(now())
 }
 
 enum AppointmentStatus {
@@ -50,13 +50,27 @@ enum AppointmentStatus {
 }
 
 model Barber {
-  id           String        @id @default(uuid())
+  id           String         @id @default(uuid())
   //userId is unique because each barber has one user profile, but a user can only be a barber or a customer, not both
-  userId       String        @unique
-  user         User          @relation(fields: [userId], references: [id])
-  active       Boolean       @default(true)
-  createdAt    DateTime      @default(now())
+  userId       String         @unique
+  user         User           @relation(fields: [userId], references: [id])
+  active       Boolean        @default(true)
+  createdAt    DateTime       @default(now())
   appointments Appointment[]
+  availability Availability[]
+}
+
+model Availability {
+  id String @id @default(uuid())
+
+  barberId String
+  barber   Barber @relation(fields: [barberId], references: [id])
+
+  dayOfWeek Int
+  startTime String
+  endTime   String
+
+  createdAt DateTime @default(now())
 }
 
 model Service {
