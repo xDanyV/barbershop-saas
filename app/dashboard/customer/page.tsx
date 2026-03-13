@@ -3,7 +3,6 @@
 import { useState } from "react";
 import CalendarPicker from "./components/CalendarPicker";
 import AvailableSlots from "./components/AvailableSlots";
-import ServiceSelector from "./components/ServiceSelector";
 
 export default function CustomerDashboard() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -23,11 +22,6 @@ export default function CustomerDashboard() {
           barberId="2db47b73-5cd5-4726-a6d2-c91e70684ed6" //temporary hardcoded barber ID
           selectedDate={selectedDate}
           setSelectedDate={setSelectedDate}
-        />
-
-        <ServiceSelector
-          selectedService={selectedService}
-          setSelectedService={setSelectedService}
         />
 
       </div>

@@ -8,14 +8,6 @@ type Props = {
   selectedService: string | null;
 };
 
-const mockSlots = [
-  "10:00 AM",
-  "11:00 AM",
-  "12:00 PM",
-  "1:00 PM",
-  "2:00 PM",
-];
-
 export default function AvailableSlots({ selectedDate, selectedService, }: Props) {
 
   const [availability, setAvailability] = useState<any[]>([]);
@@ -85,9 +77,10 @@ export default function AvailableSlots({ selectedDate, selectedService, }: Props
     : [];
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 max-h-125 overflow-y-auto">
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 max-h-125 flex flex-col">
 
-      <div className="mb-6">
+      {/* Static Header */}
+      <div className="mb-6 shrink-0">
 
         <h3 className="text-lg font-semibold text-gray-800">
           Available Slots
@@ -103,13 +96,15 @@ export default function AvailableSlots({ selectedDate, selectedService, }: Props
 
       </div>
 
-      <div className="space-y-3">
+      {/* Scrollable List */}
+      <div className="space-y-3 overflow-y-auto pr-1">
 
         {slots.map((slot) => (
           <SlotCard
             key={slot}
             time={slot}
-            service={selectedService}
+            selectedDate={selectedDate}
+            barberId="2db47b73-5cd5-4726-a6d2-c91e70684ed6" // temporal
           />
         ))}
 
