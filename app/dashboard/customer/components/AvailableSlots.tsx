@@ -8,38 +8,48 @@ type Props = {
   selectedService: string | null;
 };
 
-export default function AvailableSlots({ selectedDate, selectedService, }: Props) {
+export default function AvailableSlots({ selectedDate, selectedService }: Props) {
 
   const [availability, setAvailability] = useState<any[]>([]);
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const barberId = "2db47b73-5cd5-4726-a6d2-c91e70684ed6"; // temporary hardcoded barber ID
 
+  // useEffect 1 — carga availability (solo una vez)
   useEffect(() => {
     async function fetchAvailability() {
       try {
-        const barberId = "2db47b73-5cd5-4726-a6d2-c91e70684ed6"; //temporary hardcoded barber ID
-
         const res = await fetch(`/api/availability/${barberId}`);
-
-        if (!res.ok) {
-          console.error("Failed to fetch availability");
-          return;
-        }
-
+        if (!res.ok) return;
         const data = await res.json();
         setAvailability(data);
-
       } catch (error) {
         console.error("Error loading availability", error);
       }
     }
-
     fetchAvailability();
   }, []);
 
+  // useEffect 2 — carga slots ocupados cuando cambia la fecha
+  useEffect(() => {
+    // Construye el rango del día completo en local time y lo manda como UTC
+    const startOfDay = new Date(selectedDate);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(selectedDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    fetch(
+      `/api/appointments/barber/${barberId}/booked?start=${startOfDay.toISOString()}&end=${endOfDay.toISOString()}`
+    )
+      .then((res) => res.json())
+      .then((data: string[]) => setBookedSlots(data))
+      .catch((err) => console.error("Could not load booked slots", err));
+  }, [selectedDate]);
+
   const dayOfWeek = selectedDate.getDay();
 
-  const schedule = availability.find(
-    (a) => a.dayOfWeek === dayOfWeek
-  );
+  const schedule = availability.find((a) => a.dayOfWeek === dayOfWeek);
+
   if (!schedule) {
     return <p>No availability for this day</p>;
   }
@@ -65,7 +75,6 @@ export default function AvailableSlots({ selectedDate, selectedService, }: Props
           minute: "2-digit",
         })
       );
-
       current.setMinutes(current.getMinutes() + interval);
     }
 
@@ -81,33 +90,29 @@ export default function AvailableSlots({ selectedDate, selectedService, }: Props
 
       {/* Static Header */}
       <div className="mb-6 shrink-0">
-
         <h3 className="text-lg font-semibold text-gray-800">
           Available Slots
         </h3>
-
         <p className="text-sm text-gray-500">
           {selectedDate.toDateString()}
         </p>
-
         <p className="text-sm text-gray-400 mt-1">
           Working hours: {schedule.startTime} - {schedule.endTime}
         </p>
-
       </div>
 
       {/* Scrollable List */}
       <div className="space-y-3 overflow-y-auto pr-1">
-
-        {slots.map((slot) => (
-          <SlotCard
-            key={slot}
-            time={slot}
-            selectedDate={selectedDate}
-            barberId="2db47b73-5cd5-4726-a6d2-c91e70684ed6" // temporal
-          />
-        ))}
-
+        {slots
+          .filter((slot) => !bookedSlots.includes(slot))
+          .map((slot) => (
+            <SlotCard
+              key={slot}
+              time={slot}
+              selectedDate={selectedDate}
+              barberId={barberId}
+            />
+          ))}
       </div>
 
     </div>

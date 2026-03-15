@@ -43,7 +43,7 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
       .finally(() => setLoading(false));
   }, [popoverOpen]);
 
-  // Cerrar popover al hacer click afuera
+// Close popover when clicking outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (
@@ -59,7 +59,7 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [popoverOpen]);
 
-  // Abre el modal de confirmacion desde el popover
+// Handle confirm button click
   const handleConfirmClick = () => {
     if (!selectedService) {
       toast.error("Please select a service");
@@ -69,7 +69,7 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
     setModalOpen(true);
   };
 
-  // Construye el DateTime combinando selectedDate + time (e.g. "09:00 AM")
+// Build ISO datetime string for booking
   const buildDateTime = (): string => {
     const [timePart, modifier] = time.split(" ");
     let [hours, minutes] = timePart.split(":").map(Number);
@@ -82,7 +82,7 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
     return date.toISOString();
   };
 
-  // Llama al endpoint y guarda la cita
+// Final booking confirmation
   const handleFinalConfirm = async () => {
     if (!selectedService) return;
 
@@ -116,7 +116,7 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
       setBooking(false);
     }
   };
-
+// Formatted date for modal display
   const formattedDate = selectedDate.toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -207,7 +207,7 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
       <Transition appear show={modalOpen} as={Fragment}>
         <Dialog as="div" className="relative z-50" onClose={() => !booking && setModalOpen(false)}>
 
-          {/* Fondo borroso */}
+          {/* Blurred background */}
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-200"
@@ -220,7 +220,7 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
           </Transition.Child>
 
-          {/* Panel centrado */}
+          {/* Centered Panel */}
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <Transition.Child
               as={Fragment}
@@ -247,7 +247,7 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
                   </button>
                 </div>
 
-                {/* Detalle de la cita */}
+                {/* Detail of the appointment */}
                 <div className="bg-gray-50 rounded-xl divide-y divide-gray-200 mb-6">
 
                   <div className="flex items-center gap-3 px-4 py-3">
@@ -291,7 +291,7 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
 
                 </div>
 
-                {/* Acciones */}
+                {/* Actions */}
                 <div className="flex gap-3">
                   <button
                     onClick={() => setModalOpen(false)}
