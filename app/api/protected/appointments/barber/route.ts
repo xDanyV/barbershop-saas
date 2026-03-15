@@ -44,7 +44,6 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(appointments);
 
     } catch (error) {
-        console.error("[GET /barber/appointments]", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
