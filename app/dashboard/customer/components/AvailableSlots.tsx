@@ -6,13 +6,14 @@ import { useEffect, useState } from "react";
 type Props = {
   selectedDate: Date;
   selectedService: string | null;
+  barberId: string;
 };
 
-export default function AvailableSlots({ selectedDate, selectedService }: Props) {
+export default function AvailableSlots({ selectedDate, selectedService, barberId }: Props) {
 
   const [availability, setAvailability] = useState<any[]>([]);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
-  const barberId = "2db47b73-5cd5-4726-a6d2-c91e70684ed6"; // temporary hardcoded barber ID
+  // const barberId = "2db47b73-5cd5-4726-a6d2-c91e70684ed6";
 
   // useEffect 1 — carga availability (solo una vez)
   useEffect(() => {
