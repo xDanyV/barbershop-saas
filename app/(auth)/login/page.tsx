@@ -36,7 +36,11 @@ export default function LoginPage() {
                                 return;
                             }
 
-                            window.location.href = "/dashboard";
+                            if (data.user.role === "BARBER") {
+                                window.location.href = "/dashboard/barber";
+                            } else {
+                                window.location.href = "/dashboard/customer/home";
+                            }
 
                         } catch (error) {
                             console.error("Login error:", error);
