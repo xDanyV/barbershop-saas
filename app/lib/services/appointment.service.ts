@@ -172,6 +172,20 @@ export async function updateAppointmentStatus(
         );
     }
 
+    if (role === "CUSTOMER" && newStatus === "CANCELLED") {
+        const now = new Date();
+        const appointmentDate = new Date(appointment.date);
+        const hoursUntilAppointment = (appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+        if (hoursUntilAppointment < 2) {
+            throw new Error("Appointments cannot be cancelled less than 2 hours before the scheduled time");
+        }
+
+        if (appointment.userId !== userId) {
+            throw new Error("Not authorized");
+        }
+    }
+
     return prisma.appointment.update({
         where: { id: appointmentId },
         data: { status: newStatus },
