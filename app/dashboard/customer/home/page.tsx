@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 type Appointment = {
   id: string;
   date: string;
-  status: "PENDING" | "CONFIRMED";
+  status: "PENDING" | "CONFIRMED" | "CANCELLED";
   service: {
     name: string;
     duration: number;
@@ -23,18 +24,53 @@ export default function CustomerHome() {
   const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState<string | null>(null); // id de la cita que se está cancelando
 
   useEffect(() => {
     fetch("/api/protected/appointments/user")
       .then((res) => res.json())
       .then((data: Appointment[]) => {
-        // Solo futuras
         const upcoming = data.filter((a) => new Date(a.date) >= new Date());
         setAppointments(upcoming);
       })
       .catch(() => console.error("Could not load appointments"))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleCancel = async (appointmentId: string, appointmentDate: string) => {
+
+    const hoursUntil = (new Date(appointmentDate).getTime() - Date.now()) / (1000 * 60 * 60);
+
+    if (hoursUntil < 2) {
+      toast.error("Appointments cannot be cancelled less than 2 hours before the scheduled time");
+      return;
+    }
+
+    setCancelling(appointmentId);
+    try {
+      const res = await fetch(`/api/protected/appointments/${appointmentId}/confirm`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "CANCELLED" }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error ?? "Could not cancel appointment");
+        return;
+      }
+
+      // Actualiza el estado local removiendo la cita cancelada
+      setAppointments((prev) => prev.filter((a) => a.id !== appointmentId));
+      toast.success("Appointment cancelled successfully");
+
+    } catch {
+      toast.error("Network error, please try again");
+    } finally {
+      setCancelling(null);
+    }
+  };
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
@@ -83,23 +119,20 @@ export default function CustomerHome() {
         <div className="space-y-3">
           {appointments.map((a) => {
             const date = new Date(a.date);
-            const formattedDate = date.toLocaleDateString("en-US", {
-              weekday: "short",
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            });
             const formattedTime = date.toLocaleTimeString("en-US", {
               hour: "2-digit",
               minute: "2-digit",
             });
+            const hoursUntil = (date.getTime() - Date.now()) / (1000 * 60 * 60);
+            const canCancel = hoursUntil >= 2;
+            const isCancelling = cancelling === a.id;
 
             return (
               <div
                 key={a.id}
                 className="bg-white border border-gray-200 rounded-2xl px-5 py-4 shadow-sm flex items-center justify-between"
               >
-                {/* Left — date block */}
+                {/* Left — date block + info */}
                 <div className="flex items-center gap-4">
                   <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3 text-center min-w-16 shrink-0">
                     <p className="text-xs text-indigo-400 font-medium uppercase">
@@ -121,16 +154,26 @@ export default function CustomerHome() {
                   </div>
                 </div>
 
-                {/* Right — status badge */}
-                <span
-                  className={`text-xs px-3 py-1 rounded-full font-medium shrink-0 ${
-                    a.status === "CONFIRMED"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-yellow-100 text-yellow-700"
-                  }`}
-                >
-                  {a.status}
-                </span>
+                {/* Right — status badge + cancel button */}
+                <div className="flex flex-col items-end gap-2 shrink-0">
+                  <span
+                    className={`text-xs px-3 py-1 rounded-full font-medium ${a.status === "CONFIRMED"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-yellow-100 text-yellow-700"
+                      }`}
+                  >
+                    {a.status}
+                  </span>
+
+                  <button
+                    onClick={() => handleCancel(a.id, a.date)}
+                    disabled={!canCancel || isCancelling}
+                    title={!canCancel ? "Cannot cancel less than 2 hours before appointment" : undefined}
+                    className="text-xs px-3 py-1 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {isCancelling ? "Cancelling..." : "Cancel"}
+                  </button>
+                </div>
               </div>
             );
           })}
