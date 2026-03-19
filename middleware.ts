@@ -41,6 +41,10 @@ export async function middleware(request: NextRequest) {
     requestHeaders.set("x-user-id", String(payload.userId));
     requestHeaders.set("x-user-role", String(payload.role));
 
+    if (payload.barberId) {
+      requestHeaders.set("x-barber-id", String(payload.barberId));
+    }
+
     if (pathname.startsWith("/dashboard/barber") && payload.role !== "BARBER") {
       return NextResponse.redirect(new URL("/dashboard/customer/home", request.url));
     }

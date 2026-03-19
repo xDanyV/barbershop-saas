@@ -21,20 +21,41 @@ type Appointment = {
   status: "PENDING" | "CONFIRMED";
 };
 
+type Exception = {
+  startDate: string;
+  endDate: string;
+};
+
 export default function BarberDashboard() {
   const [date, setDate] = useState("");
   const [raw, setRaw] = useState<RawAppointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exceptions, setExceptions] = useState<Exception[]>([]);
+  const [barberId, setBarberId] = useState<string | null>(null);
 
+  // Step 1 — get barberId from protected endpoint
   useEffect(() => {
+    fetch("/api/protected/barbers/me")
+      .then((res) => res.json())
+      .then((data) => setBarberId(data.barberId))
+      .catch(() => console.error("Could not load barber profile"));
+  }, []);
+
+  // Step 2 — load appointments and exceptions once we have the barberId
+  useEffect(() => {
+    if (!barberId) return;
+
     fetch("/api/protected/appointments/barber")
       .then((res) => res.json())
-      .then((data) => {
-        setRaw(data);
-      })
-      .catch((err) => console.error("fetch error:", err))
+      .then((data: RawAppointment[]) => setRaw(data))
+      .catch((err) => console.error("Could not load appointments", err))
       .finally(() => setLoading(false));
-  }, []);
+
+    fetch(`/api/exceptions/${barberId}`)
+      .then((res) => res.json())
+      .then((data: Exception[]) => setExceptions(data))
+      .catch(() => console.error("Could not load exceptions"));
+  }, [barberId]);
 
   const filterDate = date || new Date().toISOString().split("T")[0];
 
@@ -51,19 +72,11 @@ export default function BarberDashboard() {
       status: a.status === "CANCELLED" ? "PENDING" : a.status,
     }));
 
-  // En page.tsx — construye el mapa de conteos
   const appointmentCounts = raw.reduce<Record<string, number>>((acc, a) => {
     const key = a.date.split("T")[0];
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
-
-  // Pásalo al calendario
-  <CalendarPicker
-    selectedDate={date}
-    onChange={setDate}
-    appointmentCounts={appointmentCounts}
-  />
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
@@ -76,6 +89,7 @@ export default function BarberDashboard() {
           selectedDate={date}
           onChange={setDate}
           appointmentCounts={appointmentCounts}
+          exceptions={exceptions}
         />
 
         <AppointmentList

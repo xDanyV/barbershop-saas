@@ -60,7 +60,7 @@ body {
 }
 
 .custom-calendar .react-calendar__tile {
-  padding: 14px 0;
+  padding: 10px 0 4px;
   border-radius: 10px;
   font-weight: 500;
 }
@@ -86,4 +86,23 @@ body {
 .custom-calendar .react-calendar__tile:disabled {
   color: #d1d5db;
   background: transparent;
+}
+
+/* exception days — override disabled styles */
+.custom-calendar .react-calendar__tile.exception-day,
+.custom-calendar .react-calendar__tile.exception-day:disabled,
+.custom-calendar .react-calendar__tile.exception-day:enabled:hover,
+.custom-calendar .react-calendar__tile.exception-day:enabled:focus {
+  background-color: #fee2e2 !important;
+  color: #b91c1c !important;
+  opacity: 1 !important;
+}
+
+/* tooltip text inside exception days */
+.exception-tooltip {
+  font-size: 9px;
+  color: #b91c1c;
+  text-align: center;
+  line-height: 1;
+  margin-top: 2px;
 }

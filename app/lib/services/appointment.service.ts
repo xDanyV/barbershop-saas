@@ -44,6 +44,18 @@ export async function createAppointment(data: {
     if (existing) {
         throw new Error("Time slot not available");
     }
+    // Check if barber has an exception on this date
+    const exception = await prisma.barberException.findFirst({
+        where: {
+            barberId,
+            startDate: { lte: startDate },
+            endDate: { gte: startDate },
+        },
+    });
+
+    if (exception) {
+        throw new Error("Barber is not available on this date");
+    }
 
     return prisma.appointment.create({
         data: {

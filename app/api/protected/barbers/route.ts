@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createBarberFromUser } from "@/lib/services/barber.service";
 
+// Endpoint to create a barber profile for an authenticated user
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
