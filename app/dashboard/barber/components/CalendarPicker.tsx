@@ -2,10 +2,16 @@
 
 import { useState } from "react";
 
+type Exception = {
+  startDate: string;
+  endDate: string;
+};
+
 type Props = {
   selectedDate: string;
   onChange: (date: string) => void;
-  appointmentCounts?: Record<string, number>; // "YYYY-MM-DD" -> cantidad de citas
+  appointmentCounts?: Record<string, number>;
+  exceptions?: Exception[];
 };
 
 const monthNames = [
@@ -34,6 +40,7 @@ export default function CalendarPicker({
   selectedDate,
   onChange,
   appointmentCounts = {},
+  exceptions = [],
 }: Props) {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -52,6 +59,17 @@ export default function CalendarPicker({
     else setCurrentMonth(currentMonth + 1);
   };
 
+  const isException = (dateString: string): boolean => {
+    const date = new Date(dateString);
+    return exceptions.some((e) => {
+      const start = new Date(e.startDate);
+      const end = new Date(e.endDate);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      return date >= start && date <= end;
+    });
+  };
+
   const days = [];
 
   for (let i = 0; i < firstDay; i++) {
@@ -67,18 +85,27 @@ export default function CalendarPicker({
       currentYear === today.getFullYear();
     const count = appointmentCounts[dateString] || 0;
     const dotCount = Math.min(count, 3);
+    const exception = isException(dateString);
 
     days.push(
       <button
         key={day}
         onClick={() => onChange(dateString)}
-        title={count > 0 ? `${count} appointment${count > 1 ? "s" : ""}` : undefined}
+        title={
+          exception
+            ? "Exception — day blocked"
+            : count > 0
+              ? `${count} appointment${count > 1 ? "s" : ""}`
+              : undefined
+        }
         className={`
           h-10 w-10 rounded-lg text-sm flex flex-col items-center justify-center
           transition-all duration-150 relative
           ${isSelected
             ? "bg-indigo-600 text-white shadow-md"
-            : densityStyle(count)
+            : exception
+              ? "bg-purple-50 border border-purple-200 text-purple-400 cursor-default"
+              : densityStyle(count)
           }
           ${isToday && !isSelected ? "ring-1 ring-indigo-400 ring-offset-1" : ""}
         `}
@@ -87,8 +114,13 @@ export default function CalendarPicker({
           {day}
         </span>
 
-        {/* Dots indicadores — ocultos cuando está seleccionado */}
-        {count > 0 && !isSelected && (
+        {/* Indicador de excepción */}
+        {exception && !isSelected && (
+          <span className="w-1 h-1 rounded-full bg-purple-400 mt-0.5" />
+        )}
+
+        {/* Dots de citas — solo si no es excepción */}
+        {count > 0 && !isSelected && !exception && (
           <div className="flex gap-0.5 mt-0.5">
             {Array.from({ length: dotCount }).map((_, i) => (
               <span
@@ -107,10 +139,7 @@ export default function CalendarPicker({
 
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
-        <button
-          onClick={prevMonth}
-          className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition"
-        >
+        <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition">
           ←
         </button>
 
@@ -137,10 +166,7 @@ export default function CalendarPicker({
           </select>
         </div>
 
-        <button
-          onClick={nextMonth}
-          className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition"
-        >
+        <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition">
           →
         </button>
       </div>
@@ -161,16 +187,20 @@ export default function CalendarPicker({
       <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100 flex-wrap">
         <span className="text-xs text-gray-400 mr-1">Appointments:</span>
         {[
-          { label: "1–2", bg: "bg-blue-50", border: "border-blue-200", dot: "bg-blue-400" },
-          { label: "3–4", bg: "bg-green-50", border: "border-green-200", dot: "bg-green-500" },
-          { label: "5–7", bg: "bg-amber-50", border: "border-amber-200", dot: "bg-amber-500" },
-          { label: "8+", bg: "bg-red-50", border: "border-red-200", dot: "bg-red-500" },
-        ].map(({ label, bg, border, dot }) => (
+          { label: "1–2", bg: "bg-blue-50", border: "border-blue-200" },
+          { label: "3–4", bg: "bg-green-50", border: "border-green-200" },
+          { label: "5–7", bg: "bg-amber-50", border: "border-amber-200" },
+          { label: "8+", bg: "bg-red-50", border: "border-red-200" },
+        ].map(({ label, bg, border }) => (
           <div key={label} className="flex items-center gap-1.5">
             <span className={`w-3 h-3 rounded-sm border ${bg} ${border}`} />
             <span className="text-xs text-gray-500">{label}</span>
           </div>
         ))}
+        <div className="flex items-center gap-1.5 ml-2">
+          <span className="w-3 h-3 rounded-sm border bg-purple-50 border-purple-200" />
+          <span className="text-xs text-gray-500">Exception</span>
+        </div>
       </div>
 
     </div>

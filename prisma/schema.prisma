@@ -58,6 +58,7 @@ model Barber {
   createdAt    DateTime       @default(now())
   appointments Appointment[]
   availability Availability[]
+  exceptions   BarberException[]
 }
 
 model Availability {
@@ -82,4 +83,14 @@ model Service {
   createdAt DateTime @default(now())
 
   appointments Appointment[]
+}
+
+model BarberException {
+  id        String   @id @default(uuid())
+  barberId  String
+  barber    Barber   @relation(fields: [barberId], references: [id])
+  startDate DateTime
+  endDate   DateTime
+  reason    String?
+  createdAt DateTime @default(now())
 }

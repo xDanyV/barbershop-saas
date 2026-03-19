@@ -39,12 +39,18 @@ export async function POST(req: Request) {
       throw new Error("JWT_SECRET not defined");
     }
 
+    // Fetch barber profile if user is a BARBER
+    const barberProfile = user.role === "BARBER"
+      ? await prisma.barber.findUnique({ where: { userId: user.id } })
+      : null;
+
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
-    // Generate a JWT token with user information
+    // Generate JWT with barberId if applicable
     const token = await new SignJWT({
       userId: user.id,
       role: user.role,
+      ...(barberProfile && { barberId: barberProfile.id }),
     })
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
@@ -55,7 +61,10 @@ export async function POST(req: Request) {
 
     const response = NextResponse.json({
       message: "Login successful",
-      user: safeUser,
+      user: {
+        ...safeUser,
+        ...(barberProfile && { barberId: barberProfile.id }),
+      },
     });
 
     // Set the JWT token in an HTTP-only cookie
