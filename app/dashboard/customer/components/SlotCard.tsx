@@ -37,7 +37,7 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
     if (!popoverOpen || services.length > 0) return;
 
     setLoading(true);
-    fetch("/api/catalog")
+    fetch(`/api/catalog?barberId=${barberId}`)
       .then((res) => res.json())
       .then((data: Service[]) => setServices(data))
       .catch(() => toast.error("Could not load services"))
@@ -142,8 +142,8 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
         {/* Slot row */}
         <div
           className={`flex items-center justify-between border rounded-xl px-4 py-3 transition ${popoverOpen
-              ? "border-indigo-400 bg-indigo-50"
-              : "border-gray-200 hover:border-indigo-300 hover:bg-indigo-50"
+            ? "border-indigo-400 bg-indigo-50"
+            : "border-gray-200 hover:border-indigo-300 hover:bg-indigo-50"
             }`}
         >
           <span className="font-medium text-gray-700">{time}</span>
@@ -168,8 +168,8 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
             {/* Arrow */}
             <div
               className={`absolute right-6 w-4 h-4 bg-white border-gray-200 rotate-45 ${openUpward
-                  ? "bottom-2 border-r border-b"
-                  : "-top-2 border-l border-t"
+                ? "bottom-2 border-r border-b"
+                : "-top-2 border-l border-t"
                 }`}
             />
 
@@ -192,8 +192,8 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
                     key={s.id}
                     onClick={() => setSelectedService(s.id)}
                     className={`flex items-center justify-between px-3 py-2.5 rounded-xl border text-sm transition cursor-pointer ${selectedService === s.id
-                        ? "bg-indigo-600 border-indigo-600 text-white"
-                        : "border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 text-gray-700"
+                      ? "bg-indigo-600 border-indigo-600 text-white"
+                      : "border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 text-gray-700"
                       }`}
                   >
                     <span className="font-medium">{s.name}</span>

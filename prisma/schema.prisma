@@ -50,15 +50,16 @@ enum AppointmentStatus {
 }
 
 model Barber {
-  id           String         @id @default(uuid())
+  id           String            @id @default(uuid())
   //userId is unique because each barber has one user profile, but a user can only be a barber or a customer, not both
-  userId       String         @unique
-  user         User           @relation(fields: [userId], references: [id])
-  active       Boolean        @default(true)
-  createdAt    DateTime       @default(now())
+  userId       String            @unique
+  user         User              @relation(fields: [userId], references: [id])
+  active       Boolean           @default(true)
+  createdAt    DateTime          @default(now())
   appointments Appointment[]
   availability Availability[]
   exceptions   BarberException[]
+  services     Service[]
 }
 
 model Availability {
@@ -81,6 +82,9 @@ model Service {
   duration  Int
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
+
+  barberId String
+  barber   Barber @relation(fields: [barberId], references: [id])
 
   appointments Appointment[]
 }
