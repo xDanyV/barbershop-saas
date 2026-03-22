@@ -7,12 +7,10 @@ export async function PATCH(
 ) {
   try {
     const role = request.headers.get("x-user-role");
+    const barberId = request.headers.get("x-barber-id");
 
-    if (!role) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+    if (!role || !barberId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await context.params;
@@ -23,23 +21,18 @@ export async function PATCH(
       {
         name: body.name,
         price: body.price !== undefined ? Number(body.price) : undefined,
-        duration:
-          body.duration !== undefined ? Number(body.duration) : undefined,
+        duration: body.duration !== undefined ? Number(body.duration) : undefined,
         active: body.active,
       },
-      role
+      role,
+      barberId
     );
 
     return NextResponse.json(updated);
 
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Internal server error";
-
-    return NextResponse.json(
-      { error: message },
-      { status: 400 }
-    );
+    const message = error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 
@@ -49,29 +42,19 @@ export async function DELETE(
 ) {
   try {
     const role = request.headers.get("x-user-role");
+    const barberId = request.headers.get("x-barber-id");
 
-    if (!role) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+    if (!role || !barberId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await context.params;
-    const deleted = await deleteCatalogService(
-      id,
-      role
-    );
+    const deleted = await deleteCatalogService(id, role, barberId);
 
     return NextResponse.json(deleted);
 
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Internal server error";
-
-    return NextResponse.json(
-      { error: message },
-      { status: 400 }
-    );
+    const message = error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }

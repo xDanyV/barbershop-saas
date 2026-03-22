@@ -16,7 +16,7 @@ export default function ServiceList({ onEdit }: Props) {
     useEffect(() => {
         async function fetchServices() {
             try {
-                const res = await fetch("/api/catalog");
+                const res = await fetch("/api/protected/catalog");
                 const data = await res.json();
 
                 setServices(data);
@@ -48,12 +48,8 @@ export default function ServiceList({ onEdit }: Props) {
 
     async function handleDelete(id: string) {
         try {
-
             const res = await fetch(`/api/protected/catalog/${id}`, {
                 method: "DELETE",
-                headers: {
-                    "x-user-role": "BARBER",
-                },
             });
 
             if (!res.ok) {

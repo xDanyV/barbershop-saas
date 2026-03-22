@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/prisma";
 
-// Create a new service in the catalog (only for barbers)
 export async function createCatalogService(
   name: string,
   price: number,
   duration: number,
-  role: string
+  role: string,
+  barberId: string
 ) {
   if (role !== "BARBER") {
     throw new Error("Only barbers can create services");
@@ -28,10 +28,11 @@ export async function createCatalogService(
       name,
       price,
       duration,
+      barberId,
     },
   });
 }
-// Update an existing service in the catalog (only for barbers)
+
 export async function updateCatalogService(
   serviceId: string,
   data: {
@@ -40,7 +41,8 @@ export async function updateCatalogService(
     duration?: number;
     active?: boolean;
   },
-  role: string
+  role: string,
+  barberId: string
 ) {
   if (role !== "BARBER") {
     throw new Error("Only barbers can update services");
@@ -52,6 +54,11 @@ export async function updateCatalogService(
 
   if (!existing) {
     throw new Error("Service not found");
+  }
+
+  // Verifies that the service belongs to the barber
+  if (existing.barberId !== barberId) {
+    throw new Error("Not authorized");
   }
 
   if (data.price !== undefined && data.price <= 0) {
@@ -67,10 +74,11 @@ export async function updateCatalogService(
     data,
   });
 }
-// Soft delete a service from the catalog (only for barbers)
+
 export async function deleteCatalogService(
   serviceId: string,
-  role: string
+  role: string,
+  barberId: string
 ) {
   if (role !== "BARBER") {
     throw new Error("Only barbers can delete services");
@@ -84,14 +92,17 @@ export async function deleteCatalogService(
     throw new Error("Service not found");
   }
 
+  // Verifies that the service belongs to the barber
+  if (existing.barberId !== barberId) {
+    throw new Error("Not authorized");
+  }
+
   if (!existing.active) {
     throw new Error("Service is already inactive");
   }
 
   return prisma.service.update({
     where: { id: serviceId },
-    data: {
-      active: false,
-    },
+    data: { active: false },
   });
 }
