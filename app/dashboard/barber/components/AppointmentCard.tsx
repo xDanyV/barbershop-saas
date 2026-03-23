@@ -11,7 +11,12 @@ type Appointment = {
   status: "PENDING" | "CONFIRMED";
 };
 
-export default function AppointmentCard({ appointment }: { appointment: Appointment }) {
+type Props = {
+  appointment: Appointment;
+  onConfirm?: (id: string) => void;
+};
+
+export default function AppointmentCard({ appointment, onConfirm }: { appointment: Appointment, onConfirm?: (id: string) => void }) {
   const [status, setStatus] = useState(appointment.status);
   const [loading, setLoading] = useState(false);
 
@@ -32,6 +37,7 @@ export default function AppointmentCard({ appointment }: { appointment: Appointm
       }
 
       setStatus("CONFIRMED");
+      onConfirm?.(appointment.id);
       toast.success(`${appointment.customerName} confirmed for ${appointment.time}`);
 
     } catch {
