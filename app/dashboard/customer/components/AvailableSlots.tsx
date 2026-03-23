@@ -112,6 +112,7 @@ export default function AvailableSlots({ selectedDate, selectedService, barberId
               time={slot}
               selectedDate={selectedDate}
               barberId={barberId}
+              onBook={(bookedTime) => setBookedSlots((prev) => [...prev, bookedTime])}
             />
           ))}
       </div>

@@ -10,9 +10,10 @@ type Appointment = {
 
 type Props = {
     appointments: Appointment[];
+    onConfirm?: (id: string) => void;
 };
 
-export default function AppointmentList({ appointments }: Props) {
+export default function AppointmentList({ appointments, onConfirm }: Props) {
 
     return (
 
@@ -36,6 +37,7 @@ export default function AppointmentList({ appointments }: Props) {
                         <AppointmentCard
                             key={appointment.id}
                             appointment={appointment}
+                            onConfirm={onConfirm}
                         />
                     ))}
 

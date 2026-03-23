@@ -33,7 +33,6 @@ export default function BarberDashboard() {
   const [exceptions, setExceptions] = useState<Exception[]>([]);
   const [barberId, setBarberId] = useState<string | null>(null);
 
-  // Step 1 — get barberId from protected endpoint
   useEffect(() => {
     fetch("/api/protected/barbers/me")
       .then((res) => res.json())
@@ -41,7 +40,6 @@ export default function BarberDashboard() {
       .catch(() => console.error("Could not load barber profile"));
   }, []);
 
-  // Step 2 — load appointments and exceptions once we have the barberId
   useEffect(() => {
     if (!barberId) return;
 
@@ -56,6 +54,13 @@ export default function BarberDashboard() {
       .then((data: Exception[]) => setExceptions(data))
       .catch(() => console.error("Could not load exceptions"));
   }, [barberId]);
+
+  // Actualiza el status en raw cuando el barbero confirma una cita
+  const handleConfirm = (id: string) => {
+    setRaw((prev) =>
+      prev.map((a) => a.id === id ? { ...a, status: "CONFIRMED" as const } : a)
+    );
+  };
 
   const filterDate = date || new Date().toISOString().split("T")[0];
 
@@ -94,6 +99,7 @@ export default function BarberDashboard() {
 
         <AppointmentList
           appointments={loading ? [] : appointments}
+          onConfirm={handleConfirm}
         />
 
       </div>
