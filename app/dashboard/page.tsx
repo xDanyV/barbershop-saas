@@ -14,8 +14,6 @@ export default async function DashboardPage() {
   if (!token) redirect("/login");
 
   const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-
-
   let user;
   //Do not use try catch for "redirect", it will cause hydration issues. Instead, we can use a simple if statement to check if the token is valid and redirect accordingly.
   try {
