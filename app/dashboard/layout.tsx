@@ -1,47 +1,30 @@
-"use client";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { jwtVerify } from "jose";
+import DashboardNavbar from "@/components/DashboardNavbar";
 
-import { useRouter } from "next/navigation";
-import { ReactNode } from "react";
-import { Toaster } from "react-hot-toast"
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  const router = useRouter();
-  const handleLogout = async () => {
-    await fetch("/api/logout", { method: "POST" });
-    router.push("/login");
-  };
+  if (!token) redirect("/login");
+
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+  let userRole: string;
+
+  try {
+    const { payload } = await jwtVerify(token, secret);
+    userRole = payload.role as string;
+  } catch (error) {
+    redirect("/login");
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-indigo-900 text-white px-8 py-4 flex justify-between items-center">
-
-        <h1 className="text-xl font-semibold tracking-wide">
-          BARBERSHOP - SAAS
-        </h1>
-
-        <div className="flex items-center gap-4">
-          <form action="/api/logout" method="POST">
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-full text-sm cursor-pointer"
-            >
-              Logout
-            </button>
-          </form>
-
-        </div>
-      </header>
-
-      <main className="p-8 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <DashboardNavbar role={userRole} />
+      <main className="p-8 w-full max-w-7xl mx-auto flex-1">
         {children}
       </main>
-
-      <Toaster position="top-right" />
-
     </div>
   );
 }
