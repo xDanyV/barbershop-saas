@@ -5,7 +5,7 @@ type Appointment = {
     customerName: string;
     service: string;
     time: string;
-    status: "PENDING" | "CONFIRMED";
+    status: "PENDING" | "CONFIRMED"| "COMPLETED";
 };
 
 type Props = {

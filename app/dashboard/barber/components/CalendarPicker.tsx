@@ -29,7 +29,8 @@ function densityStyle(n: number): string {
   return "bg-red-50 border border-red-200 text-red-800 hover:bg-red-100";
 }
 
-function dotColor(n: number): string {
+function dotColor(n: number, isPast: boolean): string {
+  if (isPast) return "bg-gray-400";
   if (n <= 2) return "bg-blue-400";
   if (n <= 4) return "bg-green-500";
   if (n <= 7) return "bg-amber-500";
@@ -43,6 +44,8 @@ export default function CalendarPicker({
   exceptions = [],
 }: Props) {
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
 
@@ -70,6 +73,12 @@ export default function CalendarPicker({
     });
   };
 
+  const isPastDate = (dateString: string): boolean => {
+    const d = new Date(dateString);
+    d.setHours(0, 0, 0, 0);
+    return d < today;
+  };
+
   const days = [];
 
   for (let i = 0; i < firstDay; i++) {
@@ -86,6 +95,7 @@ export default function CalendarPicker({
     const count = appointmentCounts[dateString] || 0;
     const dotCount = Math.min(count, 3);
     const exception = isException(dateString);
+    const isPast = isPastDate(dateString);
 
     days.push(
       <button
@@ -99,33 +109,33 @@ export default function CalendarPicker({
               : undefined
         }
         className={`
-          h-10 w-10 rounded-lg text-sm flex flex-col items-center justify-center
-          transition-all duration-150 relative
+          h-10 w-10 rounded-xl text-sm flex flex-col items-center justify-center
+          transition-all duration-200 relative
           ${isSelected
             ? "bg-indigo-600 text-white shadow-md"
             : exception
-              ? "bg-purple-50 border border-purple-200 text-purple-400 cursor-default"
-              : densityStyle(count)
+              ? "bg-purple-50 border border-purple-200 text-purple-400"
+              : isPast
+                ? "bg-gray-100 border border-gray-200 text-gray-400 hover:bg-gray-200"
+                : densityStyle(count)
           }
-          ${isToday && !isSelected ? "ring-1 ring-indigo-400 ring-offset-1" : ""}
+          ${isToday && !isSelected ? "ring-2 ring-indigo-400 ring-offset-1" : ""}
         `}
       >
         <span className={`leading-none ${isToday ? "font-semibold" : ""}`}>
           {day}
         </span>
 
-        {/* Indicador de excepción */}
         {exception && !isSelected && (
-          <span className="w-1 h-1 rounded-full bg-purple-400 mt-0.5" />
+          <span className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-0.5" />
         )}
 
-        {/* Dots de citas — solo si no es excepción */}
         {count > 0 && !isSelected && !exception && (
           <div className="flex gap-0.5 mt-0.5">
             {Array.from({ length: dotCount }).map((_, i) => (
               <span
                 key={i}
-                className={`w-1 h-1 rounded-full ${dotColor(count)} ${i === dotCount - 1 && count > 3 ? "opacity-50" : ""}`}
+                className={`w-1.5 h-1.5 rounded-full ${dotColor(count, isPast)} ${i === dotCount - 1 && count > 3 ? "opacity-50" : ""}`}
               />
             ))}
           </div>
@@ -135,11 +145,10 @@ export default function CalendarPicker({
   }
 
   return (
-    <div className="w-85 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+    <div className="w-90 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
 
-      {/* Header */}
       <div className="flex items-center justify-between mb-5">
-        <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition">
+        <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition">
           ←
         </button>
 
@@ -166,41 +175,19 @@ export default function CalendarPicker({
           </select>
         </div>
 
-        <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition">
+        <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition">
           →
         </button>
       </div>
 
-      {/* Días de la semana */}
       <div className="grid grid-cols-7 text-xs text-gray-400 mb-3">
         {daysOfWeek.map((d) => (
           <div key={d} className="text-center font-medium">{d}</div>
         ))}
       </div>
 
-      {/* Grid de días */}
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-2">
         {days}
-      </div>
-
-      {/* Leyenda */}
-      <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100 flex-wrap">
-        <span className="text-xs text-gray-400 mr-1">Appointments:</span>
-        {[
-          { label: "1–2", bg: "bg-blue-50", border: "border-blue-200" },
-          { label: "3–4", bg: "bg-green-50", border: "border-green-200" },
-          { label: "5–7", bg: "bg-amber-50", border: "border-amber-200" },
-          { label: "8+", bg: "bg-red-50", border: "border-red-200" },
-        ].map(({ label, bg, border }) => (
-          <div key={label} className="flex items-center gap-1.5">
-            <span className={`w-3 h-3 rounded-sm border ${bg} ${border}`} />
-            <span className="text-xs text-gray-500">{label}</span>
-          </div>
-        ))}
-        <div className="flex items-center gap-1.5 ml-2">
-          <span className="w-3 h-3 rounded-sm border bg-purple-50 border-purple-200" />
-          <span className="text-xs text-gray-500">Exception</span>
-        </div>
       </div>
 
     </div>

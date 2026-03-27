@@ -8,7 +8,7 @@ type Appointment = {
   customerName: string;
   service: string;
   time: string;
-  status: "PENDING" | "CONFIRMED";
+  status: "PENDING" | "CONFIRMED" | "COMPLETED";
 };
 
 type Props = {
@@ -60,8 +60,10 @@ export default function AppointmentCard({ appointment, onConfirm }: { appointmen
 
         <span
           className={`text-xs px-2 py-1 rounded ${status === "CONFIRMED"
-            ? "bg-green-100 text-green-700"
-            : "bg-yellow-100 text-yellow-700"
+              ? "bg-green-100 text-green-700"
+              : status === "COMPLETED"
+                ? "bg-gray-100 text-gray-600"
+                : "bg-yellow-100 text-yellow-700"
             }`}
         >
           {status}

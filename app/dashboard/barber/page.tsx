@@ -18,7 +18,7 @@ type Appointment = {
   customerName: string;
   service: string;
   time: string;
-  status: "PENDING" | "CONFIRMED";
+  status: "PENDING" | "CONFIRMED" | "COMPLETED";
 };
 
 type Exception = {
@@ -55,7 +55,6 @@ export default function BarberDashboard() {
       .catch(() => console.error("Could not load exceptions"));
   }, [barberId]);
 
-  // Actualiza el status en raw cuando el barbero confirma una cita
   const handleConfirm = (id: string) => {
     setRaw((prev) =>
       prev.map((a) => a.id === id ? { ...a, status: "CONFIRMED" as const } : a)
@@ -64,19 +63,30 @@ export default function BarberDashboard() {
 
   const filterDate = date || new Date().toISOString().split("T")[0];
 
+
+
   const appointments: Appointment[] = raw
     .filter((a) => a.date.split("T")[0] === filterDate)
-    .map((a) => ({
-      id: a.id,
-      customerName: a.user.name ?? "Unknown",
-      service: a.service.name,
-      time: new Date(a.date).toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      status: a.status === "CANCELLED" ? "PENDING" : a.status,
-    }));
+    .map((a) => {
+      
+      const isPast = new Date(a.date) < new Date();
 
+      let status: "PENDING" | "CONFIRMED" | "COMPLETED" =
+        a.status === "CANCELLED" ? "PENDING" :
+          a.status === "CONFIRMED" && isPast ? "COMPLETED" :
+            a.status;
+
+      return {
+        id: a.id,
+        customerName: a.user.name ?? "Unknown",
+        service: a.service.name,
+        time: new Date(a.date).toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        status,
+      };
+    });
   const appointmentCounts = raw.reduce<Record<string, number>>((acc, a) => {
     const key = a.date.split("T")[0];
     acc[key] = (acc[key] || 0) + 1;
