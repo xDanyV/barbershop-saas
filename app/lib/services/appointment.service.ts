@@ -120,7 +120,7 @@ export async function getBarberAppointments(barberId: string) {
         where: {
             barberId,
             status: { not: "CANCELLED" },
-            date: { gte: new Date() }// Only future appointments
+            //date: { gte: new Date() } // Optionally filter out past appointments
         },
         include: {
             user: {// Include user details but exclude sensitive info
@@ -146,6 +146,7 @@ const allowedTransitions: Record<
     PENDING: ["CONFIRMED", "CANCELLED"],
     CONFIRMED: ["CANCELLED"],
     CANCELLED: [],
+    COMPLETED: []
 };
 
 export async function updateAppointmentStatus(
