@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import DashboardHeader from "./components/DashboardHeader";
 import CalendarPicker from "./components/CalendarPicker";
 import AppointmentList from "./components/AppointmentList";
+import { motion } from "framer-motion";
 
 type RawAppointment = {
   id: string;
@@ -63,12 +64,10 @@ export default function BarberDashboard() {
 
   const filterDate = date || new Date().toISOString().split("T")[0];
 
-
-
   const appointments: Appointment[] = raw
     .filter((a) => a.date.split("T")[0] === filterDate)
     .map((a) => {
-      
+
       const isPast = new Date(a.date) < new Date();
 
       let status: "PENDING" | "CONFIRMED" | "COMPLETED" =
@@ -94,26 +93,31 @@ export default function BarberDashboard() {
   }, {});
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="p-8 max-w-6xl mx-auto min-h-screen"
+    >
       <DashboardHeader />
 
-      <div className="grid grid-cols-2 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mt-4">
+        <div className="lg:col-span-5 flex justify-center lg:justify-start">
+          <CalendarPicker
+            selectedDate={date}
+            onChange={setDate}
+            appointmentCounts={appointmentCounts}
+            exceptions={exceptions}
+          />
+        </div>
 
-        <CalendarPicker
-          selectedDate={date}
-          onChange={setDate}
-          appointmentCounts={appointmentCounts}
-          exceptions={exceptions}
-        />
-
-        <AppointmentList
-          appointments={loading ? [] : appointments}
-          onConfirm={handleConfirm}
-        />
-
+        <div className="lg:col-span-7">
+          <AppointmentList
+            appointments={loading ? [] : appointments}
+            onConfirm={handleConfirm}
+            selectedDate={filterDate}
+          />
+        </div>
       </div>
-
-    </div>
+    </motion.div>
   );
 }
