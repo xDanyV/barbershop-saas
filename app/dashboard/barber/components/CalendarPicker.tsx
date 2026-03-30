@@ -145,51 +145,37 @@ export default function CalendarPicker({
   }
 
   return (
-    <div className="w-90 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-
-      <div className="flex items-center justify-between mb-5">
-        <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition">
-          ←
-        </button>
-
-        <div className="flex gap-2">
-          <select
-            value={currentMonth}
-            onChange={(e) => setCurrentMonth(Number(e.target.value))}
-            className="text-sm border border-gray-200 rounded-md px-2 py-1 bg-white"
-          >
-            {monthNames.map((m, i) => (
-              <option key={i} value={i}>{m}</option>
-            ))}
-          </select>
-
-          <select
-            value={currentYear}
-            onChange={(e) => setCurrentYear(Number(e.target.value))}
-            className="text-sm border border-gray-200 rounded-md px-2 py-1 bg-white"
-          >
-            {Array.from({ length: 10 }).map((_, i) => {
-              const year = currentYear - 5 + i;
-              return <option key={year} value={year}>{year}</option>;
-            })}
-          </select>
+    <div className="w-full max-w-md bg-white border border-gray-100 rounded-4xl p-7 shadow-xl shadow-gray-100/50">
+      <div className="flex items-center justify-between mb-8">
+        <h3 className="font-bold text-gray-800 text-lg">Schedule</h3>
+        <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-xl">
+          <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition text-gray-400 hover:text-indigo-600">←</button>
+          <span className="text-sm font-bold text-gray-700 px-2">
+            {monthNames[currentMonth]} {currentYear}
+          </span>
+          <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition text-gray-400 hover:text-indigo-600">→</button>
         </div>
-
-        <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition">
-          →
-        </button>
       </div>
 
-      <div className="grid grid-cols-7 text-xs text-gray-400 mb-3">
+      <div className="grid grid-cols-7 gap-y-4 gap-x-2 text-center">
         {daysOfWeek.map((d) => (
-          <div key={d} className="text-center font-medium">{d}</div>
+          <div key={d} className="text-[10px] font-black uppercase tracking-widest text-gray-300">{d}</div>
         ))}
-      </div>
-
-      <div className="grid grid-cols-7 gap-2">
         {days}
       </div>
 
+
+      <div className="mt-8 pt-6 border-t border-gray-50 flex justify-between items-center text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-indigo-600" /> Selected
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-purple-400" /> Blocked
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-amber-400" /> Busy
+        </div>
+      </div>
     </div>
   );
 }
