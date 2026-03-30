@@ -1,25 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Scissors, DollarSign, Clock, PlusCircle } from "lucide-react";
 
 type Props = {
     setView: (view: "list") => void;
 };
 
 export default function CreateServiceForm({ setView }: Props) {
-    const router = useRouter();
-
     const [name, setName] = useState("");
     const [price, setPrice] = useState("");
     const [duration, setDuration] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const inputStyles = "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:bg-white focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all placeholder:text-gray-400 text-gray-900 font-medium";
 
     async function handleSubmit(e: React.FormEvent) {
-
         e.preventDefault();
+        setIsSubmitting(true);
 
         try {
-
             const res = await fetch("/api/protected/catalog", {
                 method: "POST",
                 headers: {
@@ -33,57 +34,90 @@ export default function CreateServiceForm({ setView }: Props) {
                 }),
             });
 
-            if (!res.ok) {
-                throw new Error("Failed to create service");
-            }
-
+            if (!res.ok) throw new Error("Failed to create service");
             setView("list");
-
         } catch (error) {
             console.error("Error creating service:", error);
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
     return (
-
-        <form
+        <motion.form
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             onSubmit={handleSubmit}
-            className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 space-y-4 max-w-md"
+            className="bg-white border border-gray-100 rounded-3xl shadow-xl shadow-gray-100 p-8 space-y-6 w-full max-w-md mx-auto"
         >
+            <div>
+                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-4">
+                    <PlusCircle size={28} />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-1">New Service</h2>
+                <p className="text-sm text-gray-500">Define the details for your new catalog entry.</p>
+            </div>
 
-            <h2 className="text-lg font-semibold">
-                Create Service
-            </h2>
+            <div className="space-y-4">
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400 ml-1 flex items-center gap-2">
+                        <Scissors size={12} /> Service Name
+                    </label>
+                    <input
+                        placeholder="e.g. Skin Fade & Beard"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className={inputStyles}
+                        required
+                    />
+                </div>
 
-            <input
-                placeholder="Service name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2"
-            />
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-gray-400 ml-1 flex items-center gap-2">
+                            <DollarSign size={12} /> Price
+                        </label>
+                        <input
+                            type="number"
+                            placeholder="0.00"
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
+                            className={inputStyles}
+                            required
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-gray-400 ml-1 flex items-center gap-2">
+                            <Clock size={12} /> Minutes
+                        </label>
+                        <input
+                            type="number"
+                            placeholder="30"
+                            value={duration}
+                            onChange={(e) => setDuration(e.target.value)}
+                            className={inputStyles}
+                            required
+                        />
+                    </div>
+                </div>
+            </div>
 
-            <input
-                placeholder="Price"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2"
-            />
-
-            <input
-                placeholder="Duration (minutes)"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2"
-            />
-
-            <button
-                type="submit"
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-            >
-                Create
-            </button>
-
-        </form>
-
+            <div className="pt-2 flex flex-col gap-3">
+                <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {isSubmitting ? "Creating..." : "Create Service"}
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setView("list")}
+                    className="w-full bg-white text-gray-500 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+                >
+                    Cancel
+                </button>
+            </div>
+        </motion.form>
     );
 }
