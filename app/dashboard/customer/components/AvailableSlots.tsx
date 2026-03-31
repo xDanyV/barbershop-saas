@@ -1,7 +1,9 @@
 "use client";
 
-import SlotCard from "./SlotCard";
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Clock, CalendarCheck, Zap } from "lucide-react";
+import SlotCard from "./SlotCard";
 
 type Props = {
   selectedDate: Date;
@@ -10,12 +12,10 @@ type Props = {
 };
 
 export default function AvailableSlots({ selectedDate, selectedService, barberId }: Props) {
-
   const [availability, setAvailability] = useState<any[]>([]);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
-  // const barberId = "2db47b73-5cd5-4726-a6d2-c91e70684ed6";
+  const [loading, setLoading] = useState(false);
 
-  // useEffect 1 — carga availability (solo una vez)
   useEffect(() => {
     async function fetchAvailability() {
       try {
@@ -28,11 +28,10 @@ export default function AvailableSlots({ selectedDate, selectedService, barberId
       }
     }
     fetchAvailability();
-  }, []);
+  }, [barberId]);
 
-  // useEffect 2 — carga slots ocupados cuando cambia la fecha
   useEffect(() => {
-    // Construye el rango del día completo en local time y lo manda como UTC
+    setLoading(true);
     const startOfDay = new Date(selectedDate);
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -44,20 +43,15 @@ export default function AvailableSlots({ selectedDate, selectedService, barberId
     )
       .then((res) => res.json())
       .then((data: string[]) => setBookedSlots(data))
-      .catch((err) => console.error("Could not load booked slots", err));
-  }, [selectedDate]);
+      .catch((err) => console.error("Could not load booked slots", err))
+      .finally(() => setLoading(false));
+  }, [selectedDate, barberId]);
 
   const dayOfWeek = selectedDate.getDay();
-
   const schedule = availability.find((a) => a.dayOfWeek === dayOfWeek);
-
-  if (!schedule) {
-    return <p>No availability for this day</p>;
-  }
 
   function generateSlots(start: string, end: string, interval = 60) {
     const slots: string[] = [];
-
     const [startHour, startMinute] = start.split(":").map(Number);
     const [endHour, endMinute] = end.split(":").map(Number);
 
@@ -78,45 +72,93 @@ export default function AvailableSlots({ selectedDate, selectedService, barberId
       );
       current.setMinutes(current.getMinutes() + interval);
     }
-
     return slots;
   }
 
-  const slots = schedule
-    ? generateSlots(schedule.startTime, schedule.endTime)
-    : [];
+  const allSlots = schedule ? generateSlots(schedule.startTime, schedule.endTime) : [];
+  const availableSlots = allSlots.filter((slot) => !bookedSlots.includes(slot));
+
+  if (!schedule) {
+    return (
+      <div className="bg-amber-50 border border-amber-100 rounded-4xl p-8 text-center">
+        <Clock className="mx-auto text-amber-400 mb-2" size={24} />
+        <p className="text-amber-800 font-bold">No availability</p>
+        <p className="text-amber-600 text-xs">The barber is not working on this day.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 max-h-125 flex flex-col">
+    <div className="bg-white border border-gray-100 rounded-[2.5rem] shadow-xl shadow-gray-100/50 p-6 flex flex-col h-125">
+      {/* Header Estático */}
+      <div className="mb-6 shrink-0 space-y-1">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+            Available Slots
+          </h3>
+        </div>
 
-      {/* Static Header */}
-      <div className="mb-6 shrink-0">
-        <h3 className="text-lg font-semibold text-gray-800">
-          Available Slots
-        </h3>
-        <p className="text-sm text-gray-500">
-          {selectedDate.toDateString()}
-        </p>
-        <p className="text-sm text-gray-400 mt-1">
-          Working hours: {schedule.startTime} - {schedule.endTime}
-        </p>
+        <div className="flex items-center gap-2 text-xs font-bold text-gray-400">
+          <CalendarCheck size={14} className="text-indigo-500" />
+          <span>{schedule.startTime} — {schedule.endTime}</span>
+        </div>
       </div>
 
-      {/* Scrollable List */}
-      <div className="space-y-3 overflow-y-auto pr-1">
-        {slots
-          .filter((slot) => !bookedSlots.includes(slot))
-          .map((slot) => (
-            <SlotCard
-              key={slot}
-              time={slot}
-              selectedDate={selectedDate}
-              barberId={barberId}
-              onBook={(bookedTime) => setBookedSlots((prev) => [...prev, bookedTime])}
-            />
-          ))}
+      {/* Lista con Scroll */}
+      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+        <AnimatePresence mode="popLayout">
+          {loading ? (
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-16 bg-gray-50 animate-pulse rounded-2xl w-full" />
+              ))}
+            </div>
+          ) : availableSlots.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-20"
+            >
+              <p className="text-gray-400 font-bold">Sold Out!</p>
+              <p className="text-gray-300 text-xs uppercase tracking-tighter">No slots available for this date.</p>
+            </motion.div>
+          ) : (
+            <div className="grid gap-3">
+              {availableSlots.map((slot, index) => (
+                <motion.div
+                  key={slot}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <SlotCard
+                    time={slot}
+                    selectedDate={selectedDate}
+                    barberId={barberId}
+                    onBook={(bookedTime) => setBookedSlots((prev) => [...prev, bookedTime])}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </AnimatePresence>
       </div>
 
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #e5e7eb;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #d1d5db;
+        }
+      `}</style>
     </div>
   );
 }
