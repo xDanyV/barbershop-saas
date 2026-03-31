@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { User, Phone, ArrowRight, Scissors, Star } from "lucide-react";
 
 type Barber = {
     id: string;
@@ -26,68 +28,120 @@ export default function BarbersPage() {
     }, []);
 
     return (
-        <div className="p-8 max-w-4xl mx-auto">
-
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-800">Our Barbers</h1>
-                <p className="text-gray-500 mt-1">Choose a barber to book your appointment</p>
-            </div>
+        <div className="p-8 max-w-5xl mx-auto min-h-screen">
+            {/* Header Section */}
+            <header className="mb-12 text-center md:text-left">
+                <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center justify-center md:justify-start gap-2 text-indigo-600 font-bold tracking-widest uppercase text-xs mb-3"
+                >
+                    <Scissors size={14} />
+                    <span>Professional Staff</span>
+                </motion.div>
+                <motion.h1
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight"
+                >
+                    Our Barbers
+                </motion.h1>
+                <motion.p
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="text-gray-500 mt-3 text-lg font-medium"
+                >
+                    Select an expert professional to elevate your style.
+                </motion.p>
+            </header>
 
             {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="bg-white border border-gray-200 rounded-2xl p-6 animate-pulse">
-                            <div className="flex items-center gap-4 mb-4">
-                                <div className="w-14 h-14 rounded-full bg-gray-100" />
-                                <div className="space-y-2 flex-1">
-                                    <div className="h-4 bg-gray-100 rounded w-3/4" />
-                                    <div className="h-3 bg-gray-100 rounded w-1/2" />
-                                </div>
+                        <div key={i} className="bg-white border border-gray-100 rounded-[2.5rem] p-8 animate-pulse shadow-sm">
+                            <div className="flex flex-col items-center text-center space-y-4">
+                                <div className="w-20 h-20 rounded-full bg-gray-100" />
+                                <div className="h-5 bg-gray-100 rounded w-3/4 mx-auto" />
+                                <div className="h-4 bg-gray-100 rounded w-1/2 mx-auto" />
+                                <div className="h-12 bg-gray-100 rounded-2xl w-full mt-4" />
                             </div>
-                            <div className="h-9 bg-gray-100 rounded-xl" />
                         </div>
                     ))}
                 </div>
             ) : barbers.length === 0 ? (
-                <div className="text-center py-16 text-gray-400">
-                    <p className="text-lg">No barbers available at the moment</p>
-                </div>
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center py-20 bg-gray-50 rounded-[3rem] border border-dashed border-gray-200"
+                >
+                    <User className="mx-auto text-gray-300 mb-4" size={48} />
+                    <p className="text-gray-500 font-bold text-xl">No barbers available</p>
+                    <p className="text-gray-400">Please check back later or contact support.</p>
+                </motion.div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <motion.div
+                    initial="hidden"
+                    animate="show"
+                    variants={{
+                        hidden: { opacity: 0 },
+                        show: {
+                            opacity: 1,
+                            transition: { staggerChildren: 0.1 }
+                        }
+                    }}
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
                     {barbers.map((barber) => {
                         const initials = barber.user.name
                             ? barber.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
                             : "B";
 
                         return (
-                            <div
+                            <motion.div
                                 key={barber.id}
-                                className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:border-indigo-300 hover:shadow-md transition-all duration-200"
+                                variants={{
+                                    hidden: { opacity: 0, y: 20 },
+                                    show: { opacity: 1, y: 0 }
+                                }}
+                                whileHover={{ y: -8 }}
+                                className="group relative bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm hover:shadow-2xl hover:shadow-indigo-100 transition-all duration-300 overflow-hidden"
                             >
-                                <div className="flex items-center gap-4 mb-5">
-                                    <div className="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-                                        <span className="text-indigo-600 font-semibold text-lg">{initials}</span>
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold text-gray-800">
-                                            {barber.user.name ?? "Barber"}
-                                        </p>
-                                        <p className="text-sm text-gray-400">{barber.user.phone}</p>
-                                    </div>
+                                {/* Decorative element */}
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <Scissors size={80} className="-rotate-12" />
                                 </div>
 
-                                <button
-                                    onClick={() => router.push(`/dashboard/customer?barberId=${barber.id}`)}
-                                    className="w-full py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition cursor-pointer"
-                                >
-                                    Book appointment
-                                </button>
-                            </div>
+                                <div className="flex flex-col items-center text-center relative z-10">
+                                    {/* Avatar with Gradient */}
+                                    <div className="w-20 h-20 rounded-4xl bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-5 shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform duration-300">
+                                        <span className="text-white font-black text-2xl tracking-tighter">{initials}</span>
+                                    </div>
+
+                                    <div className="mb-6">
+                                        <h3 className="font-black text-gray-900 text-xl tracking-tight mb-1">
+                                            {barber.user.name ?? "Master Barber"}
+                                        </h3>
+                                        <div className="flex items-center justify-center gap-1.5 text-gray-400 font-bold text-xs uppercase tracking-widest">
+                                            <Phone size={12} className="text-indigo-400" />
+                                            {barber.user.phone}
+                                        </div>
+                                    </div>
+
+                                    <motion.button
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => router.push(`/dashboard/customer?barberId=${barber.id}`)}
+                                        className="w-full py-4 rounded-[1.25rem] bg-gray-900 text-white text-sm font-black uppercase tracking-widest hover:bg-indigo-600 shadow-xl shadow-gray-200 hover:shadow-indigo-200 transition-all flex items-center justify-center gap-2 group-hover:gap-4"
+                                    >
+                                        Select Barber
+                                        <ArrowRight size={18} />
+                                    </motion.button>
+                                </div>
+                            </motion.div>
                         );
                     })}
-                </div>
+                </motion.div>
             )}
-
         </div>
     );
 }
