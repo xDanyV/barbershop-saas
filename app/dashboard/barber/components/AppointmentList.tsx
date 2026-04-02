@@ -1,6 +1,6 @@
 import AppointmentCard from "./AppointmentCard";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, Inbox } from "lucide-react";
+import { Calendar, Inbox, Ban } from "lucide-react";
 
 type Appointment = {
     id: string;
@@ -10,17 +10,40 @@ type Appointment = {
     status: "PENDING" | "CONFIRMED" | "COMPLETED";
 };
 
+type Exception = {
+    startDate: string;
+    endDate: string;
+};
+
 type Props = {
     appointments: Appointment[];
     onConfirm?: (id: string) => void;
     selectedDate: string;
+    exceptions?: Exception[];
 };
 
-export default function AppointmentList({ appointments, onConfirm, selectedDate }: Props) {
-    const formattedDate = new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", {
+export default function AppointmentList({ appointments, onConfirm, selectedDate, exceptions = [] }: Props) {
+
+    const [year, month, day] = selectedDate.split("-").map(Number);
+    const localDate = new Date(year, month - 1, day); // Mes es 0-indexed
+
+    const formattedDate = localDate.toLocaleDateString("en-US", {
         weekday: 'long',
         month: 'long',
         day: 'numeric',
+    });
+
+    const isExceptionDay = exceptions.some((e) => {
+        const currentDate = new Date(year, month - 1, day);
+        currentDate.setHours(0, 0, 0, 0);
+        
+        const [sYear, sMonth, sDay] = e.startDate.split("T")[0].split("-").map(Number);
+        const [eYear, eMonth, eDay] = e.endDate.split("T")[0].split("-").map(Number);
+
+        const start = new Date(sYear, sMonth - 1, sDay, 0, 0, 0, 0);
+        const end = new Date(eYear, eMonth - 1, eDay, 23, 59, 59, 999);
+
+        return currentDate >= start && currentDate <= end;
     });
 
     return (
@@ -50,8 +73,27 @@ export default function AppointmentList({ appointments, onConfirm, selectedDate 
             {/* Contenido con Scroll sutil si hay muchas citas */}
             <div className="flex-1">
                 <AnimatePresence mode="popLayout">
-                    {appointments.length === 0 ? (
+
+                    {isExceptionDay ? (
                         <motion.div
+                            key="exception"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            className="flex flex-col items-center justify-center py-24 text-center"
+                        >
+                            <div className="w-20 h-20 bg-purple-50 rounded-4xl flex items-center justify-center mb-4 border border-purple-100">
+                                <Ban className="text-purple-300" size={32} />
+                            </div>
+                            <p className="text-gray-700 font-semibold">Day blocked</p>
+                            <p className="text-gray-400 text-xs uppercase tracking-tighter mt-1 font-bold">
+                                This day has an active exception
+                            </p>
+                        </motion.div>
+
+                    ) : appointments.length === 0 ? (
+                        <motion.div
+                            key="empty"
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
@@ -61,8 +103,11 @@ export default function AppointmentList({ appointments, onConfirm, selectedDate 
                                 <Inbox className="text-gray-200" size={32} />
                             </div>
                             <p className="text-gray-400 font-semibold">No appointments scheduled</p>
-                            <p className="text-gray-300 text-xs uppercase tracking-tighter mt-1 font-bold">Enjoy your free time!</p>
+                            <p className="text-gray-300 text-xs uppercase tracking-tighter mt-1 font-bold">
+                                Enjoy your free time!
+                            </p>
                         </motion.div>
+
                     ) : (
                         <div className="grid grid-cols-1 gap-4">
                             {appointments.map((appointment, idx) => (
@@ -81,6 +126,7 @@ export default function AppointmentList({ appointments, onConfirm, selectedDate 
                             ))}
                         </div>
                     )}
+
                 </AnimatePresence>
             </div>
         </div>

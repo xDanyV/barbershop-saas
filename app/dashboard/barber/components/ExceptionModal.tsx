@@ -8,9 +8,10 @@ import { X } from "lucide-react";
 type Props = {
     open: boolean;
     onClose: () => void;
+    onSuccess: () => void;
 };
 
-export default function ExceptionModal({ open, onClose }: Props) {
+export default function ExceptionModal({ open, onClose, onSuccess }: Props) {
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [reason, setReason] = useState("");
@@ -51,6 +52,7 @@ export default function ExceptionModal({ open, onClose }: Props) {
             }
 
             toast.success("Exception saved — affected appointments have been cancelled");
+            onSuccess();
             handleClose();
 
         } catch {
