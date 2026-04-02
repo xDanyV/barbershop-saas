@@ -128,7 +128,7 @@ export default function CustomerHome() {
         {loading ? (
           <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-32 bg-gray-50 border border-gray-100 rounded-[2rem] animate-pulse" />
+              <div key={i} className="h-32 bg-gray-50 border border-gray-100 rounded-4xl animate-pulse" />
             ))}
           </motion.div>
         ) : list.length === 0 ? (
@@ -172,10 +172,10 @@ export default function CustomerHome() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="group bg-white border border-gray-100 rounded-[2rem] p-5 shadow-sm hover:shadow-xl hover:shadow-gray-100/50 transition-all flex flex-col sm:flex-row items-center gap-6"
+                  className="group bg-white border border-gray-100 rounded-4xl p-5 shadow-sm hover:shadow-xl hover:shadow-gray-100/50 transition-all flex flex-col sm:flex-row items-center gap-6"
                 >
                   {/* Date Badge */}
-                  <div className="bg-indigo-50/50 border border-indigo-100 rounded-[1.5rem] px-5 py-4 text-center min-w-[80px] group-hover:bg-indigo-600 group-hover:border-indigo-600 transition-colors">
+                  <div className="bg-indigo-50/50 border border-indigo-100 rounded-3xl px-5 py-4 text-center min-w-20 group-hover:bg-indigo-600 group-hover:border-indigo-600 transition-colors">
                     <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest group-hover:text-indigo-200">
                       {date.toLocaleDateString("en-US", { month: "short" })}
                     </p>
@@ -189,9 +189,9 @@ export default function CustomerHome() {
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                       <h3 className="font-black text-gray-900 text-lg tracking-tight">{a.service.name}</h3>
                       <span className={`w-fit mx-auto sm:mx-0 text-[10px] px-3 py-0.5 rounded-full font-black uppercase tracking-widest border ${a.status === "CONFIRMED" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
-                          a.status === "COMPLETED" ? "bg-gray-50 text-gray-400 border-gray-100" :
-                            a.status === "CANCELLED" ? "bg-red-50 text-red-600 border-red-100" :
-                              "bg-amber-50 text-amber-600 border-amber-100"
+                        a.status === "COMPLETED" ? "bg-gray-50 text-gray-400 border-gray-100" :
+                          a.status === "CANCELLED" ? "bg-red-50 text-red-600 border-red-100" :
+                            "bg-amber-50 text-amber-600 border-amber-100"
                         }`}>
                         {a.status}
                       </span>

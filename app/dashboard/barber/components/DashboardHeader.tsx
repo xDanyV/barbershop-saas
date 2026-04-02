@@ -7,7 +7,11 @@ import ExceptionModal from "./ExceptionModal";
 import { Clock, Calendar as CalendarIcon, Scissors, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
-export default function DashboardHeader() {
+type Props = {
+    onExceptionAdded: () => void;
+};
+
+export default function DashboardHeader({ onExceptionAdded }: Props) {
     const router = useRouter();
     const [time, setTime] = useState<Date | null>(null);
     const [exceptionOpen, setExceptionOpen] = useState(false);
@@ -75,7 +79,11 @@ export default function DashboardHeader() {
                 </div>
             </header>
 
-            <ExceptionModal open={exceptionOpen} onClose={() => setExceptionOpen(false)} />
+            <ExceptionModal
+                open={exceptionOpen}
+                onClose={() => setExceptionOpen(false)}
+                onSuccess={onExceptionAdded}
+            />
         </>
     );
 }
