@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { Toaster } from "react-hot-toast";
+import { Toaster, toast } from "react-hot-toast";
 import { motion } from "framer-motion";
 
 export default function DashboardNavbar({ role }: { role: string }) {
@@ -22,16 +22,49 @@ export default function DashboardNavbar({ role }: { role: string }) {
         await fetch("/api/logout", { method: "POST" });
         router.push("/login");
     };
+    const handleNavigation = async (path: string) => {
+        if (role === "CUSTOMER" && path === "/dashboard/customer/barbers") {
+            try {
+                const response = await fetch("/api/protected/appointments/user");
+                const data = await response.json();
+
+                if (Array.isArray(data)) {
+                    const activeCount = data.filter(
+                        (a: any) => a.status === "PENDING" || a.status === "CONFIRMED"
+                    ).length;
+
+                    if (activeCount >= 2) {
+                        toast.error("You can only have a maximum of 2 active appointments.", {
+                            id: "limit",
+                            icon: '🚫',
+                            style: {
+                                borderRadius: '8px',
+                                background: '#FFFFFF',
+                                color: '#1e293b',
+                                border: '1px solid #e2e8f0',
+                                fontSize: '14px',
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                            },
+                        });
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error("Error checking appointments:", error);
+            }
+        }
+        router.push(path);
+    };
 
     return (
         <>
-            <motion.header 
+            <motion.header
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 className="bg-indigo-950 text-white px-8 py-3 flex justify-between items-center shadow-lg border-b border-indigo-800/50 sticky top-0 z-50"
             >
                 <div className="flex items-center gap-12">
-                    <div 
+                    <div
                         className="flex items-center gap-2 cursor-pointer"
                         onClick={() => router.push("/dashboard/customer/home")}
                     >
@@ -49,13 +82,13 @@ export default function DashboardNavbar({ role }: { role: string }) {
                             return (
                                 <button
                                     key={item.path}
-                                    onClick={() => router.push(item.path)}
+                                    onClick={() => handleNavigation(item.path)}
                                     className={`relative px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md
                                         ${isActive ? "text-white" : "text-indigo-300 hover:text-white hover:bg-white/5"}`}
                                 >
                                     {item.name}
                                     {isActive && (
-                                        <motion.div 
+                                        <motion.div
                                             layoutId="activeTab"
                                             className="absolute bottom-0 left-2 right-2 h-0.5 bg-indigo-400 rounded-full"
                                         />
