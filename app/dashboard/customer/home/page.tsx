@@ -34,15 +34,49 @@ export default function CustomerHome() {
     fetch("/api/protected/appointments/user")
       .then((res) => res.json())
       .then((data: Appointment[]) => {
-        const now = new Date();
-        const upcoming = data.filter((a) => new Date(a.date) >= now);
-        const history = data.filter((a) => new Date(a.date) < now);
+        const nowMs = Date.now();
+        const ONE_HOUR_MS = 60 * 60 * 1000;
+
+        const upcoming = data.filter((a) => {
+          const apptMs = new Date(a.date).getTime();
+          return a.status !== "CANCELLED" && (apptMs + ONE_HOUR_MS) > nowMs;
+        });
+
+        const history = data.filter((a) => {
+          const apptMs = new Date(a.date).getTime();
+          return a.status === "CANCELLED" || (apptMs + ONE_HOUR_MS) <= nowMs;
+        });
+
         setAppointments(upcoming);
         setHistory(history);
       })
       .catch(() => console.error("Could not load appointments"))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleNewBooking = () => {
+    const activeAppointments = appointments.filter(
+      (a) => a.status === "PENDING" || a.status === "CONFIRMED"
+    );
+
+    if (activeAppointments.length >= 2) {
+      toast.error("You can only have a maximum of 2 active appointments.", {
+        id: "limit", // Evita el spam
+        icon: '🚫',
+        style: {
+          borderRadius: '8px',
+          background: '#FFFFFF', // Fondo blanco puro
+          color: '#1e293b',      // Texto slate-800 (gris muy oscuro)
+          border: '1px solid #e2e8f0', // Borde gris suave
+          fontSize: '14px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        },
+      });
+      return;
+    }
+
+    router.push("/dashboard/customer/barbers");
+  };
 
   const handleCancel = async (appointmentId: string, appointmentDate: string) => {
     const hoursUntil = (new Date(appointmentDate).getTime() - Date.now()) / (1000 * 60 * 60);
@@ -93,7 +127,7 @@ export default function CustomerHome() {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => router.push("/dashboard/customer/barbers")}
+          onClick={handleNewBooking}
           className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all"
         >
           <Plus size={18} />

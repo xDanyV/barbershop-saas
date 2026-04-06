@@ -4,7 +4,7 @@ import { jwtVerify } from "jose";
 
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
 
   if (!token) {
     if (pathname.startsWith("/api")) {// If it's an API route, return a 401 response
@@ -44,6 +44,37 @@ export async function middleware(request: NextRequest) {
     if (payload.barberId) {
       requestHeaders.set("x-barber-id", String(payload.barberId));
     }
+
+    const isBookingRoute =
+      pathname === "/dashboard/customer/barbers" ||
+      (pathname === "/dashboard/customer" && searchParams.has("barberId"));
+
+    if (isBookingRoute && payload.role === "CUSTOMER") {
+      try {
+        const response = await fetch(`${request.nextUrl.origin}/api/protected/appointments/user`, {
+          headers: { Cookie: `token=${token}` },
+        });
+
+        const data = await response.json();
+
+        if (Array.isArray(data)) {
+          const activeAppointments = data.filter(
+            (a) => a.status === "PENDING" || a.status === "CONFIRMED"
+          );
+
+          if (activeAppointments.length >= 2) {
+            const responseRedirect = NextResponse.redirect(new URL("/dashboard/customer/home", request.url));
+
+            responseRedirect.headers.set('Cache-Control', 'no-store, max-age=0');
+            return responseRedirect;
+          }
+        }
+      } catch (err) {
+        console.error("Error checking active appointments:", err);
+      }
+    }
+
+
 
     if (pathname.startsWith("/dashboard/barber") && payload.role !== "BARBER") {
       return NextResponse.redirect(new URL("/dashboard/customer/home", request.url));

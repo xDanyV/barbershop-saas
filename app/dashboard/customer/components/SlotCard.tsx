@@ -5,6 +5,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { CalendarDays, Clock, Scissors, DollarSign, X, ChevronRight, Check } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type Service = {
   id: string;
@@ -32,6 +33,7 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const service = services.find((s) => s.id === selectedService);
+  const router = useRouter();
 
   useEffect(() => {
     if (!popoverOpen || services.length > 0) return;
@@ -105,6 +107,7 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
       onBook?.(time, selectedService);
       setModalOpen(false);
       setSelectedService(null);
+      window.location.href = "/dashboard/customer/home";
     } catch {
       toast.error("Network error, please try again");
     } finally {
