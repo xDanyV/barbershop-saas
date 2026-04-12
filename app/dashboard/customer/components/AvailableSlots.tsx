@@ -76,7 +76,26 @@ export default function AvailableSlots({ selectedDate, selectedService, barberId
   }
 
   const allSlots = schedule ? generateSlots(schedule.startTime, schedule.endTime) : [];
-  const availableSlots = allSlots.filter((slot) => !bookedSlots.includes(slot));
+
+  const availableSlots = allSlots.filter((slot) => {
+    if (bookedSlots.includes(slot)) return false;
+
+    const now = new Date();
+    const isToday = selectedDate.toDateString() === now.toDateString();
+
+    if (isToday) {
+      const [time, modifier] = slot.split(" ");
+      let [hours, minutes] = time.split(":").map(Number);
+
+      if (modifier === "PM" && hours < 12) hours += 12;
+      if (modifier === "AM" && hours === 12) hours = 0;
+
+      const slotTime = new Date(now);
+      slotTime.setHours(hours, minutes, 0, 0);
+      return slotTime > now;
+    }
+    return true;
+  });
 
   if (!schedule) {
     return (
