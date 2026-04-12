@@ -5,9 +5,6 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Info } from "lucide-react";
 
-// Importante: No eliminamos el import de la base, pero lo estilizaremos encima
-import "react-calendar/dist/Calendar.css";
-
 type Exception = {
   startDate: string;
   endDate: string;
