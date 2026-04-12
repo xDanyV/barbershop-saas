@@ -45,11 +45,17 @@ export default function CalendarPicker({ selectedDate, setSelectedDate, barberId
 
   const isException = (date: Date): boolean => {
     return exceptions.some((e) => {
-      const start = new Date(e.startDate);
-      const end = new Date(e.endDate);
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-      return date >= start && date <= end;
+      // Parse date-only strings directly to avoid UTC offset issues
+      const [sy, sm, sd] = e.startDate.split("T")[0].split("-").map(Number);
+      const [ey, em, ed] = e.endDate.split("T")[0].split("-").map(Number);
+
+      const start = new Date(sy, sm - 1, sd, 0, 0, 0, 0);
+      const end = new Date(ey, em - 1, ed, 23, 59, 59, 999);
+
+      const check = new Date(date);
+      check.setHours(12, 0, 0, 0); // noon to avoid any DST edge cases
+
+      return check >= start && check <= end;
     });
   };
 
@@ -59,87 +65,6 @@ export default function CalendarPicker({ selectedDate, setSelectedDate, barberId
       animate={{ opacity: 1, y: 0 }}
       className="relative"
     >
-      <style jsx global>{`
-        .react-calendar {
-          width: 100% !important;
-          border: none !important;
-          font-family: inherit !important;
-          padding: 10px;
-        }
-        /* Header del calendario */
-        .react-calendar__navigation {
-          margin-bottom: 20px !important;
-          height: 44px !important;
-        }
-        .react-calendar__navigation button {
-          font-weight: 800 !important;
-          text-transform: uppercase !important;
-          letter-spacing: 0.1em !important;
-          font-size: 0.8rem !important;
-          color: #111827 !important;
-          border-radius: 12px !important;
-        }
-        .react-calendar__navigation button:hover {
-          background-color: #f3f4f6 !important;
-        }
-        /* Días de la semana */
-        .react-calendar__month-view__weekdays {
-          font-weight: 700 !important;
-          text-transform: uppercase !important;
-          font-size: 0.65rem !important;
-          letter-spacing: 0.1em !important;
-          color: #9ca3af !important;
-          margin-bottom: 10px !important;
-        }
-        .react-calendar__month-view__weekdays abbr {
-          text-decoration: none !important;
-        }
-        /* Los tiles (celdas) */
-        .react-calendar__tile {
-          padding: 1.25em 0.5em !important;
-          font-weight: 700 !important;
-          font-size: 0.9rem !important;
-          color: #374151 !important;
-          border-radius: 16px !important;
-          transition: all 0.2s ease !important;
-          position: relative !important;
-          display: flex !important;
-          flex-direction: column !important;
-          align-items: center !important;
-        }
-        /* Día seleccionado */
-        .react-calendar__tile--active {
-          background: #4f46e5 !important;
-          color: white !important;
-          box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3) !important;
-        }
-        .react-calendar__tile--active:enabled:hover {
-          background: #4338ca !important;
-        }
-        /* Día de hoy */
-        .react-calendar__tile--now {
-          background: #fef2f2 !important;
-          color: #ef4444 !important;
-        }
-        /* Días deshabilitados (No disponible o Excepción) */
-        .react-calendar__tile:disabled {
-          background-color: transparent !important;
-          color: #d1d5db !important;
-          cursor: not-allowed !important;
-          font-weight: 400 !important;
-        }
-        /* Indicador de Excepción */
-        .exception-day {
-          text-decoration: line-through !important;
-          color: #9ca3af !important;
-        }
-        /* Efecto hover en días válidos */
-        .react-calendar__tile:enabled:hover {
-          background-color: #eef2ff !important;
-          color: #4f46e5 !important;
-        }
-      `}</style>
-
       <Calendar
         value={selectedDate}
         onChange={(value) => setSelectedDate(value as Date)}
