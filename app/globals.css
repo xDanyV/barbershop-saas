@@ -106,3 +106,87 @@ body {
   line-height: 1;
   margin-top: 2px;
 }
+
+/* react-calendar custom styles */
+.react-calendar {
+  width: 100% !important;
+  border: none !important;
+  font-family: inherit !important;
+  padding: 10px;
+}
+
+.react-calendar__navigation {
+  margin-bottom: 20px !important;
+  height: 44px !important;
+}
+
+.react-calendar__navigation button {
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  font-size: 0.8rem !important;
+  color: #111827 !important;
+  border-radius: 12px !important;
+}
+
+.react-calendar__navigation button:hover {
+  background-color: #f3f4f6 !important;
+}
+
+.react-calendar__month-view__weekdays {
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  font-size: 0.65rem !important;
+  letter-spacing: 0.1em !important;
+  color: #9ca3af !important;
+  margin-bottom: 10px !important;
+}
+
+.react-calendar__month-view__weekdays abbr {
+  text-decoration: none !important;
+}
+
+.react-calendar__tile {
+  padding: 1.25em 0.5em !important;
+  font-weight: 700 !important;
+  font-size: 0.9rem !important;
+  color: #374151 !important;
+  border-radius: 16px !important;
+  transition: all 0.2s ease !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+.react-calendar__tile--active {
+  background: #4f46e5 !important;
+  color: white !important;
+  box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3) !important;
+}
+
+.react-calendar__tile--active:enabled:hover {
+  background: #4338ca !important;
+}
+
+.react-calendar__tile--now {
+  background: #fef2f2 !important;
+  color: #ef4444 !important;
+}
+
+.react-calendar__tile:disabled {
+  background-color: transparent !important;
+  color: #d1d5db !important;
+  cursor: not-allowed !important;
+  font-weight: 400 !important;
+}
+
+.exception-day {
+  text-decoration: line-through !important;
+  color: #9ca3af !important;
+}
+
+.react-calendar__tile:enabled:hover {
+  background-color: #eef2ff !important;
+  color: #4f46e5 !important;
+}
