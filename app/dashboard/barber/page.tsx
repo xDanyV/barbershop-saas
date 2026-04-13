@@ -17,6 +17,8 @@ type RawAppointment = {
 type Appointment = {
   id: string;
   customerName: string;
+  customerEmail: string; // Agrégalos aquí
+  customerPhone: string; // Agrégalos aquí
   service: string;
   time: string;
   status: "PENDING" | "CONFIRMED" | "COMPLETED";
@@ -64,10 +66,9 @@ export default function BarberDashboard() {
 
   const filterDate = date || new Date().toISOString().split("T")[0];
 
-  const appointments: Appointment[] = raw
+  const appointments: Appointment[] = (raw as any[]) // Forzamos raw como array de cualquier cosa
     .filter((a) => a.date.split("T")[0] === filterDate)
     .map((a) => {
-
       const isPast = new Date(a.date) < new Date();
 
       let status: "PENDING" | "CONFIRMED" | "COMPLETED" =
@@ -77,15 +78,19 @@ export default function BarberDashboard() {
 
       return {
         id: a.id,
-        customerName: a.user.name ?? "Unknown",
-        service: a.service.name,
+        customerName: a.user?.name ?? "Unknown",
+        customerEmail: a.user?.email ?? "", // Ahora sí te dejará
+        customerPhone: a.user?.phone ?? "", // Ahora sí te dejará
+        service: a.service?.name ?? "Service",
         time: new Date(a.date).toLocaleTimeString("en-US", {
           hour: "2-digit",
           minute: "2-digit",
+          hour12: true
         }),
         status,
       };
     });
+
   const appointmentCounts = raw.reduce<Record<string, number>>((acc, a) => {
     const key = a.date.split("T")[0];
     acc[key] = (acc[key] || 0) + 1;
