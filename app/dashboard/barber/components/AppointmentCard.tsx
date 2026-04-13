@@ -1,13 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import toast from "react-hot-toast";
-import { CheckCircle2, Clock, User, Scissors } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock,
+  User,
+  Scissors,
+  Mail,
+  Phone,
+  ExternalLink,
+  MessageCircle,
+} from "lucide-react";
 import { motion } from "framer-motion";
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from "@headlessui/react";
 
 type Appointment = {
   id: string;
   customerName: string;
+  customerEmail: string;
+  customerPhone: string;
   service: string;
   time: string;
   status: "PENDING" | "CONFIRMED" | "COMPLETED";
@@ -18,33 +35,36 @@ type Props = {
   onConfirm?: (id: string) => void;
 };
 
-export default function AppointmentCard({ appointment, onConfirm }: Props) {
+export default function AppointmentCard({
+  appointment,
+  onConfirm,
+}: Props) {
   const [status, setStatus] = useState(appointment.status);
   const [loading, setLoading] = useState(false);
 
   const handleConfirm = async () => {
     setLoading(true);
-    try {
-      const res = await fetch(`/api/protected/appointments/${appointment.id}/confirm`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "CONFIRMED" }),
-      });
 
-      const data = await res.json();
+    try {
+      const res = await fetch(
+        `/api/protected/appointments/${appointment.id}/confirm`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "CONFIRMED" }),
+        }
+      );
 
       if (!res.ok) {
-        toast.error(data.error ?? "Could not confirm appointment");
+        toast.error("Could not confirm appointment");
         return;
       }
 
       setStatus("CONFIRMED");
-      // Notificamos al padre para que refresque la lista si es necesario
       onConfirm?.(appointment.id);
-      toast.success(`${appointment.customerName} confirmed for ${appointment.time}`);
-
+      toast.success(`Cita de ${appointment.customerName} confirmada`);
     } catch {
-      toast.error("Network error, please try again");
+      toast.error("Error de red");
     } finally {
       setLoading(false);
     }
@@ -57,54 +77,137 @@ export default function AppointmentCard({ appointment, onConfirm }: Props) {
   };
 
   return (
-    <motion.div
-      whileHover={{ y: -2 }}
-      className="group border border-gray-100 rounded-2xl p-4 flex justify-between items-center bg-white shadow-sm hover:shadow-md hover:border-indigo-100 transition-all duration-200"
-    >
-      <div className="flex items-center gap-4">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${status === "PENDING" ? "bg-amber-50 text-amber-500" : "bg-indigo-50 text-indigo-500"
-          }`}>
-          {status === "COMPLETED" ? <CheckCircle2 size={20} /> : <User size={20} />}
-        </div>
+    <Popover className="relative">
+      {({ open }) => (
+        <motion.div
+          whileHover={{ y: -2 }}
+          className={`relative border border-gray-100 rounded-2xl p-4 flex justify-between items-center bg-white shadow-sm hover:shadow-md transition-all duration-200 ${open ? "z-50" : "z-0 hover:z-20"
+            }`}
+        >
+          <div className="flex items-center gap-4">
+            <PopoverButton className="flex items-center gap-4 focus:outline-none group/btn text-left cursor-pointer">
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${status === "PENDING"
+                    ? "bg-amber-50 text-amber-500"
+                    : "bg-indigo-50 text-indigo-500"
+                  }`}
+              >
+                {status === "COMPLETED" ? (
+                  <CheckCircle2 size={20} />
+                ) : (
+                  <User size={20} />
+                )}
+              </div>
 
-        <div>
-          <p className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">
-            {appointment.customerName}
-          </p>
-          <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
-            <span className="flex items-center gap-1">
-              <Scissors size={12} />
-              {appointment.service}
-            </span>
-          </div>
-        </div>
-      </div>
+              <div>
+                <p className="font-bold text-gray-900 group-hover/btn:text-indigo-600 transition-colors flex items-center gap-1">
+                  {appointment.customerName}
+                  <ExternalLink
+                    size={12}
+                    className="opacity-0 group-hover/btn:opacity-100 transition-opacity text-gray-400"
+                  />
+                </p>
 
-      <div className="text-right flex flex-col items-end gap-2">
-        <div className="flex items-center gap-1.5 text-sm font-bold text-gray-700 bg-gray-50 px-2 py-1 rounded-lg">
-          <Clock size={14} className="text-indigo-500" />
-          {appointment.time}
-        </div>
+                <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                  <span className="flex items-center gap-1">
+                    <Scissors size={12} />
+                    {appointment.service}
+                  </span>
+                </div>
+              </div>
+            </PopoverButton>
 
-        <div className="flex gap-2 items-center">
-          <span
-            className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${statusStyles[status as keyof typeof statusStyles]
-              }`}
-          >
-            {status}
-          </span>
-
-          {status === "PENDING" && (
-            <button
-              onClick={handleConfirm}
-              disabled={loading}
-              className="text-xs px-4 py-1.5 rounded-full bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            <Transition
+              as={Fragment}
+              enter="transition ease-out duration-200"
+              enterFrom="opacity-0 translate-y-1"
+              enterTo="opacity-100 translate-y-0"
+              leave="transition ease-in duration-150"
+              leaveFrom="opacity-100 translate-y-0"
+              leaveTo="opacity-0 translate-y-1"
             >
-              {loading ? "..." : "Confirm"}
-            </button>
-          )}
-        </div>
-      </div>
-    </motion.div>
+              <PopoverPanel className="absolute left-0 top-full z-50 mt-3 w-64 px-4">
+                <div className="overflow-hidden rounded-2xl shadow-xl ring-1 ring-black/5 bg-white p-4">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
+                    Detalles del Cliente
+                  </p>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between group/item">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                          <Phone size={14} />
+                        </div>
+
+                        <div>
+                          <p className="text-xs text-gray-400 font-medium leading-none">
+                            Teléfono
+                          </p>
+                          <p className="text-sm font-bold text-gray-700">
+                            {appointment.customerPhone || "No provisto"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {appointment.customerPhone && (
+                        <a
+                          href={`https://wa.me/${appointment.customerPhone}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 rounded-lg bg-gray-50 text-gray-400 hover:bg-emerald-500 hover:text-white transition-all"
+                        >
+                          <MessageCircle size={14} />
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <Mail size={14} />
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-400 font-medium leading-none">
+                          Email
+                        </p>
+                        <p className="text-sm font-bold text-gray-700 truncate">
+                          {appointment.customerEmail || "No provisto"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </PopoverPanel>
+            </Transition>
+          </div>
+
+          <div className="text-right flex flex-col items-end gap-2">
+            <div className="flex items-center gap-1.5 text-sm font-bold text-gray-700 bg-gray-50 px-2 py-1 rounded-lg">
+              <Clock size={14} className="text-indigo-500" />
+              {appointment.time}
+            </div>
+
+            <div className="flex gap-2 items-center">
+              <span
+                className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${statusStyles[status]
+                  }`}
+              >
+                {status}
+              </span>
+
+              {status === "PENDING" && (
+                <button
+                  onClick={handleConfirm}
+                  disabled={loading}
+                  className="text-xs px-4 py-1.5 rounded-full bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all cursor-pointer"
+                >
+                  {loading ? "..." : "Confirmar"}
+                </button>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </Popover>
   );
 }

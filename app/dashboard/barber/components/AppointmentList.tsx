@@ -3,11 +3,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, Inbox, Ban } from "lucide-react";
 
 type Appointment = {
-    id: string;
-    customerName: string;
-    service: string;
-    time: string;
-    status: "PENDING" | "CONFIRMED" | "COMPLETED";
+  id: string;
+  customerName: string;
+  customerEmail: string; // Agrégalos aquí
+  customerPhone: string; // Agrégalos aquí
+  service: string;
+  time: string;
+  status: "PENDING" | "CONFIRMED" | "COMPLETED";
 };
 
 type Exception = {
@@ -24,7 +26,8 @@ type Props = {
 
 export default function AppointmentList({ appointments, onConfirm, selectedDate, exceptions = [] }: Props) {
 
-    const [year, month, day] = selectedDate.split("-").map(Number);
+    const dateToProcess = selectedDate || new Date().toISOString().split('T')[0];
+    const [year, month, day] = dateToProcess.split("-").map(Number);
     const localDate = new Date(year, month - 1, day); // Mes es 0-indexed
 
     const formattedDate = localDate.toLocaleDateString("en-US", {
@@ -34,9 +37,10 @@ export default function AppointmentList({ appointments, onConfirm, selectedDate,
     });
 
     const isExceptionDay = exceptions.some((e) => {
+
         const currentDate = new Date(year, month - 1, day);
         currentDate.setHours(0, 0, 0, 0);
-        
+
         const [sYear, sMonth, sDay] = e.startDate.split("T")[0].split("-").map(Number);
         const [eYear, eMonth, eDay] = e.endDate.split("T")[0].split("-").map(Number);
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBarberAppointments } from "@/lib/services/appointment.service";
 import { prisma } from "@/lib/prisma";
+import { a } from "framer-motion/client";
 
 // Get all appointments for the authenticated barber
 export async function GET(request: NextRequest) {
@@ -40,6 +41,7 @@ export async function GET(request: NextRequest) {
         }
 
         const appointments = await getBarberAppointments(barber.id);
+
 
         return NextResponse.json(appointments);
 
