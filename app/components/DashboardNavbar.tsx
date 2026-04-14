@@ -73,7 +73,7 @@ export default function DashboardNavbar({ role }: { role: string }) {
                         className="flex items-center gap-2 cursor-pointer"
                         onClick={() => router.push(role === "BARBER" ? "/dashboard/barber" : "/dashboard/customer/home")}
                     >
-                        <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center font-bold shadow-inner flex-shrink-0">
+                        <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center font-bold shadow-inner shrink-0">
                             B
                         </div>
                         <h1 className="text-base sm:text-lg font-bold tracking-tighter uppercase">

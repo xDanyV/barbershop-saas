@@ -59,35 +59,35 @@ export default function ServiceList({ onEdit }: Props) {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {services.map((service, index) => (
                 <motion.div
                     key={service.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="group bg-white border border-gray-100 p-5 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-100 transition-all flex justify-between items-center"
+                    className="group bg-white border border-gray-100 p-4 md:p-5 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-100 transition-all flex justify-between items-center gap-4"
                 >
-                    <div>
-                        <h3 className="font-bold text-gray-900 text-lg group-hover:text-indigo-600 transition-colors">
+                    <div className="min-w-0 flex-1"> {/* min-w-0 permite que el texto se trunque si es necesario */}
+                        <h3 className="font-bold text-gray-900 text-base md:text-lg group-hover:text-indigo-600 transition-colors truncate">
                             {service.name}
                         </h3>
-                        <div className="flex gap-4 mt-2">
-                            <span className="flex items-center gap-1 text-sm font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-md">
+                        <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2">
+                            <span className="flex items-center gap-1 text-xs md:text-sm font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md">
                                 <DollarSign size={14} />
                                 {service.price.toFixed(2)}
                             </span>
-                            <span className="flex items-center gap-1 text-sm text-gray-500">
+                            <span className="flex items-center gap-1 text-xs md:text-sm text-gray-400 font-medium">
                                 <Clock size={14} />
                                 {service.duration} min
                             </span>
                         </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 md:gap-2 shrink-0">
                         <button
                             onClick={() => onEdit(service)}
-                            className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                            className="p-2.5 md:p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl md:rounded-lg transition-all active:scale-90"
                             title="Edit"
                         >
                             <Edit2 size={18} />
@@ -95,26 +95,29 @@ export default function ServiceList({ onEdit }: Props) {
                         <button
                             onClick={() => {
                                 toast((t) => (
-                                    <div className="flex flex-col gap-3 p-1">
-                                        <p className="text-sm font-medium">Delete "{service.name}"?</p>
+                                    <div className="flex flex-col gap-3 p-1 min-w-[200px]">
+                                        <p className="text-sm font-semibold text-gray-800">Delete "{service.name}"?</p>
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => { handleDelete(service.id); toast.dismiss(t.id); }}
-                                                className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold"
+                                                className="flex-1 bg-red-500 text-white px-3 py-2 rounded-lg text-xs font-bold active:bg-red-600"
                                             >
                                                 Confirm
                                             </button>
                                             <button
                                                 onClick={() => toast.dismiss(t.id)}
-                                                className="bg-gray-100 px-3 py-1.5 rounded-lg text-xs font-bold"
+                                                className="flex-1 bg-gray-100 text-gray-600 px-3 py-2 rounded-lg text-xs font-bold active:bg-gray-200"
                                             >
                                                 Cancel
                                             </button>
                                         </div>
                                     </div>
-                                ));
+                                ), {
+                                    duration: 4000,
+                                    position: 'bottom-center', // Mejor posición para pulgares en móvil
+                                });
                             }}
-                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                            className="p-2.5 md:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl md:rounded-lg transition-all active:scale-90"
                             title="Delete"
                         >
                             <Trash2 size={18} />

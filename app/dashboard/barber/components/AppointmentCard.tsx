@@ -81,13 +81,13 @@ export default function AppointmentCard({
       {({ open }) => (
         <motion.div
           whileHover={{ y: -2 }}
-          className={`relative border border-gray-100 rounded-2xl p-4 flex justify-between items-center bg-white shadow-sm hover:shadow-md transition-all duration-200 ${open ? "z-50" : "z-0 hover:z-20"
+          className={`relative border border-gray-100 rounded-2xl p-3 md:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white shadow-sm hover:shadow-md transition-all duration-200 gap-4 ${open ? "z-50" : "z-0 hover:z-20"
             }`}
         >
-          <div className="flex items-center gap-4">
-            <PopoverButton className="flex items-center gap-4 focus:outline-none group/btn text-left cursor-pointer">
+          <div className="flex items-center gap-3 md:gap-4 w-full sm:w-auto">
+            <PopoverButton className="flex items-center gap-3 md:gap-4 focus:outline-none group/btn text-left cursor-pointer min-w-0 flex-1">
               <div
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${status === "PENDING"
+                className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center transition-colors ${status === "PENDING"
                     ? "bg-amber-50 text-amber-500"
                     : "bg-indigo-50 text-indigo-500"
                   }`}
@@ -99,18 +99,18 @@ export default function AppointmentCard({
                 )}
               </div>
 
-              <div>
-                <p className="font-bold text-gray-900 group-hover/btn:text-indigo-600 transition-colors flex items-center gap-1">
-                  {appointment.customerName}
+              <div className="min-w-0">
+                <p className="font-bold text-gray-900 group-hover/btn:text-indigo-600 transition-colors flex items-center gap-1 text-sm md:text-base">
+                  <span className="truncate">{appointment.customerName}</span>
                   <ExternalLink
                     size={12}
-                    className="opacity-0 group-hover/btn:opacity-100 transition-opacity text-gray-400"
+                    className="opacity-0 group-hover/btn:opacity-100 transition-opacity text-gray-400 shrink-0"
                   />
                 </p>
 
-                <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
-                  <span className="flex items-center gap-1">
-                    <Scissors size={12} />
+                <div className="flex items-center gap-2 text-[11px] md:text-xs text-gray-500 mt-0.5">
+                  <span className="flex items-center gap-1 truncate">
+                    <Scissors size={12} className="shrink-0" />
                     {appointment.service}
                   </span>
                 </div>
@@ -126,7 +126,7 @@ export default function AppointmentCard({
               leaveFrom="opacity-100 translate-y-0"
               leaveTo="opacity-0 translate-y-1"
             >
-              <PopoverPanel className="absolute left-0 top-full z-50 mt-3 w-64 px-4">
+              <PopoverPanel className="absolute left-0 sm:left-12 top-full z-50 mt-3 w-[calc(100vw-3rem)] sm:w-64 px-0 sm:px-4">
                 <div className="overflow-hidden rounded-2xl shadow-xl ring-1 ring-black/5 bg-white p-4">
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
                     Detalles del Cliente
@@ -134,16 +134,16 @@ export default function AppointmentCard({
 
                   <div className="space-y-3">
                     <div className="flex items-center justify-between group/item">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                           <Phone size={14} />
                         </div>
 
-                        <div>
+                        <div className="min-w-0">
                           <p className="text-xs text-gray-400 font-medium leading-none">
                             Teléfono
                           </p>
-                          <p className="text-sm font-bold text-gray-700">
+                          <p className="text-sm font-bold text-gray-700 truncate">
                             {appointment.customerPhone || "No provisto"}
                           </p>
                         </div>
@@ -154,15 +154,15 @@ export default function AppointmentCard({
                           href={`https://wa.me/${appointment.customerPhone}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-2 rounded-lg bg-gray-50 text-gray-400 hover:bg-emerald-500 hover:text-white transition-all"
+                          className="p-2 rounded-lg bg-gray-50 text-gray-400 hover:bg-emerald-500 hover:text-white transition-all shrink-0"
                         >
                           <MessageCircle size={14} />
                         </a>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                         <Mail size={14} />
                       </div>
 
@@ -181,15 +181,15 @@ export default function AppointmentCard({
             </Transition>
           </div>
 
-          <div className="text-right flex flex-col items-end gap-2">
-            <div className="flex items-center gap-1.5 text-sm font-bold text-gray-700 bg-gray-50 px-2 py-1 rounded-lg">
+          <div className="text-left sm:text-right flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center w-full sm:w-auto gap-2 border-t sm:border-t-0 pt-3 sm:pt-0 border-gray-50">
+            <div className="flex items-center gap-1.5 text-xs md:text-sm font-bold text-gray-700 bg-gray-50 px-2 py-1 rounded-lg">
               <Clock size={14} className="text-indigo-500" />
               {appointment.time}
             </div>
 
             <div className="flex gap-2 items-center">
               <span
-                className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${statusStyles[status]
+                className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border shrink-0 ${statusStyles[status]
                   }`}
               >
                 {status}
@@ -199,7 +199,7 @@ export default function AppointmentCard({
                 <button
                   onClick={handleConfirm}
                   disabled={loading}
-                  className="text-xs px-4 py-1.5 rounded-full bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all cursor-pointer"
+                  className="text-[11px] md:text-xs px-3 md:px-4 py-1.5 rounded-full bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all cursor-pointer whitespace-nowrap"
                 >
                   {loading ? "..." : "Confirmar"}
                 </button>

@@ -48,33 +48,36 @@ export default function CreateServiceForm({ setView }: Props) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             onSubmit={handleSubmit}
-            className="bg-white border border-gray-100 rounded-3xl shadow-xl shadow-gray-100 p-8 space-y-6 w-full max-w-md mx-auto"
+            // Ajuste de max-width y padding para móviles
+            className="bg-white border border-gray-100 rounded-3xl shadow-xl shadow-gray-100 p-6 md:p-8 space-y-6 w-full max-w-[95vw] sm:max-w-md mx-auto"
         >
-            <div>
-                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-4">
+            <div className="text-center sm:text-left">
+                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-4 mx-auto sm:mx-0">
                     <PlusCircle size={28} />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">New Service</h2>
-                <p className="text-sm text-gray-500">Define the details for your new catalog entry.</p>
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">New Service</h2>
+                <p className="text-xs md:text-sm text-gray-500">Define the details for your new catalog entry.</p>
             </div>
 
             <div className="space-y-4">
                 <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400 ml-1 flex items-center gap-2">
+                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400 ml-1 flex items-center gap-2">
                         <Scissors size={12} /> Service Name
                     </label>
                     <input
                         placeholder="e.g. Skin Fade & Beard"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className={inputStyles}
+                        // Asegúrate de que inputStyles tenga text-base (16px) en móvil para evitar zoom
+                        className={`${inputStyles} text-base md:text-sm py-3`}
                         required
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                {/* Grid col-1 en móviles muy pequeños o mantenido en 2 si los labels son cortos */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold uppercase tracking-wider text-gray-400 ml-1 flex items-center gap-2">
+                        <label className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400 ml-1 flex items-center gap-2">
                             <DollarSign size={12} /> Price
                         </label>
                         <input
@@ -82,12 +85,12 @@ export default function CreateServiceForm({ setView }: Props) {
                             placeholder="0.00"
                             value={price}
                             onChange={(e) => setPrice(e.target.value)}
-                            className={inputStyles}
+                            className={`${inputStyles} text-base md:text-sm py-3`}
                             required
                         />
                     </div>
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold uppercase tracking-wider text-gray-400 ml-1 flex items-center gap-2">
+                        <label className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400 ml-1 flex items-center gap-2">
                             <Clock size={12} /> Minutes
                         </label>
                         <input
@@ -95,7 +98,7 @@ export default function CreateServiceForm({ setView }: Props) {
                             placeholder="30"
                             value={duration}
                             onChange={(e) => setDuration(e.target.value)}
-                            className={inputStyles}
+                            className={`${inputStyles} text-base md:text-sm py-3`}
                             required
                         />
                     </div>
@@ -106,14 +109,14 @@ export default function CreateServiceForm({ setView }: Props) {
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-indigo-600 text-white py-3.5 md:py-4 rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
                 >
                     {isSubmitting ? "Creating..." : "Create Service"}
                 </button>
                 <button
                     type="button"
                     onClick={() => setView("list")}
-                    className="w-full bg-white text-gray-500 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+                    className="w-full bg-white text-gray-500 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-all text-sm md:text-base"
                 >
                     Cancel
                 </button>

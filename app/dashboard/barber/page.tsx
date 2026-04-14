@@ -110,12 +110,13 @@ export default function BarberDashboard() {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-8 max-w-6xl mx-auto min-h-screen"
+      className="w-full min-h-screen"
     >
       <DashboardHeader onExceptionAdded={refreshExceptions} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mt-4">
-        <div className="lg:col-span-5 flex justify-center lg:justify-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start mt-4">
+
+        <div className="lg:col-span-5 w-full flex justify-center lg:justify-start overflow-hidden">
           <CalendarPicker
             selectedDate={date}
             onChange={setDate}
@@ -124,7 +125,7 @@ export default function BarberDashboard() {
           />
         </div>
 
-        <div className="lg:col-span-7">
+        <div className="lg:col-span-7 w-full">
           <AppointmentList
             appointments={loading ? [] : appointments}
             onConfirm={handleConfirm}
