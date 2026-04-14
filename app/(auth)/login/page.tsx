@@ -45,27 +45,27 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4 relative overflow-hidden">
 
-      {/* Background glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-125 h-75 bg-indigo-600/15 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-75 h-75 bg-indigo-900/20 blur-[100px] rounded-full pointer-events-none" />
+      {/* Background glow - Ajustado para ser más sutil en móvil */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-xl h-75 bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-64 h-64 bg-indigo-900/15 blur-[100px] rounded-full pointer-events-none" />
 
       {/* Grid background */}
       <div
         className="absolute inset-0 opacity-[0.03]"
         style={{
           backgroundImage: `linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
+          backgroundSize: "40px 40px", // Cuadrícula un poco más pequeña para mejor detalle
         }}
       />
 
-      <div className="relative z-10 w-full max-w-sm">
+      <div className="relative z-10 w-full max-w-sm sm:max-w-md">
 
         {/* Logo */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-8"
+          className="text-center mb-6 sm:mb-8"
         >
           <Link href="/" className="inline-block text-white font-black text-2xl tracking-tight">
             BARBER<span className="text-indigo-400">SAAS</span>
@@ -77,12 +77,12 @@ export default function LoginPage() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="bg-white/4 border border-white/8 rounded-2xl p-8 backdrop-blur-sm"
+          className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8 backdrop-blur-md shadow-2xl"
         >
-          <h1 className="text-2xl font-black text-white mb-1 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-black text-white mb-1 tracking-tight">
             Welcome back
           </h1>
-          <p className="text-gray-500 text-sm mb-8">
+          <p className="text-gray-500 text-xs sm:text-sm mb-6 sm:mb-8 leading-relaxed">
             Sign in to your account to continue
           </p>
 
@@ -98,30 +98,32 @@ export default function LoginPage() {
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 required
-                className="w-full bg-white/5 border border-white/8 text-white placeholder:text-gray-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition"
+                className="w-full bg-white/5 border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
               />
             </div>
 
             <div>
-              <label className="text-xs font-medium text-gray-400 mb-1.5 block">
-                Password
-              </label>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-xs font-medium text-gray-400 block">
+                  Password
+                </label>
+              </div>
               <input
                 type="password"
                 placeholder="••••••••"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 required
-                className="w-full bg-white/5 border border-white/8 text-white placeholder:text-gray-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition"
+                className="w-full bg-white/5 border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
               />
             </div>
 
             {/* Error message */}
             {error && (
               <motion.p
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-red-400 text-[11px] sm:text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"
               >
                 {error}
               </motion.p>
@@ -130,7 +132,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
             >
               {loading ? (
                 <>
@@ -151,12 +153,12 @@ export default function LoginPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="text-center text-gray-600 text-sm mt-6"
+          className="text-center text-gray-500 text-xs sm:text-sm mt-8"
         >
           Don't have an account?{" "}
           <Link
             href="/register"
-            className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+            className="text-indigo-400 hover:text-indigo-300 font-bold transition-colors"
           >
             Create one
           </Link>
