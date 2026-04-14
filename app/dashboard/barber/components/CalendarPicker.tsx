@@ -109,10 +109,10 @@ export default function CalendarPicker({
               : undefined
         }
         className={`
-          h-10 w-10 rounded-xl text-sm flex flex-col items-center justify-center
-          transition-all duration-200 relative
+          h-9 w-9 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl text-xs sm:text-sm flex flex-col items-center justify-center
+          transition-all duration-200 relative mx-auto
           ${isSelected
-            ? "bg-indigo-600 text-white shadow-md"
+            ? "bg-indigo-600 text-white shadow-md z-10"
             : exception
               ? "bg-purple-50 border border-purple-200 text-purple-400"
               : isPast
@@ -122,12 +122,12 @@ export default function CalendarPicker({
           ${isToday && !isSelected ? "ring-2 ring-indigo-400 ring-offset-1" : ""}
         `}
       >
-        <span className={`leading-none ${isToday ? "font-semibold" : ""}`}>
+        <span className={`leading-none ${isToday ? "font-bold" : ""}`}>
           {day}
         </span>
 
         {exception && !isSelected && (
-          <span className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-0.5" />
+          <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-purple-400 mt-0.5" />
         )}
 
         {count > 0 && !isSelected && !exception && (
@@ -135,7 +135,7 @@ export default function CalendarPicker({
             {Array.from({ length: dotCount }).map((_, i) => (
               <span
                 key={i}
-                className={`w-1.5 h-1.5 rounded-full ${dotColor(count, isPast)} ${i === dotCount - 1 && count > 3 ? "opacity-50" : ""}`}
+                className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full ${dotColor(count, isPast)} ${i === dotCount - 1 && count > 3 ? "opacity-50" : ""}`}
               />
             ))}
           </div>
@@ -145,27 +145,28 @@ export default function CalendarPicker({
   }
 
   return (
-    <div className="w-full max-w-md bg-white border border-gray-100 rounded-4xl p-7 shadow-xl shadow-gray-100/50">
-      <div className="flex items-center justify-between mb-8">
+    <div className="w-full max-w-md bg-white border border-gray-100 rounded-3xl sm:rounded-4xl p-4 sm:p-7 shadow-xl shadow-gray-100/50">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
         <h3 className="font-bold text-gray-800 text-lg">Schedule</h3>
-        <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-xl">
+        <div className="flex items-center justify-between w-full sm:w-auto gap-2 bg-gray-50 p-1 rounded-xl">
           <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition text-gray-400 hover:text-indigo-600">←</button>
-          <span className="text-sm font-bold text-gray-700 px-2">
+          <span className="text-xs sm:text-sm font-bold text-gray-700 px-2 min-w-[100px] text-center">
             {monthNames[currentMonth]} {currentYear}
           </span>
           <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition text-gray-400 hover:text-indigo-600">→</button>
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-y-4 gap-x-2 text-center">
+      <div className="grid grid-cols-7 gap-y-2 sm:gap-y-4 gap-x-1 sm:gap-x-2 text-center">
         {daysOfWeek.map((d) => (
-          <div key={d} className="text-[10px] font-black uppercase tracking-widest text-gray-300">{d}</div>
+          <div key={d} className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-300 py-2">
+            {d}
+          </div>
         ))}
         {days}
       </div>
 
-
-      <div className="mt-8 pt-6 border-t border-gray-50 flex justify-between items-center text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+      <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-50 flex flex-wrap justify-between items-center gap-3 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-indigo-600" /> Selected
         </div>

@@ -90,32 +90,39 @@ export default function ExceptionModal({ open, onClose, onSuccess }: Props) {
                         leaveFrom="opacity-100 scale-100"
                         leaveTo="opacity-0 scale-95"
                     >
-                        <Dialog.Panel className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
+                        {/* - sm:max-w-md: Ancho estándar en escritorio.
+                  - max-w-[95vw]: Previene que toque los bordes en móviles muy pequeños.
+                  - p-5 md:p-6: Padding ajustable.
+                */}
+                        <Dialog.Panel className="w-full max-w-[95vw] sm:max-w-md bg-white rounded-2xl shadow-2xl p-5 md:p-6 overflow-hidden">
 
                             {/* Header */}
-                            <div className="flex items-center justify-between mb-5">
-                                <Dialog.Title className="text-lg font-semibold text-gray-800">
+                            <div className="flex items-center justify-between mb-4 md:mb-5">
+                                <Dialog.Title className="text-base md:text-lg font-bold text-gray-800">
                                     Add Exception
                                 </Dialog.Title>
                                 <button
                                     onClick={handleClose}
                                     disabled={saving}
-                                    className="text-gray-400 hover:text-gray-600 transition cursor-pointer disabled:opacity-40"
+                                    className="p-1 text-gray-400 hover:text-gray-600 transition cursor-pointer disabled:opacity-40"
                                 >
                                     <X size={20} />
                                 </button>
                             </div>
 
-                            <p className="text-sm text-gray-500 mb-5">
+                            <p className="text-xs md:text-sm text-gray-500 mb-5 leading-relaxed">
                                 Select a date range to block. All pending and confirmed appointments within this range will be automatically cancelled.
                             </p>
 
                             <div className="space-y-4">
 
                                 {/* Date range */}
-                                <div className="grid grid-cols-2 gap-3">
+                                {/* - grid-cols-1: En móvil van uno sobre otro para evitar inputs apretados.
+                          - sm:grid-cols-2: En escritorio van uno al lado del otro.
+                        */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-xs font-medium text-gray-500 mb-1 block">
+                                        <label className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5 block">
                                             Start date
                                         </label>
                                         <input
@@ -123,11 +130,11 @@ export default function ExceptionModal({ open, onClose, onSuccess }: Props) {
                                             value={startDate}
                                             min={new Date().toISOString().split("T")[0]}
                                             onChange={(e) => setStartDate(e.target.value)}
-                                            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                                            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none bg-white"
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-medium text-gray-500 mb-1 block">
+                                        <label className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5 block">
                                             End date
                                         </label>
                                         <input
@@ -135,14 +142,14 @@ export default function ExceptionModal({ open, onClose, onSuccess }: Props) {
                                             value={endDate}
                                             min={startDate || new Date().toISOString().split("T")[0]}
                                             onChange={(e) => setEndDate(e.target.value)}
-                                            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                                            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none bg-white"
                                         />
                                     </div>
                                 </div>
 
                                 {/* Reason */}
                                 <div>
-                                    <label className="text-xs font-medium text-gray-500 mb-1 block">
+                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5 block">
                                         Reason (optional)
                                     </label>
                                     <input
@@ -150,30 +157,32 @@ export default function ExceptionModal({ open, onClose, onSuccess }: Props) {
                                         value={reason}
                                         onChange={(e) => setReason(e.target.value)}
                                         placeholder="e.g. Vacation, Emergency..."
-                                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                                        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                                     />
                                 </div>
 
                             </div>
 
                             {/* Actions */}
-                            <div className="flex gap-3 mt-6">
+                            {/* - items-center justify-stretch: Asegura que los botones ocupen el espacio equitativamente.
+                    */}
+                            <div className="flex flex-col-reverse sm:flex-row gap-3 mt-6">
                                 <button
                                     onClick={handleClose}
                                     disabled={saving}
-                                    className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition cursor-pointer disabled:opacity-40"
+                                    className="w-full sm:flex-1 py-3 sm:py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-500 hover:bg-gray-50 transition cursor-pointer disabled:opacity-40"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleSave}
                                     disabled={saving || !startDate || !endDate}
-                                    className="flex-1 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
+                                    className="w-full sm:flex-1 py-3 sm:py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 transition cursor-pointer disabled:opacity-60 shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
                                 >
                                     {saving ? (
                                         <>
                                             <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                                            Saving...
+                                            <span>Saving...</span>
                                         </>
                                     ) : (
                                         "Apply Exception"
