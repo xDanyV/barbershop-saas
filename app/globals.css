@@ -190,3 +190,66 @@ body {
   background-color: #eef2ff !important;
   color: #4f46e5 !important;
 }
+
+.calendar-container .react-calendar {
+  width: 100% !important;
+  background: transparent;
+  border: none;
+}
+
+.calendar-container .react-calendar__viewContainer {
+  padding: 0.5rem;
+}
+
+/* Ajuste de los azulejos (días) para que sean cuadrados y táctiles */
+.calendar-container .react-calendar__tile {
+  padding: 1rem 0.5rem !important;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border-radius: 1rem;
+  transition: all 0.2s;
+}
+
+@media (max-width: 640px) {
+  .calendar-container .react-calendar__tile {
+    padding: 0.75rem 0.25rem !important;
+    font-size: 0.75rem;
+  }
+
+  .calendar-container .react-calendar__navigation button {
+    font-size: 1rem !important;
+  }
+}
+
+.calendar-container .react-calendar__tile--active {
+  background: #4f46e5 !important;
+  color: white !important;
+  border-radius: 1rem !important;
+}
+
+.calendar-container .react-calendar__tile--now {
+  background: #fee2e2 !important;
+  color: #ef4444 !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db;
+}
