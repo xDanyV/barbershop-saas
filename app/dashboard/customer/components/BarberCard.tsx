@@ -69,7 +69,6 @@ export default function BarberCard({ barber }: Props) {
                     </div>
                 </div>
             </div>
-
         </motion.div>
     );
 }

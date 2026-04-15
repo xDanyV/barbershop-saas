@@ -63,46 +63,52 @@ export default function CalendarPicker({ selectedDate, setSelectedDate, barberId
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative"
+      className="relative w-full overflow-hidden"
     >
-      <Calendar
-        value={selectedDate}
-        onChange={(value) => setSelectedDate(value as Date)}
-        locale="en-US"
-        tileDisabled={({ date, view }) => {
-          if (view !== "month") return false;
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          return (
-            date < today ||
-            !availability.includes(date.getDay()) ||
-            isException(date)
-          );
-        }}
-        tileClassName={({ date, view }) => {
-          if (view !== "month") return null;
-          if (isException(date)) return "exception-day";
-          return null;
-        }}
-      />
+      {/* Contenedor con estilos inyectados para forzar responsividad */}
+      <div className="calendar-container w-full">
+        <Calendar
+          value={selectedDate}
+          onChange={(value) => setSelectedDate(value as Date)}
+          locale="en-US"
+          className="w-ful! border-none! font-sans!" // Forzamos ancho completo y quitamos bordes nativos
+          tileDisabled={({ date, view }) => {
+            if (view !== "month") return false;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return (
+              date < today ||
+              !availability.includes(date.getDay()) ||
+              isException(date)
+            );
+          }}
+          tileClassName={({ date, view }) => {
+            if (view !== "month") return null;
+            if (isException(date)) return "exception-day";
+            return "calendar-tile"; // Clase personalizada para estilizar
+          }}
+        />
+      </div>
 
-      {/* Leyenda de ayuda en la parte inferior */}
-      <div className="mt-6 flex flex-wrap gap-4 px-4 py-3">
-        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
+      {/* Leyenda de ayuda - Ajustada con flex-col en móviles muy pequeños */}
+      <div className="mt-4 md:mt-6 grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-y-3 gap-x-4 px-2 md:px-4 py-3 border-t border-gray-50">
+        <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">
           <div className="w-2 h-2 rounded-full bg-indigo-600" />
           <span>Selected</span>
         </div>
-        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
+        <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">
           <div className="w-2 h-2 rounded-full bg-red-400" />
           <span>Today</span>
         </div>
-        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
+        <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">
           <div className="w-2 h-2 rounded-full bg-gray-200" />
           <span>Unavailable</span>
         </div>
-        <div className="flex items-center gap-1.5 ml-auto text-indigo-400">
-          <Info size={14} />
-          <span className="text-[10px] lowercase font-bold tracking-normal italic">
+
+        {/* Info tool-tip: Se mueve a su propia línea en móvil si no hay espacio */}
+        <div className="flex items-center gap-1.5 col-span-2 sm:ml-auto text-indigo-400 pt-1 sm:pt-0">
+          <Info size={14} className="shrink-0" />
+          <span className="text-[9px] md:text-[10px] lowercase font-bold tracking-normal italic">
             choose an active day to see slots
           </span>
         </div>

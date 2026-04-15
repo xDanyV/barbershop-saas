@@ -87,7 +87,7 @@ export default function AppointmentCard({
           <div className="flex items-center gap-3 md:gap-4 w-full sm:w-auto">
             <PopoverButton className="flex items-center gap-3 md:gap-4 focus:outline-none group/btn text-left cursor-pointer min-w-0 flex-1">
               <div
-                className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center transition-colors ${status === "PENDING"
+                className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center transition-colors ${status === "PENDING"
                     ? "bg-amber-50 text-amber-500"
                     : "bg-indigo-50 text-indigo-500"
                   }`}

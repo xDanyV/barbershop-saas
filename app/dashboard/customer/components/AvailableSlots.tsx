@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, CalendarCheck, Zap } from "lucide-react";
+import { Clock, CalendarCheck } from "lucide-react";
 import SlotCard from "./SlotCard";
 
 type Props = {
@@ -11,7 +11,11 @@ type Props = {
   barberId: string;
 };
 
-export default function AvailableSlots({ selectedDate, selectedService, barberId }: Props) {
+export default function AvailableSlots({
+  selectedDate,
+  selectedService,
+  barberId,
+}: Props) {
   const [availability, setAvailability] = useState<any[]>([]);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -32,6 +36,7 @@ export default function AvailableSlots({ selectedDate, selectedService, barberId
 
   useEffect(() => {
     setLoading(true);
+
     const startOfDay = new Date(selectedDate);
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -72,10 +77,13 @@ export default function AvailableSlots({ selectedDate, selectedService, barberId
       );
       current.setMinutes(current.getMinutes() + interval);
     }
+
     return slots;
   }
 
-  const allSlots = schedule ? generateSlots(schedule.startTime, schedule.endTime) : [];
+  const allSlots = schedule
+    ? generateSlots(schedule.startTime, schedule.endTime)
+    : [];
 
   const availableSlots = allSlots.filter((slot) => {
     if (bookedSlots.includes(slot)) return false;
@@ -92,57 +100,65 @@ export default function AvailableSlots({ selectedDate, selectedService, barberId
 
       const slotTime = new Date(now);
       slotTime.setHours(hours, minutes, 0, 0);
+
       return slotTime > now;
     }
+
     return true;
   });
 
   if (!schedule) {
     return (
-      <div className="bg-amber-50 border border-amber-100 rounded-4xl p-8 text-center">
+      <div className="bg-amber-50 border border-amber-100 rounded-3xl md:rounded-4xl p-6 md:p-8 text-center">
         <Clock className="mx-auto text-amber-400 mb-2" size={24} />
         <p className="text-amber-800 font-bold">No availability</p>
-        <p className="text-amber-600 text-xs">The barber is not working on this day.</p>
+        <p className="text-amber-600 text-xs">
+          The barber is not working on this day.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-100 rounded-[2.5rem] shadow-xl shadow-gray-100/50 p-6 flex flex-col h-125">
-      {/* Header Estático */}
-      <div className="mb-6 shrink-0 space-y-1">
+    <div className="bg-white border border-gray-100 rounded-4xl md:rounded-[2.5rem] shadow-xl shadow-gray-100/50 p-5 md:p-6 flex flex-col h-100 md:h-125">
+      <div className="mb-5 md:mb-6 shrink-0 space-y-1">
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+          <h3 className="text-lg md:text-xl font-black text-gray-900 tracking-tight">
             Available Slots
           </h3>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-bold text-gray-400">
+        <div className="flex items-center gap-2 text-[10px] md:text-xs font-bold text-gray-400">
           <CalendarCheck size={14} className="text-indigo-500" />
-          <span>{schedule.startTime} — {schedule.endTime}</span>
+          <span>
+            {schedule.startTime} — {schedule.endTime}
+          </span>
         </div>
       </div>
 
-      {/* Lista con Scroll */}
-      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto overflow-x-visible pr-1 md:pr-2 custom-scrollbar">
         <AnimatePresence mode="popLayout">
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-16 bg-gray-50 animate-pulse rounded-2xl w-full" />
+                <div
+                  key={i}
+                  className="h-14 md:h-16 bg-gray-50 animate-pulse rounded-xl md:rounded-2xl w-full"
+                />
               ))}
             </div>
           ) : availableSlots.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-20"
+              className="text-center py-12 md:py-20"
             >
-              <p className="text-gray-400 font-bold">Sold Out!</p>
-              <p className="text-gray-300 text-xs uppercase tracking-tighter">No slots available for this date.</p>
+              <p className="text-gray-400 font-bold text-sm md:text-base">
+                Sold Out!
+              </p>
             </motion.div>
           ) : (
-            <div className="grid gap-3">
+            <div className="grid gap-2 md:gap-3">
               {availableSlots.map((slot, index) => (
                 <motion.div
                   key={slot}
@@ -154,7 +170,9 @@ export default function AvailableSlots({ selectedDate, selectedService, barberId
                     time={slot}
                     selectedDate={selectedDate}
                     barberId={barberId}
-                    onBook={(bookedTime) => setBookedSlots((prev) => [...prev, bookedTime])}
+                    onBook={(bookedTime) =>
+                      setBookedSlots((prev) => [...prev, bookedTime])
+                    }
                   />
                 </motion.div>
               ))}
@@ -162,22 +180,6 @@ export default function AvailableSlots({ selectedDate, selectedService, barberId
           )}
         </AnimatePresence>
       </div>
-
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #e5e7eb;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #d1d5db;
-        }
-      `}</style>
     </div>
   );
 }

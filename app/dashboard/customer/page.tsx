@@ -55,67 +55,61 @@ export default function CustomerDashboard() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto p-6 md:p-10">
-      {/* Botón de volver */}
+    <div className="max-w-6xl mx-auto p-4 md:p-10">
       <button
         onClick={() => router.push("/dashboard/customer/barbers")}
-        className="flex items-center gap-2 text-gray-400 hover:text-indigo-600 font-bold text-xs uppercase tracking-widest mb-8 transition-colors group"
+        className="flex items-center gap-2 text-gray-400 hover:text-indigo-600 font-bold text-[10px] md:text-xs uppercase tracking-widest mb-6 md:mb-8 transition-colors group py-2"
       >
         <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
         Back to Barbers
       </button>
 
-      <div className="grid lg:grid-cols-12 gap-12 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
 
-        {/* LEFT SIDE: Calendar & Date Selection */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="lg:col-span-7 space-y-8"
+          className="order-1 lg:col-span-7 space-y-6 md:space-y-8"
         >
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-indigo-600 font-black text-xs uppercase tracking-[0.2em]">
+          <div className="space-y-2 text-center lg:text-left">
+            <div className="flex items-center justify-center lg:justify-start gap-2 text-indigo-600 font-black text-[10px] md:text-xs uppercase tracking-[0.2em]">
               <CalendarIcon size={14} />
               Step 1: Select Date
             </div>
-            <h2 className="text-4xl font-black text-gray-900 tracking-tight">
+            <h2 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">
               {displayDate}
             </h2>
           </div>
 
-          <div className="bg-white p-2 rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-100/50">
+          <div className="bg-white p-2 rounded-4xl md:rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-100/50 overflow-hidden">
             <CalendarPicker
               barberId={barberId}
               selectedDate={selectedDate}
               setSelectedDate={setSelectedDate}
             />
           </div>
-          <p className="text-center text-xs text-gray-400 font-medium px-8">
+          <p className="text-center text-[10px] md:text-xs text-gray-400 font-medium px-4 md:px-8">
             Note: Cancellations are only allowed up to 2 hours before the appointment.
           </p>
         </motion.div>
 
-        {/* RIGHT SIDE: Barber Info & Time Slots */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="lg:col-span-5 space-y-6"
+          className="order-2 lg:col-span-5 space-y-6"
         >
-          {/* Barber Info Card Section */}
           <div className="space-y-4">
-
-            {/* BarberCard estilizado (asumiendo su estructura interna) */}
-            <div className="relative overflow-hidden rounded-4xl border border-indigo-50 shadow-sm">
+            <div className="relative overflow-hidden rounded-4xl md:rounded-4xl border border-indigo-50 shadow-sm">
               <BarberCard barber={barber} />
             </div>
           </div>
 
-          {/* Slots Section */}
-          <div className="bg-gray-50/50 rounded-[2.5rem] ">
-            <div className="flex items-center justify-center pb-2 gap-2 text-indigo-600 font-black text-xs uppercase tracking-[0.2em]">
+          <div className="bg-gray-50/50 rounded-4xl md:rounded-[2.5rem] py-6 md:py-0">
+            <div className="flex items-center justify-center pb-4 gap-2 text-indigo-600 font-black text-[10px] md:text-xs uppercase tracking-[0.2em]">
               <Clock size={14} />
               Step 2: Choose Time
             </div>
+
             <AvailableSlots
               barberId={barberId}
               selectedDate={selectedDate}
