@@ -51,7 +51,7 @@ export default function AppointmentList({ appointments, onConfirm, selectedDate,
     });
 
     return (
-        <div className="bg-white border border-gray-100 rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-8 shadow-xl shadow-gray-100/50 min-h-137.5 flex flex-col">
+        <div className="bg-white border  border-gray-100 rounded-4xl md:rounded-[2.5rem] p-5 md:p-8 shadow-xl shadow-gray-100/50 min-h-137.5 flex flex-col">
             {/* Header de la Lista */}
             <div className="flex flex-col mb-6 md:mb-8 gap-1">
                 <div className="flex items-center justify-between">

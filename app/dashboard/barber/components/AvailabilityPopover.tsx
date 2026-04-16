@@ -3,7 +3,8 @@
 import { useEffect, useState, Fragment } from "react";
 import { Dialog, Transition, TransitionChild, DialogPanel, DialogTitle } from "@headlessui/react";
 import { toast } from "react-hot-toast";
-import { X, Calendar } from "lucide-react";
+import { X, Calendar, Coffee } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const days = [
     { label: "Mon", value: 1 }, { label: "Tue", value: 2 },
@@ -17,6 +18,12 @@ export default function AvailabilityModal() {
     const [selectedDays, setSelectedDays] = useState<number[]>([]);
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
+
+    // Estados para el Lunch/Break
+    const [hasBreak, setHasBreak] = useState(false);
+    const [breakStart, setBreakStart] = useState("");
+    const [breakEnd, setBreakEnd] = useState("");
+
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -26,9 +33,21 @@ export default function AvailabilityModal() {
                 const res = await fetch("/api/protected/availability");
                 const data = await res.json();
                 if (!data?.length) return;
+
                 setSelectedDays(data.map((d: any) => d.dayOfWeek));
                 setStartTime(data[0].startTime);
                 setEndTime(data[0].endTime);
+
+                // Cargar datos de break si existen
+                if (data[0].breakStart && data[0].breakEnd) {
+                    setHasBreak(true);
+                    setBreakStart(data[0].breakStart);
+                    setBreakEnd(data[0].breakEnd);
+                } else {
+                    setHasBreak(false);
+                    setBreakStart("");
+                    setBreakEnd("");
+                }
             } catch (error) {
                 console.error("Error loading availability", error);
             }
@@ -47,7 +66,14 @@ export default function AvailabilityModal() {
         const res = await fetch("/api/protected/availability", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ days: selectedDays, startTime, endTime }),
+            body: JSON.stringify({
+                days: selectedDays,
+                startTime,
+                endTime,
+                // Si hasBreak es false, enviamos null
+                breakStart: hasBreak ? breakStart : null,
+                breakEnd: hasBreak ? breakEnd : null
+            }),
         });
         setLoading(false);
 
@@ -59,7 +85,6 @@ export default function AvailabilityModal() {
 
     return (
         <>
-            {/* Botón disparador */}
             <button
                 onClick={() => setIsOpen(true)}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
@@ -70,8 +95,6 @@ export default function AvailabilityModal() {
 
             <Transition show={isOpen} as={Fragment}>
                 <Dialog as="div" className="relative z-50" onClose={() => !loading && setIsOpen(false)}>
-
-                    {/* Backdrop (Fondo oscuro) */}
                     <TransitionChild
                         as={Fragment}
                         enter="ease-out duration-300"
@@ -96,7 +119,6 @@ export default function AvailabilityModal() {
                                 leaveTo="opacity-0 scale-95"
                             >
                                 <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-3xl bg-white p-7 shadow-2xl transition-all">
-
                                     <div className="flex items-center justify-between mb-6">
                                         <DialogTitle as="h3" className="text-xl font-bold text-gray-900">
                                             Working Hours
@@ -123,8 +145,8 @@ export default function AvailabilityModal() {
                                                             key={day.value}
                                                             onClick={() => toggleDay(day.value)}
                                                             className={`h-10 w-10 rounded-xl text-xs font-bold transition-all border ${active
-                                                                    ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200"
-                                                                    : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
+                                                                ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200"
+                                                                : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
                                                                 }`}
                                                         >
                                                             {day.label}
@@ -134,7 +156,7 @@ export default function AvailabilityModal() {
                                             </div>
                                         </div>
 
-                                        {/* Inputs de Tiempo */}
+                                        {/* Turno Principal */}
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-1.5">
                                                 <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block ml-1">Start</label>
@@ -154,6 +176,59 @@ export default function AvailabilityModal() {
                                                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
                                                 />
                                             </div>
+                                        </div>
+
+                                        {/* Sección de Lunch/Break */}
+                                        <div className="pt-4 border-t border-gray-50">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="p-2 bg-amber-50 rounded-lg text-amber-600">
+                                                        <Coffee size={16} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-gray-900">Lunch Break</p>
+                                                        <p className="text-[10px] text-gray-400 font-medium">Add a break to your shift</p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => setHasBreak(!hasBreak)}
+                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${hasBreak ? 'bg-indigo-600' : 'bg-gray-200'}`}
+                                                >
+                                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${hasBreak ? 'translate-x-6' : 'translate-x-1'}`} />
+                                                </button>
+                                            </div>
+
+                                            <AnimatePresence>
+                                                {hasBreak && (
+                                                    <motion.div
+                                                        initial={{ height: 0, opacity: 0 }}
+                                                        animate={{ height: 'auto', opacity: 1 }}
+                                                        exit={{ height: 0, opacity: 0 }}
+                                                        className="overflow-hidden"
+                                                    >
+                                                        <div className="grid grid-cols-2 gap-4 pb-2">
+                                                            <div className="space-y-1.5">
+                                                                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block ml-1">Break Start</label>
+                                                                <input
+                                                                    type="time"
+                                                                    value={breakStart}
+                                                                    onChange={(e) => setBreakStart(e.target.value)}
+                                                                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all"
+                                                                />
+                                                            </div>
+                                                            <div className="space-y-1.5">
+                                                                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block ml-1">Break End</label>
+                                                                <input
+                                                                    type="time"
+                                                                    value={breakEnd}
+                                                                    onChange={(e) => setBreakEnd(e.target.value)}
+                                                                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
                                         </div>
                                     </div>
 

@@ -28,7 +28,7 @@ export default function BarbersPage() {
     }, []);
 
     return (
-        <div className="p-4 md:p-8 max-w-5xl mx-auto min-h-screen">
+        <div className="p-4 md:p-8 max-w-5xl mx-auto">
             {/* Header Section */}
             <header className="mb-8 md:mb-12 text-center md:text-left">
                 <motion.div
