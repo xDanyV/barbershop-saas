@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { days, startTime, endTime } = body;
+        const { days, startTime, endTime, breakStart, breakEnd } = body;
 
         await prisma.availability.deleteMany({
             where: { barberId: barber.id },
@@ -66,12 +66,15 @@ export async function POST(request: NextRequest) {
                 dayOfWeek: day,
                 startTime,
                 endTime,
+                breakStart: breakStart || null,
+                breakEnd: breakEnd || null,
             })),
         });
 
         return NextResponse.json(availability);
 
-    } catch {
+    } catch (error) {
+        console.error("API Availability Error:", error);
         return NextResponse.json(
             { error: "Internal server error" },
             { status: 500 }

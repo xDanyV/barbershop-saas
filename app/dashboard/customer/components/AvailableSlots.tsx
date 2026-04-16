@@ -36,10 +36,8 @@ export default function AvailableSlots({
 
   useEffect(() => {
     setLoading(true);
-
     const startOfDay = new Date(selectedDate);
     startOfDay.setHours(0, 0, 0, 0);
-
     const endOfDay = new Date(selectedDate);
     endOfDay.setHours(23, 59, 59, 999);
 
@@ -52,6 +50,20 @@ export default function AvailableSlots({
       .finally(() => setLoading(false));
   }, [selectedDate, barberId]);
 
+  // Función auxiliar para comparar horas fácilmente
+  const timeToMinutes = (timeStr: string) => {
+    // Maneja formatos "HH:mm" y "hh:mm AM/PM"
+    if (timeStr.includes("M")) {
+      const [time, modifier] = timeStr.split(" ");
+      let [hours, minutes] = time.split(":").map(Number);
+      if (modifier === "PM" && hours < 12) hours += 12;
+      if (modifier === "AM" && hours === 12) hours = 0;
+      return hours * 60 + minutes;
+    }
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    return hours * 60 + minutes;
+  };
+
   const dayOfWeek = selectedDate.getDay();
   const schedule = availability.find((a) => a.dayOfWeek === dayOfWeek);
 
@@ -62,12 +74,10 @@ export default function AvailableSlots({
 
     const startDate = new Date(selectedDate);
     startDate.setHours(startHour, startMinute, 0, 0);
-
     const endDate = new Date(selectedDate);
     endDate.setHours(endHour, endMinute, 0, 0);
 
     const current = new Date(startDate);
-
     while (current < endDate) {
       slots.push(
         current.toLocaleTimeString("en-US", {
@@ -77,7 +87,6 @@ export default function AvailableSlots({
       );
       current.setMinutes(current.getMinutes() + interval);
     }
-
     return slots;
   }
 
@@ -86,22 +95,29 @@ export default function AvailableSlots({
     : [];
 
   const availableSlots = allSlots.filter((slot) => {
+    // 1. Filtrar si ya está reservado
     if (bookedSlots.includes(slot)) return false;
 
+    // 2. FILTRO DE LUNCH BREAK
+    if (schedule?.breakStart && schedule?.breakEnd) {
+      const slotMin = timeToMinutes(slot);
+      const breakStartMin = timeToMinutes(schedule.breakStart);
+      const breakEndMin = timeToMinutes(schedule.breakEnd);
+
+      // Si el slot está dentro del rango de descanso, lo eliminamos
+      if (slotMin >= breakStartMin && slotMin < breakEndMin) {
+        return false;
+      }
+    }
+
+    // 3. Filtrar si es hoy y la hora ya pasó
     const now = new Date();
     const isToday = selectedDate.toDateString() === now.toDateString();
 
     if (isToday) {
-      const [time, modifier] = slot.split(" ");
-      let [hours, minutes] = time.split(":").map(Number);
-
-      if (modifier === "PM" && hours < 12) hours += 12;
-      if (modifier === "AM" && hours === 12) hours = 0;
-
-      const slotTime = new Date(now);
-      slotTime.setHours(hours, minutes, 0, 0);
-
-      return slotTime > now;
+      const slotMin = timeToMinutes(slot);
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+      return slotMin > nowMin;
     }
 
     return true;
@@ -112,14 +128,13 @@ export default function AvailableSlots({
       <div className="bg-amber-50 border border-amber-100 rounded-3xl md:rounded-4xl p-6 md:p-8 text-center">
         <Clock className="mx-auto text-amber-400 mb-2" size={24} />
         <p className="text-amber-800 font-bold">No availability</p>
-        <p className="text-amber-600 text-xs">
-          The barber is not working on this day.
-        </p>
+        <p className="text-amber-600 text-xs">The barber is not working on this day.</p>
       </div>
     );
   }
 
   return (
+    /* Mantenemos tus clases originales de scroll y tamaño */
     <div className="bg-white border border-gray-100 rounded-4xl md:rounded-[2.5rem] shadow-xl shadow-gray-100/50 p-5 md:p-6 flex flex-col h-100 md:h-125">
       <div className="mb-5 md:mb-6 shrink-0 space-y-1">
         <div className="flex items-center justify-between">
@@ -132,6 +147,7 @@ export default function AvailableSlots({
           <CalendarCheck size={14} className="text-indigo-500" />
           <span>
             {schedule.startTime} — {schedule.endTime}
+            {schedule.breakStart && ` (Break: ${schedule.breakStart}-${schedule.breakEnd})`}
           </span>
         </div>
       </div>
@@ -141,21 +157,12 @@ export default function AvailableSlots({
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="h-14 md:h-16 bg-gray-50 animate-pulse rounded-xl md:rounded-2xl w-full"
-                />
+                <div key={i} className="h-14 md:h-16 bg-gray-50 animate-pulse rounded-xl md:rounded-2xl w-full" />
               ))}
             </div>
           ) : availableSlots.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-12 md:py-20"
-            >
-              <p className="text-gray-400 font-bold text-sm md:text-base">
-                Sold Out!
-              </p>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12 md:py-20">
+              <p className="text-gray-400 font-bold text-sm md:text-base">Sold Out!</p>
             </motion.div>
           ) : (
             <div className="grid gap-2 md:gap-3">
@@ -170,9 +177,7 @@ export default function AvailableSlots({
                     time={slot}
                     selectedDate={selectedDate}
                     barberId={barberId}
-                    onBook={(bookedTime) =>
-                      setBookedSlots((prev) => [...prev, bookedTime])
-                    }
+                    onBook={(bookedTime) => setBookedSlots((prev) => [...prev, bookedTime])}
                   />
                 </motion.div>
               ))}

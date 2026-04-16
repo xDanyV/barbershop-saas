@@ -32,7 +32,7 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Sections - Asegúrate de que Hero y Features también tengan padding interno responsivo */}
+      {/* Sections */}
       <div className="pt-14">
         <HeroSection />
         <FeaturesSection />

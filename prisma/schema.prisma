@@ -72,6 +72,8 @@ model Availability {
   dayOfWeek Int
   startTime String
   endTime   String
+  breakStart String? 
+  breakEnd   String? 
 
   createdAt DateTime @default(now())
 }
