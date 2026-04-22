@@ -4,21 +4,20 @@ import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Toaster, toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, LogOut } from "lucide-react"; // Usaremos iconos para ahorrar espacio
+import { LogOut, CalendarDays, Scissors, Users, BookOpen } from "lucide-react";
 
 export default function DashboardNavbar({ role }: { role: string }) {
     const router = useRouter();
     const pathname = usePathname();
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const menuItems = role === "BARBER"
         ? [
-            { name: "Mis Citas", path: "/dashboard/barber" },
-            { name: "Catálogo", path: "/dashboard/barber/catalog" },
+            { name: "Mis Citas", path: "/dashboard/barber", icon: CalendarDays },
+            { name: "Catálogo", path: "/dashboard/barber/catalog", icon: Scissors },
         ]
         : [
-            { name: "Mis Citas", path: "/dashboard/customer/home" },
-            { name: "Reservar", path: "/dashboard/customer/barbers" },
+            { name: "Mis Citas", path: "/dashboard/customer/home", icon: CalendarDays },
+            { name: "Reservar", path: "/dashboard/customer/barbers", icon: BookOpen },
         ];
 
     const handleLogout = async () => {
@@ -27,7 +26,6 @@ export default function DashboardNavbar({ role }: { role: string }) {
     };
 
     const handleNavigation = async (path: string) => {
-        setIsMenuOpen(false); // Cerramos el menú al navegar
         if (role === "CUSTOMER" && path === "/dashboard/customer/barbers") {
             try {
                 const response = await fetch("/api/protected/appointments/user");
@@ -41,13 +39,13 @@ export default function DashboardNavbar({ role }: { role: string }) {
                     if (activeCount >= 2) {
                         toast.error("Máximo 2 citas activas permitidas.", {
                             id: "limit",
-                            icon: '🚫',
+                            icon: "🚫",
                             style: {
-                                borderRadius: '8px',
-                                background: '#FFFFFF',
-                                color: '#1e293b',
-                                border: '1px solid #e2e8f0',
-                                fontSize: '14px',
+                                borderRadius: "8px",
+                                background: "#FFFFFF",
+                                color: "#1e293b",
+                                border: "1px solid #e2e8f0",
+                                fontSize: "14px",
                             },
                         });
                         return;
@@ -62,13 +60,15 @@ export default function DashboardNavbar({ role }: { role: string }) {
 
     return (
         <>
+            {/* ── Desktop Navbar (top) ── */}
             <motion.header
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="bg-indigo-950 text-white px-4 sm:px-8 py-3 flex justify-between items-center shadow-lg border-b border-indigo-800/50 sticky top-0 z-50"
+                transition={{ duration: 0.4 }}
+                className="hidden md:flex bg-indigo-950 text-white px-8 py-3 justify-between items-center shadow-lg border-b border-indigo-800/50 sticky top-0 z-50"
             >
-                {/* Logo y Menú Desktop */}
-                <div className="flex items-center gap-4 sm:gap-12">
+                {/* Logo + nav */}
+                <div className="flex items-center gap-10">
                     <div
                         className="flex items-center gap-2 cursor-pointer"
                         onClick={() => router.push(role === "BARBER" ? "/dashboard/barber" : "/dashboard/customer/home")}
@@ -76,13 +76,12 @@ export default function DashboardNavbar({ role }: { role: string }) {
                         <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center font-bold shadow-inner shrink-0">
                             B
                         </div>
-                        <h1 className="text-base sm:text-lg font-bold tracking-tighter uppercase">
+                        <h1 className="text-base font-bold tracking-tighter uppercase">
                             Barber<span className="text-indigo-400">SaaS</span>
                         </h1>
                     </div>
 
-                    {/* Menú visible solo en Desktop (sm y superior) */}
-                    <nav className="hidden md:flex gap-1">
+                    <nav className="flex gap-1">
                         {menuItems.map((item) => {
                             const isActive = pathname === item.path;
                             return (
@@ -95,7 +94,7 @@ export default function DashboardNavbar({ role }: { role: string }) {
                                     {item.name}
                                     {isActive && (
                                         <motion.div
-                                            layoutId="activeTab"
+                                            layoutId="activeTabDesktop"
                                             className="absolute bottom-0 left-2 right-2 h-0.5 bg-indigo-400 rounded-full"
                                         />
                                     )}
@@ -105,57 +104,104 @@ export default function DashboardNavbar({ role }: { role: string }) {
                     </nav>
                 </div>
 
-                {/* Acciones y Botón Mobile */}
-                <div className="flex items-center gap-2 sm:gap-4">
-                    {/* Botón Logout Desktop */}
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleLogout}
-                        className="hidden sm:flex items-center gap-2 text-xs font-semibold bg-white/10 hover:bg-red-500/20 hover:text-red-300 border border-white/10 hover:border-red-500/50 px-4 py-2 rounded-lg transition-all"
-                    >
-                        Cerrar Sesión
-                    </motion.button>
+                {/* Logout */}
+                <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 text-xs font-semibold bg-white/10 hover:bg-red-500/20 hover:text-red-300 border border-white/10 hover:border-red-500/50 px-4 py-2 rounded-lg transition-all"
+                >
+                    <LogOut size={14} />
+                    Cerrar Sesión
+                </motion.button>
+            </motion.header>
 
-                    {/* Botón Hamburguesa Mobile */}
-                    <button
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        className="md:hidden p-2 text-indigo-300 hover:text-white"
-                    >
-                        {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                    </button>
+            {/* ── Mobile Top Bar (logo only) ── */}
+            <motion.header
+                initial={{ y: -10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4 }}
+                className="md:hidden bg-indigo-950 text-white px-5 py-3 flex justify-between items-center border-b border-indigo-800/50 sticky top-0 z-50"
+            >
+                <div
+                    className="flex items-center gap-2 cursor-pointer"
+                    onClick={() => router.push(role === "BARBER" ? "/dashboard/barber" : "/dashboard/customer/home")}
+                >
+                    <div className="w-7 h-7 bg-indigo-500 rounded-md flex items-center justify-center font-bold text-sm shrink-0">
+                        B
+                    </div>
+                    <h1 className="text-sm font-bold tracking-tighter uppercase">
+                        Barber<span className="text-indigo-400">SaaS</span>
+                    </h1>
                 </div>
 
-                {/* Menú Mobile (AnimatePresence para animar entrada/salida) */}
-                <AnimatePresence>
-                    {isMenuOpen && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="absolute top-full left-0 right-0 bg-indigo-900 border-b border-indigo-800 md:hidden flex flex-col p-4 gap-2"
-                        >
-                            {menuItems.map((item) => (
-                                <button
-                                    key={item.path}
-                                    onClick={() => handleNavigation(item.path)}
-                                    className={`px-4 py-3 text-left rounded-lg text-sm font-medium ${pathname === item.path ? "bg-indigo-500 text-white" : "text-indigo-200"
-                                        }`}
-                                >
-                                    {item.name}
-                                </button>
-                            ))}
-                            <hr className="border-indigo-800 my-1" />
-                            <button
-                                onClick={handleLogout}
-                                className="px-4 py-3 text-left text-red-400 text-sm font-bold flex items-center gap-2"
-                            >
-                                <LogOut size={16} /> Cerrar Sesión
-                            </button>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                <motion.button
+                    whileTap={{ scale: 0.92 }}
+                    onClick={handleLogout}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-indigo-300 hover:text-red-300 transition-colors"
+                >
+                    <LogOut size={15} />
+                </motion.button>
             </motion.header>
+
+            {/* ── Mobile Bottom Nav ── */}
+            <motion.nav
+                initial={{ y: 80, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.1, type: "spring", stiffness: 200, damping: 25 }}
+                className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-indigo-950/95 backdrop-blur-xl border-t border-indigo-800/50 px-6 pb-safe"
+            >
+                <div className="flex items-center justify-around py-2">
+                    {menuItems.map((item) => {
+                        const isActive = pathname === item.path;
+                        const Icon = item.icon;
+
+                        return (
+                            <button
+                                key={item.path}
+                                onClick={() => handleNavigation(item.path)}
+                                className="flex flex-col items-center gap-1 px-5 py-2 relative"
+                            >
+                                {/* Active pill background */}
+                                <AnimatePresence>
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="activePill"
+                                            className="absolute inset-0 bg-indigo-500/20 rounded-2xl"
+                                            initial={{ opacity: 0, scale: 0.8 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.8 }}
+                                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                        />
+                                    )}
+                                </AnimatePresence>
+
+                                <motion.div
+                                    animate={{
+                                        scale: isActive ? 1.1 : 1,
+                                        y: isActive ? -1 : 0,
+                                    }}
+                                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                                >
+                                    <Icon
+                                        size={22}
+                                        className={`transition-colors duration-200 ${isActive ? "text-indigo-300" : "text-indigo-500"}`}
+                                        strokeWidth={isActive ? 2.5 : 1.8}
+                                    />
+                                </motion.div>
+
+                                <span className={`text-[10px] font-bold transition-colors duration-200 ${isActive ? "text-indigo-300" : "text-indigo-500/70"}`}>
+                                    {item.name}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+            </motion.nav>
+
+            {/* Spacer so content doesn't hide behind bottom nav on mobile */}
+            <div className="md:hidden h-20" />
+
             <Toaster position="top-right" />
         </>
     );
