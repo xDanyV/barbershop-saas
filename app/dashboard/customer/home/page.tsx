@@ -113,7 +113,6 @@ export default function CustomerHome() {
 
   return (
     <div className="p-4 md:p-8 max-w-2xl mx-auto">
-      {/* Header Section */}
       <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 md:mb-10 gap-6 text-center md:text-left">
         <div>
           <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
@@ -135,7 +134,6 @@ export default function CustomerHome() {
         </motion.button>
       </header>
 
-      {/* Tabs */}
       <div className="mb-8 flex justify-center md:justify-start">
         <div className="inline-flex bg-gray-100/80 backdrop-blur-sm rounded-2xl p-1.5 border border-gray-200/50">
           <button
@@ -168,86 +166,103 @@ export default function CustomerHome() {
             <p className="text-gray-500 font-bold">No appointments found</p>
           </motion.div>
         ) : (
-          <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={showHistory ? "divide-y divide-gray-100" : "space-y-4"}>
-            {list.map((a, idx) => {
-              const date = new Date(a.date);
-              const formattedTime = date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+          <motion.div
+            key="list"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className={showHistory ? "bg-white border border-gray-100 rounded-[2.5rem] shadow-xl shadow-gray-100/50 p-4 md:p-6" : "space-y-4"}
+          >
+            <div className={showHistory ? "overflow-y-auto pr-2 custom-scrollbar max-h-120 grid gap-1" : "space-y-4"}>
+              <AnimatePresence mode="popLayout">
+                {list.map((a, idx) => {
+                  const date = new Date(a.date);
+                  const formattedTime = date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 
-              {/* VISTA DE HISTORIAL (COMPACTA) */ }
-              if (showHistory) {
-                return (
-                  <motion.div
-                    key={a.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center justify-between py-4 group hover:bg-gray-50/50 px-2 rounded-xl transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="text-center min-w-11.25">
-                        <p className="text-[10px] font-black text-gray-400 uppercase">{date.toLocaleDateString("en-US", { month: "short" })}</p>
-                        <p className="text-lg font-black text-gray-700 leading-none">{date.getDate()}</p>
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-gray-900 text-sm line-clamp-1">{a.service.name}</h3>
-                        <p className="text-[11px] text-gray-500 font-medium">
-                          {a.barber.user.name} • {formattedTime}
+                  if (showHistory) {
+                    return (
+                      <motion.div
+                        key={a.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="flex items-center justify-between py-3.5 group hover:bg-gray-50/80 px-3 rounded-2xl transition-all duration-200 border border-transparent hover:border-gray-100"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="text-center min-w-12.5 bg-gray-50 py-2 rounded-xl group-hover:bg-white transition-colors border border-gray-100/50">
+                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">
+                              {date.toLocaleDateString("en-US", { month: "short" })}
+                            </p>
+                            <p className="text-base font-black text-gray-800 leading-none">
+                              {date.getDate()}
+                            </p>
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-gray-900 text-sm line-clamp-1 tracking-tight">
+                              {a.service.name}
+                            </h3>
+                            <p className="text-[11px] text-gray-500 font-medium flex items-center gap-1.5 mt-0.5">
+                              <span className="text-gray-900 font-semibold">{a.barber.user.name}</span>
+                              <span className="text-gray-300">•</span>
+                              <span className="bg-gray-100 px-1.5 py-0.5 rounded text-[10px]">
+                                {formattedTime}
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                        <span className={`text-[10px] px-3 py-1 rounded-full font-bold tracking-wide border shadow-sm ${a.status === "COMPLETED"
+                            ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                            : "bg-rose-50 text-rose-600 border-rose-100"
+                          }`}>
+                          {a.status}
+                        </span>
+                      </motion.div>
+                    );
+                  }
+
+                  return (
+                    <motion.div
+                      key={a.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="group bg-white border border-gray-100 rounded-4xl md:rounded-4xl p-4 md:p-5 shadow-sm hover:shadow-xl hover:shadow-gray-100/50 transition-all flex flex-col sm:flex-row items-center gap-4 md:gap-6"
+                    >
+                      <div className="bg-indigo-50/50 border border-indigo-100 rounded-2xl md:rounded-3xl px-4 py-3 md:px-5 md:py-4 text-center min-w-17.5 md:min-w-20 group-hover:bg-indigo-600 group-hover:border-indigo-600 transition-colors w-full sm:w-auto">
+                        <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest group-hover:text-indigo-200">
+                          {date.toLocaleDateString("en-US", { month: "short" })}
+                        </p>
+                        <p className="text-2xl md:text-3xl font-black text-indigo-600 leading-none group-hover:text-white">
+                          {date.getDate()}
                         </p>
                       </div>
-                    </div>
-                    <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase border ${a.status === "COMPLETED" ? "bg-gray-50 text-gray-400 border-gray-100" : "bg-red-50 text-red-600 border-red-100"
-                      }`}>
-                      {a.status}
-                    </span>
-                  </motion.div>
-                );
-              }
 
-              {/* VISTA UPCOMING (CARD ORIGINAL OPTIMIZADA) */ }
-              return (
-                <motion.div
-                  key={a.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="group bg-white border border-gray-100 rounded-4xl md:rounded-4xl p-4 md:p-5 shadow-sm hover:shadow-xl hover:shadow-gray-100/50 transition-all flex flex-col sm:flex-row items-center gap-4 md:gap-6"
-                >
-                  {/* Date Badge */}
-                  <div className="bg-indigo-50/50 border border-indigo-100 rounded-2xl md:rounded-3xl px-4 py-3 md:px-5 md:py-4 text-center min-w-17.5 md:min-w-20 group-hover:bg-indigo-600 group-hover:border-indigo-600 transition-colors w-full sm:w-auto">
-                    <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest group-hover:text-indigo-200">
-                      {date.toLocaleDateString("en-US", { month: "short" })}
-                    </p>
-                    <p className="text-2xl md:text-3xl font-black text-indigo-600 leading-none group-hover:text-white">
-                      {date.getDate()}
-                    </p>
-                  </div>
+                      <div className="flex-1 text-center sm:text-left space-y-2 w-full">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                          <h3 className="font-black text-gray-900 text-base md:text-lg tracking-tight">{a.service.name}</h3>
+                          <span className="w-fit mx-auto sm:mx-0 text-[9px] md:text-[10px] px-3 py-0.5 rounded-full font-black uppercase tracking-widest border bg-emerald-50 text-emerald-600 border-emerald-100">
+                            {a.status}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap justify-center sm:justify-start gap-y-2 gap-x-4 text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-tight">
+                          <div className="flex items-center gap-1.5"><Clock size={14} className="text-indigo-400" /> {formattedTime} · {a.service.duration}m</div>
+                          <div className="flex items-center gap-1.5 text-indigo-500 font-black tracking-normal">$ {a.service.price.toFixed(2)}</div>
+                          <div className="flex items-center gap-1.5"><User size={14} className="text-indigo-400" /> {a.barber.user.name}</div>
+                        </div>
+                      </div>
 
-                  {/* Info */}
-                  <div className="flex-1 text-center sm:text-left space-y-2 w-full">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <h3 className="font-black text-gray-900 text-base md:text-lg tracking-tight">{a.service.name}</h3>
-                      <span className="w-fit mx-auto sm:mx-0 text-[9px] md:text-[10px] px-3 py-0.5 rounded-full font-black uppercase tracking-widest border bg-emerald-50 text-emerald-600 border-emerald-100">
-                        {a.status}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap justify-center sm:justify-start gap-y-2 gap-x-4 text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-tight">
-                      <div className="flex items-center gap-1.5"><Clock size={14} className="text-indigo-400" /> {formattedTime} · {a.service.duration}m</div>
-                      <div className="flex items-center gap-1.5 text-indigo-500 font-black tracking-normal">$ {a.service.price.toFixed(2)}</div>
-                      <div className="flex items-center gap-1.5"><User size={14} className="text-indigo-400" /> {a.barber.user.name}</div>
-                    </div>
-                  </div>
-
-                  {/* Action */}
-                  <div className="shrink-0 flex items-center w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-50 mt-2 sm:mt-0">
-                    <button
-                      onClick={() => handleCancel(a.id, a.date)}
-                      className="w-full sm:w-auto p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all font-bold text-xs"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </motion.div>
-              );
-            })}
+                      <div className="shrink-0 flex items-center w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-50 mt-2 sm:mt-0">
+                        <button
+                          onClick={() => handleCancel(a.id, a.date)}
+                          className="w-full sm:w-auto p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all font-bold text-xs"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
