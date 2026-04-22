@@ -64,7 +64,7 @@ export default function DashboardHeader({ onExceptionAdded }: Props) {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                    <div className="flex-1 min-w-[140px] md:flex-none">
+                    <div className="flex-1 min-w-35 md:flex-none">
                         <AvailabilityPopover />
                     </div>
 
