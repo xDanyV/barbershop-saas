@@ -23,7 +23,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
       <DashboardNavbar role={userRole} />
 
-      <main className="w-full max-w-7xl mx-auto px-4 py-6 sm:p-8 flex-1 overflow-y-auto overflow-x-hidden">
+      <main className="w-full max-w-7xl mx-auto px-4 py-6 sm:p-8 flex-1">
         {children}
       </main>
     </div>

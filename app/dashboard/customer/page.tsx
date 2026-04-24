@@ -47,7 +47,6 @@ export default function CustomerDashboard() {
 
   if (!barberId || !barber) return null;
 
-  // Formateador para el título de la fecha
   const displayDate = selectedDate.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
@@ -71,14 +70,16 @@ export default function CustomerDashboard() {
           animate={{ opacity: 1, x: 0 }}
           className="order-1 lg:col-span-7 space-y-6 md:space-y-8"
         >
-          <div className="space-y-2 text-center lg:text-left">
-            <div className="flex items-center justify-center lg:justify-start gap-2 text-indigo-600 font-black text-[10px] md:text-xs uppercase tracking-[0.2em]">
-              <CalendarIcon size={14} />
-              Step 1: Select Date
+          <div className="sticky top-16 lg:static z-20 bg-white/95 backdrop-blur-sm -mx-4 px-4 py-4 lg:p-0 lg:bg-transparent lg:backdrop-blur-none transition-all">
+            <div className="space-y-2 text-center lg:text-left">
+              <div className="flex items-center justify-center lg:justify-start gap-2 text-indigo-600 font-black text-[10px] md:text-xs uppercase tracking-[0.2em]">
+                <CalendarIcon size={14} />
+                Step 1: Select Date
+              </div>
+              <h2 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">
+                {displayDate}
+              </h2>
             </div>
-            <h2 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">
-              {displayDate}
-            </h2>
           </div>
 
           <div className="bg-white p-2 rounded-4xl md:rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-100/50 overflow-hidden">
