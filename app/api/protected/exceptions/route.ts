@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
         const userId = request.headers.get("x-user-id");
         const role = request.headers.get("x-user-role");
 
-        if (!userId || role !== "BARBER") {
+        if (!userId || (role !== "BARBER" && role !== "ADMIN")) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 

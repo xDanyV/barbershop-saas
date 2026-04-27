@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
             select: { role: true }
         });
 
-        // Only allow access if the user is a barber
-        if (!user || user.role !== "BARBER") {
+        // Only allow access if the user is a barber or admin
+        if (!user || (user.role !== "BARBER" && user.role !== "ADMIN")) {
             return NextResponse.json(
                 { error: "Forbidden" },
                 { status: 403 }

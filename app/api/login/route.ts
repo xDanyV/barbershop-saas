@@ -39,18 +39,24 @@ export async function POST(req: Request) {
       throw new Error("JWT_SECRET not defined");
     }
 
-    // Fetch barber profile if user is a BARBER
-    const barberProfile = user.role === "BARBER"
+    // LÓGICA DE ROLES: Buscamos el perfil si es BARBER o ADMIN
+    const isBarberOrAdmin = user.role === "BARBER" || user.role === "ADMIN";
+
+    const barberProfile = isBarberOrAdmin
       ? await prisma.barber.findUnique({ where: { userId: user.id } })
       : null;
 
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
-    // Generate JWT with barberId if applicable
+    // Generar JWT con información de Barbero (ID y Estatus)
     const token = await new SignJWT({
       userId: user.id,
       role: user.role,
-      ...(barberProfile && { barberId: barberProfile.id }),
+      // Incluimos barberId y barberStatus solo si existen
+      ...(barberProfile && {
+        barberId: barberProfile.id,
+        barberStatus: barberProfile.status
+      }),
     })
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
@@ -63,11 +69,13 @@ export async function POST(req: Request) {
       message: "Login successful",
       user: {
         ...safeUser,
-        ...(barberProfile && { barberId: barberProfile.id }),
+        ...(barberProfile && {
+          barberId: barberProfile.id,
+          barberStatus: barberProfile.status
+        }),
       },
     });
 
-    // Set the JWT token in an HTTP-only cookie
     response.cookies.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -79,7 +87,7 @@ export async function POST(req: Request) {
     return response;
 
   } catch (error) {
-    console.error(error);
+    console.error("Login Error:", error);
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }

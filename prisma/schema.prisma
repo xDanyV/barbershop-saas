@@ -27,6 +27,7 @@ model User {
 enum Role {
   CUSTOMER
   BARBER
+  ADMIN
 }
 
 model Appointment {
@@ -55,12 +56,19 @@ model Barber {
   //userId is unique because each barber has one user profile, but a user can only be a barber or a customer, not both
   userId       String            @unique
   user         User              @relation(fields: [userId], references: [id])
+  status       BarberStatus      @default(PENDING)
   active       Boolean           @default(true)
   createdAt    DateTime          @default(now())
   appointments Appointment[]
   availability Availability[]
   exceptions   BarberException[]
   services     Service[]
+}
+
+enum BarberStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model Availability {
