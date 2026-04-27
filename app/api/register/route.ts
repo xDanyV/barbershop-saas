@@ -25,7 +25,12 @@ export async function POST(req: Request) {
         );
     }
 
+    const userCount = await prisma.user.count();
+    const isFirstUser = userCount === 0;
+
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    const finalRole = (isFirstUser && role === "BARBER") ? "ADMIN" : (role || "CUSTOMER");
 
     const newUser = await prisma.user.create({
         data: {
@@ -33,15 +38,13 @@ export async function POST(req: Request) {
             email,
             phone,
             password: hashedPassword,
+            role: finalRole, 
         },
     });
 
-    if (role === "BARBER") {
-        await createBarberFromUser(newUser.id);
+    if (role === "BARBER" || finalRole === "ADMIN") {
+        await createBarberFromUser(newUser.id, isFirstUser);
     }
-
-
-    const { password: _, ...safeUser } = newUser;
 
     return NextResponse.json(
       { message: "User created successfully" },

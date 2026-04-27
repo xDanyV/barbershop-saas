@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
         const role = request.headers.get("x-user-role");
         const barberId = request.headers.get("x-barber-id");
 
-        if (role !== "BARBER" || !barberId) {
+        if ((role !== "BARBER" && role !== "ADMIN") || !barberId) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
         const role = request.headers.get("x-user-role");
         const barberId = request.headers.get("x-barber-id");
 
-        if (role !== "BARBER" || !barberId) {
+        if ((role !== "BARBER" && role !== "ADMIN") || !barberId) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 

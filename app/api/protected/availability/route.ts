@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
         const role = request.headers.get("x-user-role");
         const userId = request.headers.get("x-user-id");
 
-        if (role !== "BARBER" || !userId) {
+        if ((role !== "BARBER" && role !== "ADMIN") || !userId) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
         const role = request.headers.get("x-user-role");
         const userId = request.headers.get("x-user-id");
 
-        if (role !== "BARBER" || !userId) {
+        if ((role !== "BARBER" && role !== "ADMIN") || !userId) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 

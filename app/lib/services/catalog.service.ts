@@ -7,7 +7,7 @@ export async function createCatalogService(
   role: string,
   barberId: string
 ) {
-  if (role !== "BARBER") {
+  if (role !== "BARBER" && role !== "ADMIN") {
     throw new Error("Only barbers can create services");
   }
 
@@ -44,7 +44,7 @@ export async function updateCatalogService(
   role: string,
   barberId: string
 ) {
-  if (role !== "BARBER") {
+  if (role !== "BARBER" && role !== "ADMIN") {
     throw new Error("Only barbers can update services");
   }
 
@@ -80,7 +80,7 @@ export async function deleteCatalogService(
   role: string,
   barberId: string
 ) {
-  if (role !== "BARBER") {
+  if (role !== "BARBER" && role !== "ADMIN") {
     throw new Error("Only barbers can delete services");
   }
 

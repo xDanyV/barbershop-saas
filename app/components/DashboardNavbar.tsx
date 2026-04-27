@@ -4,21 +4,32 @@ import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Toaster, toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { LogOut, CalendarDays, Scissors, Users, BookOpen } from "lucide-react";
+import { LogOut, CalendarDays, Scissors, BookOpen, ShieldCheck } from "lucide-react";
 
 export default function DashboardNavbar({ role }: { role: string }) {
     const router = useRouter();
     const pathname = usePathname();
 
-    const menuItems = role === "BARBER"
-        ? [
+    let menuItems = [];
+
+    if (role === "ADMIN") {
+        menuItems = [
+            { name: "Admin Control", path: "/dashboard/admin", icon: ShieldCheck }, // Tu nueva pestaña
             { name: "Mis Citas", path: "/dashboard/barber", icon: CalendarDays },
             { name: "Catálogo", path: "/dashboard/barber/catalog", icon: Scissors },
-        ]
-        : [
+        ];
+    } else if (role === "BARBER") {
+        menuItems = [
+            { name: "Mis Citas", path: "/dashboard/barber", icon: CalendarDays },
+            { name: "Catálogo", path: "/dashboard/barber/catalog", icon: Scissors },
+        ];
+    } else {
+        // Por defecto es CUSTOMER
+        menuItems = [
             { name: "Mis Citas", path: "/dashboard/customer/home", icon: CalendarDays },
             { name: "Reservar", path: "/dashboard/customer/barbers", icon: BookOpen },
         ];
+    }
 
     const handleLogout = async () => {
         await fetch("/api/logout", { method: "POST" });

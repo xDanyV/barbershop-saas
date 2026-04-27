@@ -7,43 +7,32 @@ export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
   if (!token) {
-    if (pathname.startsWith("/api")) {// If it's an API route, return a 401 response
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+    if (pathname.startsWith("/api")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    return NextResponse.redirect(new URL("/login", request.url));// Redirect to login page if no token is present
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Ensure JWT_SECRET is defined
   const jwtSecret = process.env.JWT_SECRET;
-
   if (!jwtSecret) {
     console.error("JWT_SECRET not defined");
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 
   try {
-    // Verify the JWT token and extract the payload
     const secret = new TextEncoder().encode(jwtSecret);
     const { payload } = await jwtVerify(token, secret);
 
-    // Check if the payload contains the necessary user information
     if (!payload.userId || !payload.role) {
       return NextResponse.json({ error: "Invalid token payload" }, { status: 401 });
     }
 
-    // Create new headers for the request to include user information
     const requestHeaders = new Headers(request.headers);
-
-    // Add user information from the token payload to the request headers
     requestHeaders.set("x-user-id", String(payload.userId));
     requestHeaders.set("x-user-role", String(payload.role));
 
-    if (payload.barberId) {
-      requestHeaders.set("x-barber-id", String(payload.barberId));
-    }
+    if (payload.barberId) requestHeaders.set("x-barber-id", String(payload.barberId));
+    if (payload.barberStatus) requestHeaders.set("x-barber-status", String(payload.barberStatus));
 
     const isBookingRoute =
       pathname === "/dashboard/customer/barbers" ||
@@ -54,17 +43,13 @@ export async function middleware(request: NextRequest) {
         const response = await fetch(`${request.nextUrl.origin}/api/protected/appointments/user`, {
           headers: { Cookie: `token=${token}` },
         });
-
         const data = await response.json();
-
         if (Array.isArray(data)) {
           const activeAppointments = data.filter(
             (a) => a.status === "PENDING" || a.status === "CONFIRMED"
           );
-
           if (activeAppointments.length >= 2) {
             const responseRedirect = NextResponse.redirect(new URL("/dashboard/customer/home", request.url));
-
             responseRedirect.headers.set('Cache-Control', 'no-store, max-age=0');
             return responseRedirect;
           }
@@ -74,13 +59,20 @@ export async function middleware(request: NextRequest) {
       }
     }
 
+    // --- PROTECCIÓN DE RUTAS POR ROL ---
 
-
-    if (pathname.startsWith("/dashboard/barber") && payload.role !== "BARBER") {
-      return NextResponse.redirect(new URL("/dashboard/customer/home", request.url));
+    if (pathname.startsWith("/dashboard/barber")) {
+      const canAccess = payload.role === "BARBER" || payload.role === "ADMIN";
+      if (!canAccess) {
+        return NextResponse.redirect(new URL("/dashboard/customer/home", request.url));
+      }
     }
 
     if (pathname.startsWith("/dashboard/customer") && payload.role !== "CUSTOMER") {
+      return NextResponse.redirect(new URL("/dashboard/barber", request.url));
+    }
+
+    if (pathname.startsWith("/dashboard/admin") && payload.role !== "ADMIN") {
       return NextResponse.redirect(new URL("/dashboard/barber", request.url));
     }
 
@@ -91,6 +83,7 @@ export async function middleware(request: NextRequest) {
     });
 
   } catch (error) {
+    console.error("Middleware JWT Error:", error);
     return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 });
   }
 }
@@ -98,6 +91,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/api/protected/:path*",
+    "/api/admin/:path*",
     "/dashboard/:path*",
   ],
 };

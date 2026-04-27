@@ -10,15 +10,15 @@ type RawAppointment = {
   id: string;
   date: string;
   status: "PENDING" | "CONFIRMED" | "CANCELLED";
-  user: { name: string };
+  user: { name: string; email?: string; phone?: string }; // Añadidos opcionales
   service: { name: string };
 };
 
 type Appointment = {
   id: string;
   customerName: string;
-  customerEmail: string; // Agrégalos aquí
-  customerPhone: string; // Agrégalos aquí
+  customerEmail: string;
+  customerPhone: string;
   service: string;
   time: string;
   status: "PENDING" | "CONFIRMED" | "COMPLETED";
@@ -44,56 +44,74 @@ export default function BarberDashboard() {
   }, []);
 
   useEffect(() => {
-    if (!barberId) return;
+    if (!barberId) {
+      // Si no hay barberId (caso Admin puro), dejamos de cargar
+      setLoading(false);
+      return;
+    }
 
+    setLoading(true);
     fetch("/api/protected/appointments/barber")
       .then((res) => res.json())
-      .then((data: RawAppointment[]) => setRaw(data))
-      .catch((err) => console.error("Could not load appointments", err))
+      .then((data) => {
+        // VALIDACIÓN CRÍTICA: Si data no es array, ponemos lista vacía
+        setRaw(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        console.error("Could not load appointments", err);
+        setRaw([]);
+      })
       .finally(() => setLoading(false));
 
     fetch(`/api/exceptions/${barberId}`)
       .then((res) => res.json())
-      .then((data: Exception[]) => setExceptions(data))
-      .catch(() => console.error("Could not load exceptions"));
+      .then((data) => setExceptions(Array.isArray(data) ? data : []))
+      .catch(() => {
+        console.error("Could not load exceptions");
+        setExceptions([]);
+      });
   }, [barberId]);
 
   const handleConfirm = (id: string) => {
     setRaw((prev) =>
-      prev.map((a) => a.id === id ? { ...a, status: "CONFIRMED" as const } : a)
+      Array.isArray(prev) ? prev.map((a) => a.id === id ? { ...a, status: "CONFIRMED" as const } : a) : []
     );
   };
 
   const filterDate = date || new Date().toISOString().split("T")[0];
 
-  const appointments: Appointment[] = (raw as any[]) // Forzamos raw como array de cualquier cosa
-    .filter((a) => a.date.split("T")[0] === filterDate)
+  // TRANSFORMACIÓN SEGURA
+  const appointments: Appointment[] = (Array.isArray(raw) ? raw : [])
+    .filter((a) => a.date && a.date.split("T")[0] === filterDate)
     .map((a) => {
       const isPast = new Date(a.date) < new Date();
 
       let status: "PENDING" | "CONFIRMED" | "COMPLETED" =
         a.status === "CANCELLED" ? "PENDING" :
           a.status === "CONFIRMED" && isPast ? "COMPLETED" :
-            a.status;
+            a.status as any;
 
       return {
         id: a.id,
         customerName: a.user?.name ?? "Unknown",
-        customerEmail: a.user?.email ?? "", // Ahora sí te dejará
-        customerPhone: a.user?.phone ?? "", // Ahora sí te dejará
+        customerEmail: a.user?.email ?? "N/A",
+        customerPhone: a.user?.phone ?? "N/A",
         service: a.service?.name ?? "Service",
-        time: new Date(a.date).toLocaleTimeString("en-US", {
+        time: a.date ? new Date(a.date).toLocaleTimeString("en-US", {
           hour: "2-digit",
           minute: "2-digit",
           hour12: true
-        }),
+        }) : "--:--",
         status,
       };
     });
 
-  const appointmentCounts = raw.reduce<Record<string, number>>((acc, a) => {
-    const key = a.date.split("T")[0];
-    acc[key] = (acc[key] || 0) + 1;
+  // REDUCE SEGURO
+  const appointmentCounts = (Array.isArray(raw) ? raw : []).reduce<Record<string, number>>((acc, a) => {
+    if (a.date) {
+      const key = a.date.split("T")[0];
+      acc[key] = (acc[key] || 0) + 1;
+    }
     return acc;
   }, {});
 
@@ -101,10 +119,9 @@ export default function BarberDashboard() {
     if (!barberId) return;
     fetch(`/api/exceptions/${barberId}`)
       .then((res) => res.json())
-      .then((data: Exception[]) => setExceptions(data))
+      .then((data) => setExceptions(Array.isArray(data) ? data : []))
       .catch(() => console.error("Could not refresh exceptions"));
   };
-
 
   return (
     <motion.div
@@ -115,7 +132,6 @@ export default function BarberDashboard() {
       <DashboardHeader onExceptionAdded={refreshExceptions} />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start mt-4">
-
         <div className="lg:col-span-5 w-full flex justify-center lg:justify-start overflow-hidden">
           <CalendarPicker
             selectedDate={date}
