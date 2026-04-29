@@ -13,9 +13,8 @@ const days = [
     { label: "Sun", value: 0 },
 ];
 
-// COMPONENTE: Selector de tiempo dividido (Hora, Minuto, AM/PM)
 const SplitTimeSelect = ({ value, onChange, label }: { value: string, onChange: (v: string) => void, label: string }) => {
-    // Convertir el formato "HH:MM" (24h) del backend para mostrar en los 3 selects
+
     const [h24Str, mStr] = value.split(':');
     const h24 = parseInt(h24Str, 10);
     const m = mStr === '30' ? '30' : '00';
@@ -24,7 +23,6 @@ const SplitTimeSelect = ({ value, onChange, label }: { value: string, onChange: 
     const ampm = isPM ? 'PM' : 'AM';
     const hour12 = h24 % 12 || 12;
 
-    // Función para reconstruir el formato "HH:MM" 24h cuando el usuario cambia algo
     const updateTime = (newHour12: number, newMin: string, newAmPm: string) => {
         let newH24 = newHour12;
         if (newAmPm === 'PM' && newHour12 !== 12) newH24 += 12;
@@ -40,7 +38,6 @@ const SplitTimeSelect = ({ value, onChange, label }: { value: string, onChange: 
                 {label}
             </label>
             <div className="flex gap-1.5 items-center">
-                {/* Select de Horas (1-12) */}
                 <select
                     value={hour12}
                     onChange={(e) => updateTime(parseInt(e.target.value, 10), m, ampm)}
@@ -51,7 +48,6 @@ const SplitTimeSelect = ({ value, onChange, label }: { value: string, onChange: 
                     ))}
                 </select>
                 <span className="text-gray-300 font-bold">:</span>
-                {/* Select de Minutos (00, 30) */}
                 <select
                     value={m}
                     onChange={(e) => updateTime(hour12, e.target.value, ampm)}
@@ -60,7 +56,6 @@ const SplitTimeSelect = ({ value, onChange, label }: { value: string, onChange: 
                     <option value="00">00</option>
                     <option value="30">30</option>
                 </select>
-                {/* Select de AM/PM */}
                 <select
                     value={ampm}
                     onChange={(e) => updateTime(hour12, m, e.target.value)}
@@ -74,7 +69,7 @@ const SplitTimeSelect = ({ value, onChange, label }: { value: string, onChange: 
     );
 };
 
-export default function AvailabilityModal() {
+export default function AvailabilityModal({isScrolled = false}: {isScrolled?: boolean}) {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedDays, setSelectedDays] = useState<number[]>([]);
     const [startTime, setStartTime] = useState("09:00");
@@ -118,14 +113,12 @@ export default function AvailabilityModal() {
         );
     };
 
-    // Función auxiliar para convertir "HH:MM" a minutos totales y comparar horas fácilmente
     const timeToMins = (time: string) => {
         const [h, m] = time.split(':').map(Number);
         return h * 60 + m;
     };
 
     const handleSave = async () => {
-        // --- 1. VALIDACIONES DE COHERENCIA ---
         if (selectedDays.length === 0) {
             return toast.error("You must select at least one active day.");
         }
@@ -145,13 +138,11 @@ export default function AvailabilityModal() {
                 return toast.error("The Lunch Break end must be after its start.");
             }
 
-            // --- 2. VALIDACIÓN: BREAK DENTRO DEL HORARIO LABORAL ---
             if (bStartMins < startMins || bEndMins > endMins) {
                 return toast.error("The Lunch Break must be within your working hours.");
             }
         }
 
-        // --- 3. GUARDADO ---
         setLoading(true);
         const res = await fetch("/api/protected/availability", {
             method: "POST",
@@ -176,10 +167,17 @@ export default function AvailabilityModal() {
         <>
             <button
                 onClick={() => setIsOpen(true)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
+                className={`
+                    flex items-center justify-center gap-2 rounded-xl font-bold transition-all active:scale-95
+                    ${isScrolled
+                        ? "w-12 h-12 bg-indigo-600 text-white shadow-xl rounded-full"
+                        : "w-full lg:w-auto px-5 py-3 bg-indigo-600 text-white text-sm shadow-sm hover:bg-indigo-700"
+                    }
+                `}
+                title="Availability Schedule"
             >
-                <Calendar size={18} />
-                Availability Schedule
+                <Calendar size={isScrolled ? 24 : 18} />
+                {!isScrolled && <span className="whitespace-nowrap">Availability</span>}
             </button>
 
             <Transition show={isOpen} as={Fragment}>

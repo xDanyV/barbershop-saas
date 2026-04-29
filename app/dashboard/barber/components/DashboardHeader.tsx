@@ -43,7 +43,7 @@ export default function DashboardHeader({ onExceptionAdded }: Props) {
         <>
             <header
                 className={`
-                    sticky top-[64px] lg:static z-30
+                    sticky top-16 lg:static z-30
                     bg-white transition-all duration-300 ease-in-out
                     ${isScrolled
                         ? "py-2 shadow-lg border-b border-gray-100 px-4"
@@ -95,7 +95,7 @@ export default function DashboardHeader({ onExceptionAdded }: Props) {
                     `}>
                         {/* Disponibilidad */}
                         <div className={`transition-all duration-300 ${isScrolled ? "w-12 h-12 rounded-full shadow-xl overflow-hidden" : "w-full lg:w-auto"}`}>
-                            <AvailabilityPopover />
+                            <AvailabilityPopover isScrolled={isScrolled} />
                         </div>
 
                         {/* Botón Excepciones */}
