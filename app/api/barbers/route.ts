@@ -5,7 +5,10 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   try {
     const barbers = await prisma.barber.findMany({
-      where: { active: true },
+      where: {
+        active: true,
+        status: "APPROVED"
+      },
       include: {
         user: {
           select: {
