@@ -19,6 +19,7 @@ model User {
   phone         String        @unique
   password      String
   role          Role          @default(CUSTOMER)
+  isBanned      Boolean       @default(false)
   barberProfile Barber?
   appointments  Appointment[]
   createdAt     DateTime      @default(now())
@@ -77,11 +78,11 @@ model Availability {
   barberId String
   barber   Barber @relation(fields: [barberId], references: [id])
 
-  dayOfWeek Int
-  startTime String
-  endTime   String
-  breakStart String? 
-  breakEnd   String? 
+  dayOfWeek  Int
+  startTime  String
+  endTime    String
+  breakStart String?
+  breakEnd   String?
 
   createdAt DateTime @default(now())
 }
@@ -108,4 +109,11 @@ model BarberException {
   endDate   DateTime
   reason    String?
   createdAt DateTime @default(now())
+}
+
+model SystemSettings {
+  id                 String   @id @default("global")
+  isServiceActive    Boolean  @default(true) // true = Abierto, false = Cerrado
+  maintenanceMessage String   @default("El servicio está temporalmente inactivo. Por favor, vuelve más tarde.")
+  updatedAt          DateTime @updatedAt
 }
