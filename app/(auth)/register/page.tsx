@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { toast } from "react-hot-toast";
 
 export default function RegisterPage() {
     const router = useRouter();
-    // 1. Iniciamos el rol como null para obligar a elegir
     const [role, setRole] = useState<"CUSTOMER" | "BARBER" | null>(null);
     const [form, setForm] = useState({ name: "", phone: "", email: "", password: "" });
     const [error, setError] = useState("");
@@ -19,9 +19,11 @@ export default function RegisterPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!role) return; // Seguridad extra
+        if (!role) return;
         setError("");
         setLoading(true);
+
+        const loadingToast = toast.loading("Creating account...");
 
         try {
             const response = await fetch("/api/register", {
@@ -34,15 +36,24 @@ export default function RegisterPage() {
 
             if (!response.ok) {
                 setError(data.error || "Something went wrong");
+                toast.error(data.error || "Failed to create account", { id: loadingToast });
+                setLoading(false); // Detenemos el loading porque hubo error
                 return;
             }
 
-            router.push("/login");
+            toast.success("Account created successfully! Redirecting...", {
+                id: loadingToast,
+                duration: 4000
+            });
+
+            setTimeout(() => {
+                router.push("/login");
+            }, 1500);
 
         } catch {
             setError("Something went wrong. Please try again.");
-        } finally {
-            setLoading(false);
+            toast.error("Connection error. Please try again.", { id: loadingToast });
+            setLoading(false); // Detenemos el loading porque hubo error
         }
     };
 
@@ -76,7 +87,7 @@ export default function RegisterPage() {
 
                 <div className="grid md:grid-cols-2 gap-6 items-start">
 
-                    {/* Role selector card - Movido arriba en móvil para que sea lo primero que ven */}
+                    {/* Role selector card */}
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -184,7 +195,6 @@ export default function RegisterPage() {
 
                             <button
                                 type="submit"
-                                // 2. Lógica de activación: requiere rol elegido y no estar cargando
                                 disabled={loading || !role}
                                 className={`w-full font-bold py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2 mt-4 
                                     ${!role
