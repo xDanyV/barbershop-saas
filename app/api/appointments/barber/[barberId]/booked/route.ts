@@ -33,7 +33,7 @@ export async function GET(
         });
 
         const bookedSlots = appointments
-            .filter((a) => {
+            .filter((a: any) => {
                 // PENDING y CONFIRMED siempre bloquean
                 if (a.status !== "CANCELLED") return true;
 
@@ -41,7 +41,7 @@ export async function GET(
                 const hoursUntil = (new Date(a.date).getTime() - now.getTime()) / (1000 * 60 * 60);
                 return hoursUntil < 2;
             })
-            .map((a) =>
+            .map((a: any) =>
                 new Date(a.date).toLocaleTimeString("en-US", {
                     hour: "2-digit",
                     minute: "2-digit",
