@@ -5,8 +5,8 @@ import { Calendar, Inbox, Ban } from "lucide-react";
 type Appointment = {
     id: string;
     customerName: string;
-    customerEmail: string; // Agrégalos aquí
-    customerPhone: string; // Agrégalos aquí
+    customerEmail: string;
+    customerPhone: string;
     service: string;
     time: string;
     status: "PENDING" | "CONFIRMED" | "COMPLETED";
@@ -74,9 +74,7 @@ export default function AppointmentList({ appointments, onConfirm, selectedDate,
                 </div>
             </div>
 
-            {/* Contenido con Scroll sutil si hay muchas citas */}
-            {/* AQUÍ ESTÁ EL CAMBIO: Se agregó max-h-[26rem] (aprox 4 citas), overflow-y-auto y pr-2 para el scrollbar */}
-            <div className="flex-1 overflow-y-auto max-h-[26rem] pr-2">
+            <div className="flex-1 overflow-y-auto max-h-104 pr-2">
                 <AnimatePresence mode="popLayout">
 
                     {isExceptionDay ? (
