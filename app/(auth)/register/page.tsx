@@ -9,9 +9,12 @@ import { toast } from "react-hot-toast";
 export default function RegisterPage() {
     const router = useRouter();
     const [role, setRole] = useState<"CUSTOMER" | "BARBER" | null>(null);
-    const [form, setForm] = useState({ name: "", phone: "", email: "", password: "" });
+    const [form, setForm] = useState({ name: "", phone: "", email: "", password: "", confirmPassword: "" });
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+
+    // Estado para mostrar/ocultar contraseña
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -19,17 +22,34 @@ export default function RegisterPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!role) return;
+
+        // 1. Validaciones del lado del cliente (Frontend)
+        if (!role) {
+            setError("Please select an account type");
+            return;
+        }
+        if (form.password !== form.confirmPassword) {
+            setError("Passwords do not match");
+            return;
+        }
+        if (form.password.length < 8) {
+            setError("Password must be at least 8 characters long");
+            return;
+        }
+
         setError("");
         setLoading(true);
 
-        const loadingToast = toast.loading("Creating account...");
+        const loadingToast = toast.loading("Creating your workspace...");
 
         try {
+            // Excluimos confirmPassword para no enviarlo a la API
+            const { confirmPassword, ...apiData } = form;
+
             const response = await fetch("/api/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...form, role }),
+                body: JSON.stringify({ ...apiData, role }),
             });
 
             const data = await response.json();
@@ -37,11 +57,11 @@ export default function RegisterPage() {
             if (!response.ok) {
                 setError(data.error || "Something went wrong");
                 toast.error(data.error || "Failed to create account", { id: loadingToast });
-                setLoading(false); // Detenemos el loading porque hubo error
+                setLoading(false);
                 return;
             }
 
-            toast.success("Account created successfully! Redirecting...", {
+            toast.success("Welcome aboard! Redirecting...", {
                 id: loadingToast,
                 duration: 4000
             });
@@ -51,17 +71,16 @@ export default function RegisterPage() {
             }, 1500);
 
         } catch {
-            setError("Something went wrong. Please try again.");
+            setError("Connection error. Please check your internet and try again.");
             toast.error("Connection error. Please try again.", { id: loadingToast });
-            setLoading(false); // Detenemos el loading porque hubo error
+            setLoading(false);
         }
     };
 
     return (
         <main className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4 py-8 md:py-16 relative overflow-hidden">
-
             {/* Background glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-75 bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-72 bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none" />
 
             {/* Grid background */}
             <div
@@ -72,55 +91,53 @@ export default function RegisterPage() {
                 }}
             />
 
-            <div className="relative z-10 w-full max-w-4xl">
-
+            <div className="relative z-10 w-full max-w-5xl">
                 {/* Logo */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-center mb-8"
+                    className="text-center mb-10"
                 >
-                    <Link href="/" className="inline-block text-white font-black text-2xl tracking-tight">
-                        BARBER<span className="text-indigo-400">SAAS</span>
+                    <Link href="/" className="inline-block text-white font-black text-3xl tracking-tight">
+                        BARBER<span className="text-indigo-500">SAAS</span>
                     </Link>
                 </motion.div>
 
-                <div className="grid md:grid-cols-2 gap-6 items-start">
-
+                <div className="grid lg:grid-cols-2 gap-8 items-start">
                     {/* Role selector card */}
                     <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.1 }}
-                        className="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-md order-1 md:order-2"
+                        initial={{ opacity: 0, x: -30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5 }}
+                        className="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-md order-1 lg:order-1"
                     >
-                        <h2 className="text-xl md:text-2xl font-black text-white mb-1 tracking-tight">
-                            I am a...
+                        <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">
+                            Choose your path
                         </h2>
-                        <p className="text-gray-500 text-sm mb-6 md:mb-8">
-                            Choose your role to enable registration
+                        <p className="text-gray-400 text-sm mb-8">
+                            Select how you want to use the platform. You can always change your settings later.
                         </p>
 
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             {/* Customer option */}
                             <button
                                 type="button"
                                 onClick={() => setRole("CUSTOMER")}
-                                className={`w-full p-4 md:p-5 rounded-xl border text-left transition-all duration-200 ${role === "CUSTOMER"
-                                    ? "bg-indigo-600/20 border-indigo-500/60 shadow-lg shadow-indigo-900/20"
-                                    : "bg-white/3 border-white/6 hover:bg-white/6"
+                                className={`w-full p-5 rounded-xl border text-left transition-all duration-300 ${role === "CUSTOMER"
+                                    ? "bg-indigo-600/10 border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.15)]"
+                                    : "bg-white/2 border-white/5 hover:border-white/10 hover:bg-white/4]"
                                     }`}
                             >
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${role === "CUSTOMER" ? "bg-indigo-500/30" : "bg-white/5"}`}>
-                                        💈
+                                <div className="flex items-start gap-4">
+                                    <div className={`mt-1 w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${role === "CUSTOMER" ? "bg-indigo-500/20 text-indigo-400" : "bg-white/5 text-gray-400"}`}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                                     </div>
                                     <div className="flex-1">
-                                        <p className={`font-bold text-sm ${role === "CUSTOMER" ? "text-white" : "text-gray-400"}`}>Customer</p>
-                                        <p className="text-gray-500 text-[11px] md:text-xs">Book appointments easily</p>
+                                        <p className={`font-semibold mb-1 ${role === "CUSTOMER" ? "text-white" : "text-gray-300"}`}>Customer</p>
+                                        <p className="text-gray-500 text-xs leading-relaxed">Book appointments, manage your schedule, and discover top-rated barbers in your area.</p>
                                     </div>
-                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${role === "CUSTOMER" ? "border-indigo-400" : "border-gray-600"}`}>
-                                        {role === "CUSTOMER" && <div className="w-2 h-2 rounded-full bg-indigo-400" />}
+                                    <div className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${role === "CUSTOMER" ? "border-indigo-500" : "border-gray-600"}`}>
+                                        {role === "CUSTOMER" && <motion.div layoutId="roleCheck" className="w-2.5 h-2.5 rounded-full bg-indigo-500" />}
                                     </div>
                                 </div>
                             </button>
@@ -129,21 +146,21 @@ export default function RegisterPage() {
                             <button
                                 type="button"
                                 onClick={() => setRole("BARBER")}
-                                className={`w-full p-4 md:p-5 rounded-xl border text-left transition-all duration-200 ${role === "BARBER"
-                                    ? "bg-indigo-600/20 border-indigo-500/60 shadow-lg shadow-indigo-900/20"
-                                    : "bg-white/3 border-white/6 hover:bg-white/6"
+                                className={`w-full p-5 rounded-xl border text-left transition-all duration-300 ${role === "BARBER"
+                                    ? "bg-indigo-600/10 border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.15)]"
+                                    : "bg-white/2 border-white/5 hover:border-white/10 hover:bg-white/4]"
                                     }`}
                             >
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${role === "BARBER" ? "bg-indigo-500/30" : "bg-white/5"}`}>
-                                        ✂️
+                                <div className="flex items-start gap-4">
+                                    <div className={`mt-1 w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${role === "BARBER" ? "bg-indigo-500/20 text-indigo-400" : "bg-white/5 text-gray-400"}`}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><line x1="20" x2="8.12" y1="4" y2="15.88" /><line x1="14.47" x2="20" y1="14.48" y2="20" /><line x1="8.12" x2="12" y1="8.12" y2="12" /></svg>
                                     </div>
                                     <div className="flex-1">
-                                        <p className={`font-bold text-sm ${role === "BARBER" ? "text-white" : "text-gray-400"}`}>Barber</p>
-                                        <p className="text-gray-500 text-[11px] md:text-xs">Manage your business</p>
+                                        <p className={`font-semibold mb-1 ${role === "BARBER" ? "text-white" : "text-gray-300"}`}>Barber Partner</p>
+                                        <p className="text-gray-500 text-xs leading-relaxed">Manage your business, setup your catalog, control your availability, and grow your client base.</p>
                                     </div>
-                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${role === "BARBER" ? "border-indigo-400" : "border-gray-600"}`}>
-                                        {role === "BARBER" && <div className="w-2 h-2 rounded-full bg-indigo-400" />}
+                                    <div className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${role === "BARBER" ? "border-indigo-500" : "border-gray-600"}`}>
+                                        {role === "BARBER" && <motion.div layoutId="roleCheck" className="w-2.5 h-2.5 rounded-full bg-indigo-500" />}
                                     </div>
                                 </div>
                             </button>
@@ -152,63 +169,127 @@ export default function RegisterPage() {
 
                     {/* Form card */}
                     <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
-                        className="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-md order-2 md:order-1"
+                        initial={{ opacity: 0, x: 30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                        className="bg-white/2 border border-white/5 rounded-2xl p-6 md:p-8 backdrop-blur-sm order-2 lg:order-2"
                     >
-                        <h1 className="text-xl md:text-2xl font-black text-white mb-1 tracking-tight">
-                            Create account
+                        <h1 className="text-2xl font-bold text-white mb-2 tracking-tight">
+                            Account details
                         </h1>
-                        <p className="text-gray-500 text-sm mb-6 md:mb-8">
-                            Join our community today
+                        <p className="text-gray-400 text-sm mb-8">
+                            Enter your information to get started
                         </p>
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            {[
-                                { name: "name", label: "Full name", placeholder: "John Doe", type: "text" },
-                                { name: "phone", label: "Phone number", placeholder: "+1 (555) 000-0000", type: "text" },
-                                { name: "email", label: "Email", placeholder: "you@example.com", type: "email" },
-                                { name: "password", label: "Password", placeholder: "••••••••", type: "password" },
-                            ].map((field) => (
-                                <div key={field.name}>
-                                    <label className="text-xs font-medium text-gray-400 mb-1.5 block">
-                                        {field.label}
-                                    </label>
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            {/* Inputs Básicos */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">Full name</label>
                                     <input
-                                        name={field.name}
-                                        type={field.type}
-                                        placeholder={field.placeholder}
-                                        value={form[field.name as keyof typeof form]}
+                                        name="name"
+                                        type="text"
+                                        placeholder="John Doe"
+                                        value={form.name}
                                         onChange={handleChange}
                                         required
-                                        className="w-full bg-white/5 border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
+                                        className="w-full bg-[#0f0f16] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
                                     />
                                 </div>
-                            ))}
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">Phone number</label>
+                                    <input
+                                        name="phone"
+                                        type="text"
+                                        placeholder="+1 (555) 000-0000"
+                                        value={form.phone}
+                                        onChange={handleChange}
+                                        required
+                                        className="w-full bg-[#0f0f16] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
+                                    />
+                                </div>
+                            </div>
 
+                            <div>
+                                <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">Email address</label>
+                                <input
+                                    name="email"
+                                    type="email"
+                                    placeholder="you@example.com"
+                                    value={form.email}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full bg-[#0f0f16] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
+                                />
+                            </div>
+
+                            {/* Contraseñas */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="relative">
+                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">Password</label>
+                                    <input
+                                        name="password"
+                                        type={showPassword ? "text" : "password"}
+                                        placeholder="••••••••"
+                                        value={form.password}
+                                        onChange={handleChange}
+                                        required
+                                        className="w-full bg-[#0f0f16] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 pr-10 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-8.5 text-gray-500 hover:text-gray-300 transition-colors"
+                                    >
+                                        {showPassword ? (
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+                                        ) : (
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                                        )}
+                                    </button>
+                                </div>
+                                <div className="relative">
+                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">Confirm Password</label>
+                                    <input
+                                        name="confirmPassword"
+                                        type={showPassword ? "text" : "password"}
+                                        placeholder="••••••••"
+                                        value={form.confirmPassword}
+                                        onChange={handleChange}
+                                        required
+                                        className={`w-full bg-[#0f0f16] border text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none transition-all ${form.confirmPassword && form.password !== form.confirmPassword
+                                                ? "border-red-500/50 focus:border-red-500 focus:ring-1 focus:ring-red-500/50"
+                                                : "border-white/10 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50"
+                                            }`}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Error Alert */}
                             {error && (
-                                <p className="text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 mt-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
                                     {error}
-                                </p>
+                                </motion.div>
                             )}
 
+                            {/* Submit Button */}
                             <button
                                 type="submit"
                                 disabled={loading || !role}
-                                className={`w-full font-bold py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2 mt-4 
-                                    ${!role
-                                        ? "bg-gray-800 text-gray-500 cursor-not-allowed opacity-50"
-                                        : "bg-indigo-600 hover:bg-indigo-500 text-white active:scale-[0.98]"
+                                className={`w-full font-bold py-3.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2 mt-6
+                                    ${(!role || loading)
+                                        ? "bg-white/5 text-gray-500 cursor-not-allowed border border-white/5"
+                                        : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] active:scale-[0.98]"
                                     }`}
                             >
                                 {loading ? (
                                     <>
                                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Creating...
+                                        Setting up your workspace...
                                     </>
                                 ) : !role ? (
-                                    "Select a role above"
+                                    "Select a role to continue"
                                 ) : (
                                     "Create account"
                                 )}
@@ -221,11 +302,12 @@ export default function RegisterPage() {
                 <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="text-center text-gray-600 text-sm mt-8"
+                    transition={{ delay: 0.3 }}
+                    className="text-center text-gray-500 text-sm mt-12"
                 >
                     Already have an account?{" "}
-                    <Link href="/login" className="text-indigo-400 hover:text-indigo-300 font-bold transition-colors">
-                        Sign in
+                    <Link href="/login" className="text-white hover:text-indigo-300 font-bold transition-colors">
+                        Sign in to your workspace
                     </Link>
                 </motion.p>
             </div>
