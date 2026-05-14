@@ -50,9 +50,8 @@ export default function AvailableSlots({
       .finally(() => setLoading(false));
   }, [selectedDate, barberId]);
 
-  // Función auxiliar para comparar horas fácilmente
   const timeToMinutes = (timeStr: string) => {
-    // Maneja formatos "HH:mm" y "hh:mm AM/PM"
+
     if (timeStr.includes("M")) {
       const [time, modifier] = timeStr.split(" ");
       let [hours, minutes] = time.split(":").map(Number);
@@ -95,22 +94,18 @@ export default function AvailableSlots({
     : [];
 
   const availableSlots = allSlots.filter((slot) => {
-    // 1. Filtrar si ya está reservado
     if (bookedSlots.includes(slot)) return false;
 
-    // 2. FILTRO DE LUNCH BREAK
     if (schedule?.breakStart && schedule?.breakEnd) {
       const slotMin = timeToMinutes(slot);
       const breakStartMin = timeToMinutes(schedule.breakStart);
       const breakEndMin = timeToMinutes(schedule.breakEnd);
 
-      // Si el slot está dentro del rango de descanso, lo eliminamos
       if (slotMin >= breakStartMin && slotMin < breakEndMin) {
         return false;
       }
     }
 
-    // 3. Filtrar si es hoy y la hora ya pasó
     const now = new Date();
     const isToday = selectedDate.toDateString() === now.toDateString();
 
@@ -134,7 +129,6 @@ export default function AvailableSlots({
   }
 
   return (
-    /* Mantenemos tus clases originales de scroll y tamaño */
     <div className="bg-white border border-gray-100 rounded-4xl md:rounded-[2.5rem] shadow-xl shadow-gray-100/50 p-5 md:p-6 flex flex-col h-100 md:h-125">
       <div className="mb-5 md:mb-6 shrink-0 space-y-1">
         <div className="flex items-center justify-between">
@@ -147,7 +141,6 @@ export default function AvailableSlots({
           <CalendarCheck size={14} className="text-indigo-500" />
           <span>
             {schedule.startTime} — {schedule.endTime}
-            {schedule.breakStart && ` (Break: ${schedule.breakStart}-${schedule.breakEnd})`}
           </span>
         </div>
       </div>
