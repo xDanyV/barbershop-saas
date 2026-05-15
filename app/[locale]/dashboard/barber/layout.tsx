@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import PendingApproval from "@/components/barber/PendingApproval";
+import PendingApproval from "@/[locale]/components/barber/PendingApproval";
 
 export default async function BarberDashboardLayout({
     children,
