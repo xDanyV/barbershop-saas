@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// ¡Mejoramos el SEO de paso!
+
 export const metadata: Metadata = {
   title: "BarberSaaS | Manage your business",
   description: "The best platform to book and manage barbershop appointments",
@@ -31,7 +31,7 @@ export default async function RootLayout({
   params
 }: {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>; // <--- SOLUCIÓN: Envolverlo en Promise
 }) {
   const { locale } = await params;
 
