@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { jwtVerify } from "jose";
-import DashboardNavbar from "@/components/DashboardNavbar";
+import DashboardNavbar from "@/[locale]/components/DashboardNavbar";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();

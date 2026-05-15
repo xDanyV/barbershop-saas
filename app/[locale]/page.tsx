@@ -1,5 +1,5 @@
-import HeroSection from "@/components/landing/HeroSection";
-import FeaturesSection from "@/components/landing/FeaturesSection";
+import HeroSection from "@/[locale]/components/landing/HeroSection";
+import FeaturesSection from "@/[locale]/components/landing/FeaturesSection";
 import Link from "next/link";
 
 export default function Home() {

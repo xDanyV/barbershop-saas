@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
+import { useTranslations } from "next-intl";
 
 export default function RegisterPage() {
+    const t = useTranslations("Register");
     const router = useRouter();
     const [role, setRole] = useState<"CUSTOMER" | "BARBER" | null>(null);
     const [form, setForm] = useState({ name: "", phone: "", email: "", password: "", confirmPassword: "" });
@@ -112,10 +114,10 @@ export default function RegisterPage() {
                         className="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-md order-1 lg:order-1"
                     >
                         <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">
-                            Choose your path
+                            {t("choosePath")}
                         </h2>
                         <p className="text-gray-400 text-sm mb-8">
-                            Select how you want to use the platform. You can always change your settings later.
+                            {t("choosePathDesc")}
                         </p>
 
                         <div className="space-y-4">
@@ -125,7 +127,7 @@ export default function RegisterPage() {
                                 onClick={() => setRole("CUSTOMER")}
                                 className={`w-full p-5 rounded-xl border text-left transition-all duration-300 ${role === "CUSTOMER"
                                     ? "bg-indigo-600/10 border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.15)]"
-                                    : "bg-white/2 border-white/5 hover:border-white/10 hover:bg-white/4]"
+                                    : "bg-white/2 border-white/5 hover:border-white/10 hover:bg-white/4"
                                     }`}
                             >
                                 <div className="flex items-start gap-4">
@@ -133,8 +135,8 @@ export default function RegisterPage() {
                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                                     </div>
                                     <div className="flex-1">
-                                        <p className={`font-semibold mb-1 ${role === "CUSTOMER" ? "text-white" : "text-gray-300"}`}>Customer</p>
-                                        <p className="text-gray-500 text-xs leading-relaxed">Book appointments, manage your schedule, and discover top-rated barbers in your area.</p>
+                                        <p className={`font-semibold mb-1 ${role === "CUSTOMER" ? "text-white" : "text-gray-300"}`}>{t("customerTitle")}</p>
+                                        <p className="text-gray-500 text-xs leading-relaxed">{t("customerDesc")}</p>
                                     </div>
                                     <div className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${role === "CUSTOMER" ? "border-indigo-500" : "border-gray-600"}`}>
                                         {role === "CUSTOMER" && <motion.div layoutId="roleCheck" className="w-2.5 h-2.5 rounded-full bg-indigo-500" />}
@@ -148,7 +150,7 @@ export default function RegisterPage() {
                                 onClick={() => setRole("BARBER")}
                                 className={`w-full p-5 rounded-xl border text-left transition-all duration-300 ${role === "BARBER"
                                     ? "bg-indigo-600/10 border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.15)]"
-                                    : "bg-white/2 border-white/5 hover:border-white/10 hover:bg-white/4]"
+                                    : "bg-white/2 border-white/5 hover:border-white/10 hover:bg-white/4"
                                     }`}
                             >
                                 <div className="flex items-start gap-4">
@@ -156,8 +158,8 @@ export default function RegisterPage() {
                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><line x1="20" x2="8.12" y1="4" y2="15.88" /><line x1="14.47" x2="20" y1="14.48" y2="20" /><line x1="8.12" x2="12" y1="8.12" y2="12" /></svg>
                                     </div>
                                     <div className="flex-1">
-                                        <p className={`font-semibold mb-1 ${role === "BARBER" ? "text-white" : "text-gray-300"}`}>Barber Partner</p>
-                                        <p className="text-gray-500 text-xs leading-relaxed">Manage your business, setup your catalog, control your availability, and grow your client base.</p>
+                                        <p className={`font-semibold mb-1 ${role === "BARBER" ? "text-white" : "text-gray-300"}`}>{t("barberTitle")}</p>
+                                        <p className="text-gray-500 text-xs leading-relaxed">{t("barberDesc")}</p>
                                     </div>
                                     <div className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${role === "BARBER" ? "border-indigo-500" : "border-gray-600"}`}>
                                         {role === "BARBER" && <motion.div layoutId="roleCheck" className="w-2.5 h-2.5 rounded-full bg-indigo-500" />}
@@ -175,17 +177,17 @@ export default function RegisterPage() {
                         className="bg-white/2 border border-white/5 rounded-2xl p-6 md:p-8 backdrop-blur-sm order-2 lg:order-2"
                     >
                         <h1 className="text-2xl font-bold text-white mb-2 tracking-tight">
-                            Account details
+                            {t("accountDetails")}
                         </h1>
                         <p className="text-gray-400 text-sm mb-8">
-                            Enter your information to get started
+                            {t("accountDetailsDesc")}
                         </p>
 
                         <form onSubmit={handleSubmit} className="space-y-5">
                             {/* Inputs Básicos */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">Full name</label>
+                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">{t("form.fullName")}</label>
                                     <input
                                         name="name"
                                         type="text"
@@ -197,7 +199,7 @@ export default function RegisterPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">Phone number</label>
+                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">{t("form.phone")}</label>
                                     <input
                                         name="phone"
                                         type="text"
@@ -211,7 +213,7 @@ export default function RegisterPage() {
                             </div>
 
                             <div>
-                                <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">Email address</label>
+                                <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">{t("form.email")}</label>
                                 <input
                                     name="email"
                                     type="email"
@@ -226,7 +228,7 @@ export default function RegisterPage() {
                             {/* Contraseñas */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div className="relative">
-                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">Password</label>
+                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">{t("form.password")}</label>
                                     <input
                                         name="password"
                                         type={showPassword ? "text" : "password"}
@@ -249,7 +251,7 @@ export default function RegisterPage() {
                                     </button>
                                 </div>
                                 <div className="relative">
-                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">Confirm Password</label>
+                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">{t("form.confirmPassword")}</label>
                                     <input
                                         name="confirmPassword"
                                         type={showPassword ? "text" : "password"}
@@ -258,8 +260,8 @@ export default function RegisterPage() {
                                         onChange={handleChange}
                                         required
                                         className={`w-full bg-[#0f0f16] border text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none transition-all ${form.confirmPassword && form.password !== form.confirmPassword
-                                                ? "border-red-500/50 focus:border-red-500 focus:ring-1 focus:ring-red-500/50"
-                                                : "border-white/10 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50"
+                                            ? "border-red-500/50 focus:border-red-500 focus:ring-1 focus:ring-red-500/50"
+                                            : "border-white/10 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50"
                                             }`}
                                     />
                                 </div>
@@ -286,12 +288,12 @@ export default function RegisterPage() {
                                 {loading ? (
                                     <>
                                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Setting up your workspace...
+                                        {t("buttons.creating")}
                                     </>
                                 ) : !role ? (
-                                    "Select a role to continue"
+                                    t("buttons.selectRole")
                                 ) : (
-                                    "Create account"
+                                    t("buttons.create")
                                 )}
                             </button>
                         </form>
@@ -305,9 +307,9 @@ export default function RegisterPage() {
                     transition={{ delay: 0.3 }}
                     className="text-center text-gray-500 text-sm mt-12"
                 >
-                    Already have an account?{" "}
+                    {t("login.question")}{" "}
                     <Link href="/login" className="text-white hover:text-indigo-300 font-bold transition-colors">
-                        Sign in to your workspace
+                        {t("login.action")}
                     </Link>
                 </motion.p>
             </div>

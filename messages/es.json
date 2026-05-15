@@ -1,0 +1,28 @@
+{
+    "Register": {
+        "choosePath": "Elige tu camino",
+        "choosePathDesc": "Selecciona cómo quieres usar la plataforma. Puedes cambiar tu configuración más tarde.",
+        "customerTitle": "Cliente",
+        "customerDesc": "Reserva citas, gestiona tu horario y descubre a los mejores barberos de tu zona.",
+        "barberTitle": "Socio Barbero",
+        "barberDesc": "Gestiona tu negocio, configura tu catálogo, controla tu disponibilidad y haz crecer tu base de clientes.",
+        "accountDetails": "Detalles de la cuenta",
+        "accountDetailsDesc": "Ingresa tu información para comenzar",
+        "form": {
+            "fullName": "Nombre completo",
+            "phone": "Número de teléfono",
+            "email": "Correo electrónico",
+            "password": "Contraseña",
+            "confirmPassword": "Confirmar Contraseña"
+        },
+        "buttons": {
+            "creating": "Configurando tu espacio...",
+            "selectRole": "Selecciona un rol para continuar",
+            "create": "Crear cuenta"
+        },
+        "login": {
+            "question": "¿Ya tienes una cuenta?",
+            "action": "Inicia sesión"
+        }
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "Register": {
+        "choosePath": "Choose your path",
+        "choosePathDesc": "Select how you want to use the platform. You can always change your settings later.",
+        "customerTitle": "Customer",
+        "customerDesc": "Book appointments, manage your schedule, and discover top-rated barbers in your area.",
+        "barberTitle": "Barber Partner",
+        "barberDesc": "Manage your business, setup your catalog, control your availability, and grow your client base.",
+        "accountDetails": "Account details",
+        "accountDetailsDesc": "Enter your information to get started",
+        "form": {
+            "fullName": "Full name",
+            "phone": "Phone number",
+            "email": "Email address",
+            "password": "Password",
+            "confirmPassword": "Confirm Password"
+        },
+        "buttons": {
+            "creating": "Setting up your workspace...",
+            "selectRole": "Select a role to continue",
+            "create": "Create account"
+        },
+        "login": {
+            "question": "Already have an account?",
+            "action": "Sign in to your workspace"
+        }
+    }
+}
