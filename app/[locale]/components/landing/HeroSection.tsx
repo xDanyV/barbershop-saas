@@ -2,8 +2,11 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export default function HeroSection() {
+    const t = useTranslations("Home.hero");
+
     return (
         <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#0a0a0f]">
 
@@ -32,7 +35,7 @@ export default function HeroSection() {
                     className="inline-flex items-center gap-2 bg-indigo-950/80 border border-indigo-700/50 text-indigo-300 text-xs font-medium px-4 py-1.5 rounded-full mb-8 backdrop-blur-sm"
                 >
                     <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-                    Barbershop management platform
+                    {t("badge")}
                 </motion.div>
 
                 {/* Headline */}
@@ -43,9 +46,9 @@ export default function HeroSection() {
                     className="text-6xl md:text-8xl font-black tracking-tight text-white leading-none mb-6"
                     style={{ fontFamily: "'DM Sans', sans-serif" }}
                 >
-                    <span className="block">YOUR CUTS.</span>
+                    <span className="block">{t("headlineLine1")}</span>
                     <span className="block text-transparent bg-clip-text bg-linear-to-r from-indigo-400 to-indigo-200">
-                        YOUR SCHEDULE.
+                        {t("headlineLine2")}
                     </span>
                 </motion.h1>
 
@@ -56,7 +59,7 @@ export default function HeroSection() {
                     transition={{ duration: 0.6, delay: 0.2 }}
                     className="text-gray-400 text-lg md:text-xl max-w-xl mx-auto mb-12 leading-relaxed"
                 >
-                    Book appointments, manage your barber's calendar, and stay on top of every cut — all in one place.
+                    {t("subheadline")}
                 </motion.p>
 
                 {/* CTA Buttons */}
@@ -70,7 +73,7 @@ export default function HeroSection() {
                         href="/register"
                         className="group relative px-8 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl transition-all duration-200 overflow-hidden"
                     >
-                        <span className="relative z-10">Get started — it's free</span>
+                        <span className="relative z-10">{t("ctaPrimary")}</span>
                         <div className="absolute inset-0 bg-linear-to-r from-indigo-500 to-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                     </Link>
 
@@ -78,7 +81,7 @@ export default function HeroSection() {
                         href="/login"
                         className="px-8 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold rounded-xl transition-all duration-200 backdrop-blur-sm"
                     >
-                        Sign in
+                        {t("ctaSecondary")}
                     </Link>
                 </motion.div>
 

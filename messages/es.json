@@ -24,5 +24,103 @@
             "question": "¿Ya tienes una cuenta?",
             "action": "Inicia sesión"
         }
+    },
+    "Home": {
+        "nav": {
+            "signIn": "Iniciar sesión",
+            "getStarted": "Comenzar"
+        },
+        "hero": {
+            "badge": "Plataforma de gestión para barberías",
+            "headlineLine1": "TUS CORTES.",
+            "headlineLine2": "TU AGENDA.",
+            "subheadline": "Reserva citas, gestiona el calendario de tu barbero y mantén el control de cada corte — todo en un solo lugar.",
+            "ctaPrimary": "Comenzar — es gratis",
+            "ctaSecondary": "Iniciar sesión"
+        },
+        "features": {
+            "eyebrow": "Todo lo que necesitas",
+            "headlinePrimary": "Hecho para barberos.",
+            "headlineSecondary": "Amado por clientes.",
+            "items": {
+                "scheduling": {
+                    "title": "Agenda inteligente",
+                    "description": "Los clientes reservan directamente desde tu calendario en vivo. Sin llamadas, sin idas y vueltas."
+                },
+                "catalog": {
+                    "title": "Catálogo de servicios",
+                    "description": "Crea y gestiona tus servicios con precios y duraciones personalizados."
+                },
+                "confirmations": {
+                    "title": "Confirmaciones instantáneas",
+                    "description": "Confirma o cancela citas con un toque. Los clientes siempre están al tanto."
+                },
+                "exceptions": {
+                    "title": "Bloqueos por excepción",
+                    "description": "Bloquea vacaciones o emergencias. Las citas afectadas se cancelan automáticamente."
+                },
+                "history": {
+                    "title": "Historial de citas",
+                    "description": "Historial completo de reservas pasadas y futuras para barberos y clientes."
+                },
+                "security": {
+                    "title": "Seguro por defecto",
+                    "description": "Autenticación JWT con acceso basado en roles. Cada usuario ve solo lo que necesita."
+                }
+            }
+        },
+        "footerCta": {
+            "title": "¿Listo para tomar el control de tu agenda?",
+            "description": "Únete a los barberos que ya gestionan sus reservas con BarberSaaS.",
+            "button": "Crea tu cuenta"
+        },
+        "footer": {
+            "rights": "© {year} BarberSaaS. Todos los derechos reservados."
+        }
+    },
+    "Login": {
+        "title": "Bienvenido de vuelta",
+        "subtitle": "Inicia sesión en tu cuenta para continuar",
+        "form": {
+            "email": "Correo electrónico",
+            "emailPlaceholder": "tu@ejemplo.com",
+            "password": "Contraseña"
+        },
+        "errors": {
+            "invalidCredentials": "Credenciales incorrectas",
+            "generic": "Algo salió mal. Por favor intenta de nuevo."
+        },
+        "buttons": {
+            "signingIn": "Iniciando sesión...",
+            "signIn": "Iniciar sesión"
+        },
+        "register": {
+            "question": "¿No tienes una cuenta?",
+            "action": "Crear una"
+        }
+    },
+    "DashboardNavbar": {
+        "menu": {
+            "adminControl": "Admin Control",
+            "myAppointments": "Mis Citas",
+            "catalog": "Catálogo",
+            "book": "Reservar"
+        },
+        "logout": "Cerrar Sesión",
+        "errors": {
+            "appointmentLimit": "Máximo 2 citas activas permitidas."
+        }
+    },
+    "PendingApproval": {
+        "title": "Cuenta en revisión",
+        "description": "¡Bienvenido al equipo! Nuestro administrador está verificando tu perfil. Esto suele tomar menos de 24 horas.",
+        "securityTitle": "La seguridad primero",
+        "securityDesc": "Verificamos a cada profesional para mantener la calidad de nuestro servicio. Tendrás acceso a tu agenda una vez que seas aprobado.",
+        "logoutButton": "Cerrar sesión y volver más tarde"
+    },
+    "Maintenance": {
+        "title": "Servicio en Pausa",
+        "waitMessage": "Te esperamos pronto",
+        "backButton": "Volver al Inicio"
     }
 }

@@ -24,5 +24,103 @@
             "question": "Already have an account?",
             "action": "Sign in to your workspace"
         }
+    },
+    "Home": {
+        "nav": {
+            "signIn": "Sign in",
+            "getStarted": "Get started"
+        },
+        "hero": {
+            "badge": "Barbershop management platform",
+            "headlineLine1": "YOUR CUTS.",
+            "headlineLine2": "YOUR SCHEDULE.",
+            "subheadline": "Book appointments, manage your barber's calendar, and stay on top of every cut — all in one place.",
+            "ctaPrimary": "Get started — it's free",
+            "ctaSecondary": "Sign in"
+        },
+        "features": {
+            "eyebrow": "Everything you need",
+            "headlinePrimary": "Built for barbers.",
+            "headlineSecondary": "Loved by clients.",
+            "items": {
+                "scheduling": {
+                    "title": "Smart Scheduling",
+                    "description": "Customers book directly from your live calendar. No back-and-forth, no phone calls."
+                },
+                "catalog": {
+                    "title": "Service Catalog",
+                    "description": "Create and manage your services with custom prices and durations."
+                },
+                "confirmations": {
+                    "title": "Instant Confirmations",
+                    "description": "Confirm or cancel appointments in one tap. Customers are always in the loop."
+                },
+                "exceptions": {
+                    "title": "Exception Blocks",
+                    "description": "Block out vacations or emergencies. Affected appointments are cancelled automatically."
+                },
+                "history": {
+                    "title": "Appointment History",
+                    "description": "Full history of past and upcoming bookings for both barbers and customers."
+                },
+                "security": {
+                    "title": "Secure by Default",
+                    "description": "JWT authentication with role-based access. Barbers and customers each see only what they need."
+                }
+            }
+        },
+        "footerCta": {
+            "title": "Ready to take control of your schedule?",
+            "description": "Join barbers already managing their bookings with BarberSaaS.",
+            "button": "Create your account"
+        },
+        "footer": {
+            "rights": "© {year} BarberSaaS. All rights reserved."
+        }
+    },
+    "Login": {
+        "title": "Welcome back",
+        "subtitle": "Sign in to your account to continue",
+        "form": {
+            "email": "Email",
+            "emailPlaceholder": "you@example.com",
+            "password": "Password"
+        },
+        "errors": {
+            "invalidCredentials": "Invalid credentials",
+            "generic": "Something went wrong. Please try again."
+        },
+        "buttons": {
+            "signingIn": "Signing in...",
+            "signIn": "Sign in"
+        },
+        "register": {
+            "question": "Don't have an account?",
+            "action": "Create one"
+        }
+    },
+    "DashboardNavbar": {
+        "menu": {
+            "adminControl": "Admin Control",
+            "myAppointments": "My Appointments",
+            "catalog": "Catalog",
+            "book": "Book"
+        },
+        "logout": "Log out",
+        "errors": {
+            "appointmentLimit": "Maximum 2 active appointments allowed."
+        }
+    },
+    "PendingApproval": {
+        "title": "Account Under Review",
+        "description": "Welcome to the team! Our administrator is currently verifying your profile. This usually takes less than 24 hours.",
+        "securityTitle": "Security first",
+        "securityDesc": "We verify every professional to maintain the quality of our service. You will gain access to your schedule once approved.",
+        "logoutButton": "Log out and check later"
+    },
+    "Maintenance": {
+        "title": "Service Paused",
+        "waitMessage": "We look forward to seeing you soon",
+        "backButton": "Back to Home"
     }
 }

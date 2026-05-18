@@ -5,8 +5,10 @@ import { useRouter, usePathname } from "next/navigation";
 import { Toaster, toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { LogOut, CalendarDays, Scissors, BookOpen, ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function DashboardNavbar({ role }: { role: string }) {
+    const t = useTranslations("DashboardNavbar");
     const router = useRouter();
     const pathname = usePathname();
 
@@ -14,20 +16,19 @@ export default function DashboardNavbar({ role }: { role: string }) {
 
     if (role === "ADMIN") {
         menuItems = [
-            { name: "Admin Control", path: "/dashboard/admin", icon: ShieldCheck }, // Tu nueva pestaña
-            { name: "Mis Citas", path: "/dashboard/barber", icon: CalendarDays },
-            { name: "Catálogo", path: "/dashboard/barber/catalog", icon: Scissors },
+            { name: t("menu.adminControl"), path: "/dashboard/admin", icon: ShieldCheck },
+            { name: t("menu.myAppointments"), path: "/dashboard/barber", icon: CalendarDays },
+            { name: t("menu.catalog"), path: "/dashboard/barber/catalog", icon: Scissors },
         ];
     } else if (role === "BARBER") {
         menuItems = [
-            { name: "Mis Citas", path: "/dashboard/barber", icon: CalendarDays },
-            { name: "Catálogo", path: "/dashboard/barber/catalog", icon: Scissors },
+            { name: t("menu.myAppointments"), path: "/dashboard/barber", icon: CalendarDays },
+            { name: t("menu.catalog"), path: "/dashboard/barber/catalog", icon: Scissors },
         ];
     } else {
-        // Por defecto es CUSTOMER
         menuItems = [
-            { name: "Mis Citas", path: "/dashboard/customer/home", icon: CalendarDays },
-            { name: "Reservar", path: "/dashboard/customer/barbers", icon: BookOpen },
+            { name: t("menu.myAppointments"), path: "/dashboard/customer/home", icon: CalendarDays },
+            { name: t("menu.book"), path: "/dashboard/customer/barbers", icon: BookOpen },
         ];
     }
 
@@ -48,7 +49,7 @@ export default function DashboardNavbar({ role }: { role: string }) {
                     ).length;
 
                     if (activeCount >= 2) {
-                        toast.error("Máximo 2 citas activas permitidas.", {
+                        toast.error(t("errors.appointmentLimit"), {
                             id: "limit",
                             icon: "🚫",
                             style: {
@@ -123,7 +124,7 @@ export default function DashboardNavbar({ role }: { role: string }) {
                     className="flex items-center gap-2 text-xs font-semibold bg-white/10 hover:bg-red-500/20 hover:text-red-300 border border-white/10 hover:border-red-500/50 px-4 py-2 rounded-lg transition-all"
                 >
                     <LogOut size={14} />
-                    Cerrar Sesión
+                    {t("logout")}
                 </motion.button>
             </motion.header>
 
@@ -173,7 +174,6 @@ export default function DashboardNavbar({ role }: { role: string }) {
                                 onClick={() => handleNavigation(item.path)}
                                 className="flex flex-col items-center gap-1 px-5 py-2 relative"
                             >
-                                {/* Active pill background */}
                                 <AnimatePresence>
                                     {isActive && (
                                         <motion.div
@@ -210,7 +210,6 @@ export default function DashboardNavbar({ role }: { role: string }) {
                 </div>
             </motion.nav>
 
-            {/* Spacer so content doesn't hide behind bottom nav on mobile */}
             <div className="md:hidden h-20" />
 
             <Toaster position="top-right" />
