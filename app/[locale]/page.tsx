@@ -1,8 +1,11 @@
 import HeroSection from "@/[locale]/components/landing/HeroSection";
 import FeaturesSection from "@/[locale]/components/landing/FeaturesSection";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export default function Home() {
+  const t = useTranslations("Home");
+
   return (
     <main className="bg-[#0a0a0f] min-h-screen">
 
@@ -19,13 +22,13 @@ export default function Home() {
               href="/login"
               className="text-gray-400 hover:text-white text-xs sm:text-sm font-medium transition-colors px-2 py-1"
             >
-              Sign in
+              {t("nav.signIn")}
             </Link>
             <Link
               href="/register"
               className="px-3 sm:px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors"
             >
-              Get started
+              {t("nav.getStarted")}
             </Link>
           </div>
 
@@ -42,16 +45,16 @@ export default function Home() {
       <section className="bg-[#0a0a0f] py-16 md:py-24 px-6 border-t border-white/6">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-6 tracking-tight leading-tight">
-            Ready to take control<br className="hidden sm:block" /> of your schedule?
+            {t("footerCta.title")}
           </h2>
           <p className="text-gray-500 mb-10 text-sm sm:text-base px-4">
-            Join barbers already managing their bookings with BarberSaaS.
+            {t("footerCta.description")}
           </p>
           <Link
             href="/register"
             className="inline-block w-full sm:w-auto px-10 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-colors text-sm"
           >
-            Create your account
+            {t("footerCta.button")}
           </Link>
         </div>
       </section>
@@ -63,7 +66,7 @@ export default function Home() {
             BARBER<span className="text-indigo-400">SAAS</span>
           </span>
           <p className="text-gray-600 text-[10px] sm:text-xs text-center">
-            © {new Date().getFullYear()} BarberSaaS. All rights reserved.
+            {t("footer.rights", { year: new Date().getFullYear() })}
           </p>
         </div>
       </footer>

@@ -2,9 +2,12 @@
 
 import { motion } from "framer-motion";
 import { Clock, ShieldCheck, LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
+// Usamos el router específico de i18n que creaste para no perder el idioma en la redirección
+import { useRouter } from "../../../../i18n/routing";
+import { useTranslations } from "next-intl";
 
 export default function PendingApproval() {
+    const t = useTranslations("PendingApproval");
     const router = useRouter();
 
     const handleLogout = async () => {
@@ -14,7 +17,7 @@ export default function PendingApproval() {
     };
 
     return (
-        <div className="fixed inset-0 z-100 bg-white flex items-center justify-center p-6">
+        <div className="fixed inset-0 z-50 bg-white flex items-center justify-center p-6">
             <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -34,11 +37,10 @@ export default function PendingApproval() {
 
                 <div className="space-y-3">
                     <h1 className="text-3xl font-black text-gray-900 tracking-tight">
-                        Account Under Review
+                        {t("title")}
                     </h1>
                     <p className="text-gray-500 font-medium leading-relaxed">
-                        Welcome to the team! Our administrator is currently verifying your profile.
-                        This usually takes less than 24 hours.
+                        {t("description")}
                     </p>
                 </div>
 
@@ -47,10 +49,9 @@ export default function PendingApproval() {
                         <ShieldCheck size={20} />
                     </div>
                     <div>
-                        <h4 className="text-indigo-900 font-bold text-sm">Security first</h4>
+                        <h4 className="text-indigo-900 font-bold text-sm">{t("securityTitle")}</h4>
                         <p className="text-indigo-700/70 text-xs mt-1 leading-relaxed">
-                            We verify every professional to maintain the quality of our service.
-                            You will gain access to your schedule once approved.
+                            {t("securityDesc")}
                         </p>
                     </div>
                 </div>
@@ -60,7 +61,7 @@ export default function PendingApproval() {
                     className="flex items-center gap-2 mx-auto text-gray-400 hover:text-gray-600 font-bold text-sm transition-colors py-2"
                 >
                     <LogOut size={18} />
-                    Log out and check later
+                    {t("logoutButton")}
                 </button>
             </motion.div>
         </div>

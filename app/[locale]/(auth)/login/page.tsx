@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export default function LoginPage() {
+  const t = useTranslations("Login");
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,7 +27,7 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Invalid credentials");
+        setError(data.error || t("errors.invalidCredentials"));
         return;
       }
 
@@ -36,7 +38,7 @@ export default function LoginPage() {
       }
 
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t("errors.generic"));
     } finally {
       setLoading(false);
     }
@@ -45,7 +47,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4 relative overflow-hidden">
 
-      {/* Background glow - Ajustado para ser más sutil en móvil */}
+      {/* Background glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-xl h-75 bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-64 h-64 bg-indigo-900/15 blur-[100px] rounded-full pointer-events-none" />
 
@@ -54,7 +56,7 @@ export default function LoginPage() {
         className="absolute inset-0 opacity-[0.03]"
         style={{
           backgroundImage: `linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px)`,
-          backgroundSize: "40px 40px", // Cuadrícula un poco más pequeña para mejor detalle
+          backgroundSize: "40px 40px",
         }}
       />
 
@@ -80,21 +82,21 @@ export default function LoginPage() {
           className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8 backdrop-blur-md shadow-2xl"
         >
           <h1 className="text-xl sm:text-2xl font-black text-white mb-1 tracking-tight">
-            Welcome back
+            {t("title")}
           </h1>
           <p className="text-gray-500 text-xs sm:text-sm mb-6 sm:mb-8 leading-relaxed">
-            Sign in to your account to continue
+            {t("subtitle")}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
 
             <div>
               <label className="text-xs font-medium text-gray-400 mb-1.5 block">
-                Email
+                {t("form.email")}
               </label>
               <input
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t("form.emailPlaceholder")}
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 required
@@ -105,7 +107,7 @@ export default function LoginPage() {
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <label className="text-xs font-medium text-gray-400 block">
-                  Password
+                  {t("form.password")}
                 </label>
               </div>
               <input
@@ -137,10 +139,10 @@ export default function LoginPage() {
               {loading ? (
                 <>
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Signing in...
+                  {t("buttons.signingIn")}
                 </>
               ) : (
-                "Sign in"
+                t("buttons.signIn")
               )}
             </button>
 
@@ -155,12 +157,12 @@ export default function LoginPage() {
           transition={{ duration: 0.5, delay: 0.3 }}
           className="text-center text-gray-500 text-xs sm:text-sm mt-8"
         >
-          Don't have an account?{" "}
+          {t("register.question")}{" "}
           <Link
             href="/register"
             className="text-indigo-400 hover:text-indigo-300 font-bold transition-colors"
           >
-            Create one
+            {t("register.action")}
           </Link>
         </motion.p>
 

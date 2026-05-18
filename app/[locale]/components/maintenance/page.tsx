@@ -1,15 +1,20 @@
 import { prisma } from "@/lib/prisma";
 import { AlertTriangle, Clock, ArrowLeft } from "lucide-react";
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import { Link, redirect } from "../../../../i18n/routing";
+import { getTranslations, getLocale } from "next-intl/server";
 
 export default async function MaintenancePage() {
+
+    const t = await getTranslations("Maintenance");
+    const locale = await getLocale();
+
     const settings = await prisma.systemSettings.findUnique({
         where: { id: "global" }
     });
 
     if (!settings || settings.isServiceActive) {
-        redirect("/dashboard/customer");
+        // Envolvemos la ruta y el idioma en un objeto {}
+        redirect({ href: "/dashboard/customer", locale });
     }
 
     return (
@@ -20,16 +25,16 @@ export default async function MaintenancePage() {
                 </div>
 
                 <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-4">
-                    Servicio en Pausa
+                    {t("title")}
                 </h1>
 
                 <p className="text-gray-500 font-medium text-lg mb-8 leading-relaxed">
-                    {settings.maintenanceMessage}
+                    {settings?.maintenanceMessage}
                 </p>
-
+                
                 <div className="flex items-center justify-center gap-2 text-sm font-bold text-gray-400 bg-gray-50 py-3 rounded-xl mb-6">
                     <Clock size={16} />
-                    <span>Te esperamos pronto</span>
+                    <span>{t("waitMessage")}</span>
                 </div>
 
                 <Link
@@ -37,7 +42,7 @@ export default async function MaintenancePage() {
                     className="flex items-center justify-center gap-2 w-full py-4 rounded-xl bg-gray-900 text-white text-sm font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl shadow-gray-200 hover:shadow-indigo-200 active:scale-95"
                 >
                     <ArrowLeft size={18} />
-                    Volver al Inicio
+                    {t("backButton")}
                 </Link>
             </div>
         </div>
