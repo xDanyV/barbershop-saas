@@ -122,5 +122,294 @@
         "title": "Service Paused",
         "waitMessage": "We look forward to seeing you soon",
         "backButton": "Back to Home"
+    },
+    "CalendarPicker": {
+        "title": "Schedule",
+        "monthNames": {
+            "january": "January",
+            "february": "February",
+            "march": "March",
+            "april": "April",
+            "may": "May",
+            "june": "June",
+            "july": "July",
+            "august": "August",
+            "september": "September",
+            "october": "October",
+            "november": "November",
+            "december": "December"
+        },
+        "daysOfWeek": {
+            "su": "Su",
+            "mo": "Mo",
+            "tu": "Tu",
+            "we": "We",
+            "th": "Th",
+            "fr": "Fr",
+            "sa": "Sa"
+        },
+        "tooltip": {
+            "blocked": "Exception — day blocked",
+            "oneAppointment": "{count} appointment",
+            "manyAppointments": "{count} appointments"
+        },
+        "legend": {
+            "selected": "Selected",
+            "blocked": "Blocked",
+            "busy": "Busy"
+        }
+    },
+    "DashboardHeader": {
+        "badge": "Barber Management",
+        "buttons": {
+            "exceptions": "Exceptions",
+            "services": "Services",
+            "availability": "Availability"
+        }
+    },
+    "AppointmentList": {
+        "title": "Appointments",
+        "scheduleFor": "Schedule for",
+        "exceptionDay": {
+            "title": "Day blocked",
+            "subtitle": "This day has an active exception"
+        },
+        "empty": {
+            "title": "No appointments scheduled",
+            "subtitle": "Enjoy your free time!"
+        }
+    },
+    "AppointmentCard": {
+        "customerDetails": "Customer Details",
+        "fields": {
+            "phone": "Phone",
+            "email": "Email",
+            "noPhone": "Not provided",
+            "noEmail": "Not provided"
+        },
+        "status": {
+            "PENDING": "Pending",
+            "CONFIRMED": "Confirmed",
+            "COMPLETED": "Completed"
+        },
+        "confirm": "Confirm",
+        "errors": {
+            "confirmFailed": "Could not confirm appointment",
+            "network": "Network error"
+        },
+        "success": {
+            "confirmed": "{name} appointment confirmed"
+        }
+    },
+    "AvailabilityModal": {
+        "triggerButton": "Availability",
+        "title": "Working Hours",
+        "days": {
+            "mon": "Mon",
+            "tue": "Tue",
+            "wed": "Wed",
+            "thu": "Thu",
+            "fri": "Fri",
+            "sat": "Sat",
+            "sun": "Sun"
+        },
+        "labels": {
+            "activeDays": "Active Days",
+            "shiftStart": "Shift Start",
+            "shiftEnd": "Shift End",
+            "lunchBreak": "Lunch Break",
+            "lunchBreakDesc": "Add a break to your shift",
+            "breakStart": "Break Start",
+            "breakEnd": "Break End"
+        },
+        "buttons": {
+            "cancel": "Cancel",
+            "save": "Save Changes",
+            "saving": "Saving..."
+        },
+        "errors": {
+            "noDay": "You must select at least one active day.",
+            "endBeforeStart": "The End time must be after the Start time.",
+            "breakEndBeforeStart": "The Lunch Break end must be after its start.",
+            "breakOutOfRange": "The Lunch Break must be within your working hours.",
+            "saveFailed": "Error saving availability"
+        },
+        "success": {
+            "saved": "Schedule updated successfully"
+        }
+    },
+    "ExceptionModal": {
+        "title": "Add Exception",
+        "description": "Select a date range to block. All pending and confirmed appointments within this range will be automatically cancelled.",
+        "fields": {
+            "startDate": "Start date",
+            "endDate": "End date",
+            "reason": "Reason (optional)",
+            "reasonPlaceholder": "e.g. Vacation, Emergency..."
+        },
+        "buttons": {
+            "cancel": "Cancel",
+            "apply": "Apply Exception",
+            "saving": "Saving..."
+        },
+        "errors": {
+            "missingDates": "Please select start and end dates",
+            "startAfterEnd": "Start date cannot be after end date",
+            "saveFailed": "Failed to save exception",
+            "network": "Network error, please try again"
+        },
+        "success": {
+            "saved": "Exception saved — affected appointments have been cancelled"
+        }
+    },
+    "CatalogPage": {
+        "backToDashboard": "Back to Dashboard",
+        "backToDashboardShort": "Dashboard",
+        "title": "Services Catalog",
+        "subtitle": "Manage your barber shop services and pricing.",
+        "buttons": {
+            "createService": "Create Service",
+            "backToList": "Back to List"
+        }
+    },
+    "ServiceList": {
+        "empty": "No services yet. Create your first service to start building your catalog.",
+        "duration": "{duration} min",
+        "buttons": {
+            "edit": "Edit",
+            "delete": "Delete",
+            "confirm": "Confirm",
+            "cancel": "Cancel"
+        },
+        "deleteConfirm": "Delete \"{name}\"?",
+        "success": {
+            "deleted": "Service deleted"
+        },
+        "errors": {
+            "deleteFailed": "Delete failed"
+        }
+    },
+    "EditServiceForm": {
+        "title": "Edit Service",
+        "subtitle": "Modify the details for this service.",
+        "fields": {
+            "name": "Service Name",
+            "namePlaceholder": "Service name",
+            "price": "Price",
+            "duration": "Duration (min)",
+            "durationPlaceholder": "Duration"
+        },
+        "buttons": {
+            "save": "Save Changes",
+            "saving": "Saving...",
+            "discard": "Discard Changes"
+        }
+    },
+    "CreateServiceForm": {
+        "title": "New Service",
+        "subtitle": "Define the details for your new catalog entry.",
+        "fields": {
+            "name": "Service Name",
+            "namePlaceholder": "e.g. Skin Fade & Beard",
+            "price": "Price",
+            "duration": "Minutes"
+        },
+        "buttons": {
+            "create": "Create Service",
+            "creating": "Creating...",
+            "cancel": "Cancel"
+        }
+    },
+    "CustomerDashboard": {
+        "backToBarbers": "Back to Barbers",
+        "step1": "Step 1: Select Date",
+        "step2": "Step 2: Choose Time",
+        "note": "Note: Cancellations are only allowed up to 2 hours before the appointment."
+    },
+    "CustomerHome": {
+        "title": "My Appointments",
+        "subtitleUpcoming": "Your next style is waiting",
+        "subtitleHistory": "Review your past grooming sessions",
+        "tabs": {
+            "upcoming": "Upcoming",
+            "history": "History"
+        },
+        "bookNow": "Book Now",
+        "cancel": "Cancel",
+        "empty": "No appointments found",
+        "status": {
+            "PENDING": "Pending",
+            "CONFIRMED": "Confirmed",
+            "CANCELLED": "Cancelled",
+            "COMPLETED": "Completed"
+        },
+        "errors": {
+            "tooLate": "Appointments cannot be cancelled less than 2 hours before the scheduled time",
+            "cancelFailed": "Could not cancel appointment",
+            "network": "Network error, please try again",
+            "maxAppointments": "You can only have a maximum of 2 active appointments."
+        },
+        "success": {
+            "cancelled": "Appointment cancelled successfully"
+        }
+    },
+    "BarbersPage": {
+        "eyebrow": "Professional Staff",
+        "title": "Our Barbers",
+        "subtitle": "Select an expert professional to elevate your style.",
+        "selectBarber": "Select Barber",
+        "empty": {
+            "title": "No barbers available",
+            "subtitle": "Please check back later or contact support."
+        },
+        "fallbackName": "Master Barber"
+    },
+    "AvailableSlots": {
+        "title": "Available Slots",
+        "soldOut": "Sold Out!",
+        "noAvailability": {
+            "title": "No availability",
+            "subtitle": "The barber is not working on this day."
+        }
+    },
+    "CalendarPickerCustomer": {
+        "legend": {
+            "selected": "Selected",
+            "today": "Today",
+            "unavailable": "Unavailable"
+        },
+        "hint": "choose an active day to see slots"
+    },
+    "SlotCard": {
+        "availableServices": "Available Services",
+        "loading": "LOADING...",
+        "buttons": {
+            "book": "Book",
+            "close": "Close",
+            "continue": "Continue",
+            "completeBooking": "Complete Booking"
+        },
+        "modal": {
+            "title": "Confirm Booking",
+            "fields": {
+                "date": "Date",
+                "time": "Time",
+                "service": "Service",
+                "total": "Total"
+            }
+        },
+        "errors": {
+            "noService": "Please select a service",
+            "loadFailed": "Could not load services",
+            "bookFailed": "Could not book appointment",
+            "network": "Network error, please try again"
+        },
+        "success": {
+            "booked": "{name} booked successfully!"
+        }
+    },
+    "BarberCard": {
+        "fallbackName": "Master Barber",
+        "verified": "Verified"
     }
 }

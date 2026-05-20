@@ -6,12 +6,14 @@ import AvailabilityPopover from "./AvailabilityPopover";
 import ExceptionModal from "./ExceptionModal";
 import { Clock, Calendar as CalendarIcon, Scissors, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 type Props = {
     onExceptionAdded: () => void;
 };
 
 export default function DashboardHeader({ onExceptionAdded }: Props) {
+    const t = useTranslations("DashboardHeader");
     const router = useRouter();
     const [time, setTime] = useState<Date | null>(null);
     const [exceptionOpen, setExceptionOpen] = useState(false);
@@ -26,7 +28,6 @@ export default function DashboardHeader({ onExceptionAdded }: Props) {
 
     useEffect(() => {
         const handleScroll = () => {
-            // Solo activamos el modo compacto en móviles para no afectar escritorio
             if (window.innerWidth < 1024) {
                 setIsScrolled(window.scrollY > 10);
             } else {
@@ -52,7 +53,6 @@ export default function DashboardHeader({ onExceptionAdded }: Props) {
             >
                 <div className="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-4">
 
-                    {/* SECCIÓN IZQUIERDA: Fecha y Hora */}
                     <div className={`flex transition-all duration-300 ${isScrolled ? "flex-row items-center justify-between w-full lg:w-auto" : "flex-col space-y-1"}`}>
                         <div className="flex flex-col">
                             <AnimatePresence>
@@ -64,7 +64,7 @@ export default function DashboardHeader({ onExceptionAdded }: Props) {
                                         className="flex items-center gap-2 text-indigo-600 font-bold mb-1"
                                     >
                                         <CalendarIcon size={14} />
-                                        <span className="uppercase text-[10px] tracking-widest">Barber Management</span>
+                                        <span className="uppercase text-[10px] tracking-widest">{t("badge")}</span>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -80,12 +80,13 @@ export default function DashboardHeader({ onExceptionAdded }: Props) {
                         <div className={`flex items-center gap-2 transition-all duration-300 ${isScrolled ? "mt-0" : "mt-1"}`}>
                             <div className="flex items-center gap-1.5 bg-gray-100 px-2.5 py-1 rounded-full text-xs font-bold text-gray-600">
                                 <Clock size={14} className="text-indigo-500" />
-                                {isScrolled ? time.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : time.toLocaleTimeString("en-US")}
+                                {isScrolled
+                                    ? time.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+                                    : time.toLocaleTimeString("en-US")}
                             </div>
                         </div>
                     </div>
 
-                    {/* SECCIÓN DERECHA: Botones de Acción */}
                     <div className={`
                         flex items-center transition-all duration-300
                         ${isScrolled
@@ -93,12 +94,10 @@ export default function DashboardHeader({ onExceptionAdded }: Props) {
                             : "flex-col md:flex-row gap-3 w-full lg:w-auto"
                         }
                     `}>
-                        {/* Disponibilidad */}
                         <div className={`transition-all duration-300 ${isScrolled ? "w-12 h-12 rounded-full shadow-xl overflow-hidden" : "w-full lg:w-auto"}`}>
                             <AvailabilityPopover isScrolled={isScrolled} />
                         </div>
 
-                        {/* Botón Excepciones */}
                         <button
                             onClick={() => setExceptionOpen(true)}
                             className={`
@@ -108,13 +107,12 @@ export default function DashboardHeader({ onExceptionAdded }: Props) {
                                     : "w-full lg:w-auto px-5 py-3 bg-white border border-gray-200 text-gray-700 text-sm shadow-sm hover:bg-gray-50"
                                 }
                             `}
-                            title="Exceptions"
+                            title={t("buttons.exceptions")}
                         >
                             <AlertCircle size={24} className={isScrolled ? "" : "text-purple-500"} />
-                            {!isScrolled && <span className="whitespace-nowrap">Exceptions</span>}
+                            {!isScrolled && <span className="whitespace-nowrap">{t("buttons.exceptions")}</span>}
                         </button>
 
-                        {/* Botón Servicios */}
                         <button
                             onClick={() => router.push("/dashboard/barber/catalog")}
                             className={`
@@ -124,10 +122,10 @@ export default function DashboardHeader({ onExceptionAdded }: Props) {
                                     : "w-full lg:w-auto px-5 py-3 bg-indigo-600 text-white text-sm shadow-lg hover:bg-indigo-700"
                                 }
                             `}
-                            title="Services"
+                            title={t("buttons.services")}
                         >
                             <Scissors size={24} />
-                            {!isScrolled && <span className="whitespace-nowrap">Services</span>}
+                            {!isScrolled && <span className="whitespace-nowrap">{t("buttons.services")}</span>}
                         </button>
                     </div>
                 </div>

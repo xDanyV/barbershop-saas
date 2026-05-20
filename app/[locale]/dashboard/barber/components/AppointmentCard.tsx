@@ -19,6 +19,7 @@ import {
   PopoverPanel,
   Transition,
 } from "@headlessui/react";
+import { useTranslations } from "next-intl";
 
 type Appointment = {
   id: string;
@@ -35,16 +36,13 @@ type Props = {
   onConfirm?: (id: string) => void;
 };
 
-export default function AppointmentCard({
-  appointment,
-  onConfirm,
-}: Props) {
+export default function AppointmentCard({ appointment, onConfirm }: Props) {
+  const t = useTranslations("AppointmentCard");
   const [status, setStatus] = useState(appointment.status);
   const [loading, setLoading] = useState(false);
 
   const handleConfirm = async () => {
     setLoading(true);
-
     try {
       const res = await fetch(
         `/api/protected/appointments/${appointment.id}/confirm`,
@@ -56,15 +54,15 @@ export default function AppointmentCard({
       );
 
       if (!res.ok) {
-        toast.error("Could not confirm appointment");
+        toast.error(t("errors.confirmFailed"));
         return;
       }
 
       setStatus("CONFIRMED");
       onConfirm?.(appointment.id);
-      toast.success(`Cita de ${appointment.customerName} confirmada`);
+      toast.success(t("success.confirmed", { name: appointment.customerName }));
     } catch {
-      toast.error("Error de red");
+      toast.error(t("errors.network"));
     } finally {
       setLoading(false);
     }
@@ -92,22 +90,14 @@ export default function AppointmentCard({
                     : "bg-indigo-50 text-indigo-500"
                   }`}
               >
-                {status === "COMPLETED" ? (
-                  <CheckCircle2 size={20} />
-                ) : (
-                  <User size={20} />
-                )}
+                {status === "COMPLETED" ? <CheckCircle2 size={20} /> : <User size={20} />}
               </div>
 
               <div className="min-w-0">
                 <p className="font-bold text-gray-900 group-hover/btn:text-indigo-600 transition-colors flex items-center gap-1 text-sm md:text-base">
                   <span className="truncate">{appointment.customerName}</span>
-                  <ExternalLink
-                    size={12}
-                    className="opacity-0 group-hover/btn:opacity-100 transition-opacity text-gray-400 shrink-0"
-                  />
+                  <ExternalLink size={12} className="opacity-0 group-hover/btn:opacity-100 transition-opacity text-gray-400 shrink-0" />
                 </p>
-
                 <div className="flex items-center gap-2 text-[11px] md:text-xs text-gray-500 mt-0.5">
                   <span className="flex items-center gap-1 truncate">
                     <Scissors size={12} className="shrink-0" />
@@ -129,7 +119,7 @@ export default function AppointmentCard({
               <PopoverPanel className="absolute left-0 sm:left-12 top-full z-50 mt-3 w-[calc(100vw-3rem)] sm:w-64 px-0 sm:px-4">
                 <div className="overflow-hidden rounded-2xl shadow-xl ring-1 ring-black/5 bg-white p-4">
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
-                    Detalles del Cliente
+                    {t("customerDetails")}
                   </p>
 
                   <div className="space-y-3">
@@ -138,13 +128,10 @@ export default function AppointmentCard({
                         <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                           <Phone size={14} />
                         </div>
-
                         <div className="min-w-0">
-                          <p className="text-xs text-gray-400 font-medium leading-none">
-                            Teléfono
-                          </p>
+                          <p className="text-xs text-gray-400 font-medium leading-none">{t("fields.phone")}</p>
                           <p className="text-sm font-bold text-gray-700 truncate">
-                            {appointment.customerPhone || "No provisto"}
+                            {appointment.customerPhone || t("fields.noPhone")}
                           </p>
                         </div>
                       </div>
@@ -165,13 +152,10 @@ export default function AppointmentCard({
                       <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                         <Mail size={14} />
                       </div>
-
                       <div className="min-w-0">
-                        <p className="text-xs text-gray-400 font-medium leading-none">
-                          Email
-                        </p>
+                        <p className="text-xs text-gray-400 font-medium leading-none">{t("fields.email")}</p>
                         <p className="text-sm font-bold text-gray-700 truncate">
-                          {appointment.customerEmail || "No provisto"}
+                          {appointment.customerEmail || t("fields.noEmail")}
                         </p>
                       </div>
                     </div>
@@ -188,11 +172,8 @@ export default function AppointmentCard({
             </div>
 
             <div className="flex gap-2 items-center">
-              <span
-                className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border shrink-0 ${statusStyles[status]
-                  }`}
-              >
-                {status}
+              <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border shrink-0 ${statusStyles[status]}`}>
+                {t(`status.${status}`)}
               </span>
 
               {status === "PENDING" && (
@@ -201,7 +182,7 @@ export default function AppointmentCard({
                   disabled={loading}
                   className="text-[11px] md:text-xs px-3 md:px-4 py-1.5 rounded-full bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all cursor-pointer whitespace-nowrap"
                 >
-                  {loading ? "..." : "Confirmar"}
+                  {loading ? "..." : t("confirm")}
                 </button>
               )}
             </div>

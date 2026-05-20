@@ -1,6 +1,7 @@
 import AppointmentCard from "./AppointmentCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, Inbox, Ban } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type Appointment = {
     id: string;
@@ -25,19 +26,19 @@ type Props = {
 };
 
 export default function AppointmentList({ appointments, onConfirm, selectedDate, exceptions = [] }: Props) {
+    const t = useTranslations("AppointmentList");
 
-    const dateToProcess = selectedDate || new Date().toISOString().split('T')[0];
+    const dateToProcess = selectedDate || new Date().toISOString().split("T")[0];
     const [year, month, day] = dateToProcess.split("-").map(Number);
-    const localDate = new Date(year, month - 1, day); // Mes es 0-indexed
+    const localDate = new Date(year, month - 1, day);
 
     const formattedDate = localDate.toLocaleDateString("en-US", {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
+        weekday: "long",
+        month: "long",
+        day: "numeric",
     });
 
     const isExceptionDay = exceptions.some((e) => {
-
         const currentDate = new Date(year, month - 1, day);
         currentDate.setHours(0, 0, 0, 0);
 
@@ -51,12 +52,12 @@ export default function AppointmentList({ appointments, onConfirm, selectedDate,
     });
 
     return (
-        <div className="bg-white border  border-gray-100 rounded-4xl md:rounded-[2.5rem] p-5 md:p-8 shadow-xl shadow-gray-100/50 min-h-137.5 flex flex-col">
-            {/* Header de la Lista */}
+        <div className="bg-white border border-gray-100 rounded-4xl md:rounded-[2.5rem] p-5 md:p-8 shadow-xl shadow-gray-100/50 min-h-137.5 flex flex-col">
+            {/* Header */}
             <div className="flex flex-col mb-6 md:mb-8 gap-1">
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">
-                        Appointments
+                        {t("title")}
                     </h2>
                     <motion.span
                         key={appointments.length}
@@ -70,7 +71,9 @@ export default function AppointmentList({ appointments, onConfirm, selectedDate,
 
                 <div className="flex items-center gap-2 text-gray-400 text-xs md:text-sm font-medium">
                     <Calendar size={14} className="text-indigo-400 shrink-0" />
-                    <span className="truncate">Schedule for <span className="text-gray-700 font-bold">{formattedDate}</span></span>
+                    <span className="truncate">
+                        {t("scheduleFor")} <span className="text-gray-700 font-bold">{formattedDate}</span>
+                    </span>
                 </div>
             </div>
 
@@ -88,9 +91,9 @@ export default function AppointmentList({ appointments, onConfirm, selectedDate,
                             <div className="w-16 h-16 md:w-20 md:h-20 bg-purple-50 rounded-3xl md:rounded-4xl flex items-center justify-center mb-4 border border-purple-100">
                                 <Ban className="text-purple-300" size={28} />
                             </div>
-                            <p className="text-gray-700 font-semibold text-sm md:text-base">Day blocked</p>
+                            <p className="text-gray-700 font-semibold text-sm md:text-base">{t("exceptionDay.title")}</p>
                             <p className="text-gray-400 text-[10px] md:text-xs uppercase tracking-tighter mt-1 font-bold">
-                                This day has an active exception
+                                {t("exceptionDay.subtitle")}
                             </p>
                         </motion.div>
 
@@ -105,9 +108,9 @@ export default function AppointmentList({ appointments, onConfirm, selectedDate,
                             <div className="w-16 h-16 md:w-20 md:h-20 bg-gray-50 rounded-3xl md:rounded-4xl flex items-center justify-center mb-4 border border-gray-100">
                                 <Inbox className="text-gray-200" size={28} />
                             </div>
-                            <p className="text-gray-400 font-semibold text-sm md:text-base">No appointments scheduled</p>
+                            <p className="text-gray-400 font-semibold text-sm md:text-base">{t("empty.title")}</p>
                             <p className="text-gray-300 text-[10px] md:text-xs uppercase tracking-tighter mt-1 font-bold">
-                                Enjoy your free time!
+                                {t("empty.subtitle")}
                             </p>
                         </motion.div>
 

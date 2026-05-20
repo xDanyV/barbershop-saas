@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, CalendarCheck } from "lucide-react";
 import SlotCard from "./SlotCard";
+import { useTranslations } from "next-intl";
 
 type Props = {
   selectedDate: Date;
@@ -16,6 +17,8 @@ export default function AvailableSlots({
   selectedService,
   barberId,
 }: Props) {
+  const t = useTranslations("AvailableSlots");
+
   const [availability, setAvailability] = useState<any[]>([]);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -51,7 +54,6 @@ export default function AvailableSlots({
   }, [selectedDate, barberId]);
 
   const timeToMinutes = (timeStr: string) => {
-
     if (timeStr.includes("M")) {
       const [time, modifier] = timeStr.split(" ");
       let [hours, minutes] = time.split(":").map(Number);
@@ -122,8 +124,8 @@ export default function AvailableSlots({
     return (
       <div className="bg-amber-50 border border-amber-100 rounded-3xl md:rounded-4xl p-6 md:p-8 text-center">
         <Clock className="mx-auto text-amber-400 mb-2" size={24} />
-        <p className="text-amber-800 font-bold">No availability</p>
-        <p className="text-amber-600 text-xs">The barber is not working on this day.</p>
+        <p className="text-amber-800 font-bold">{t("noAvailability.title")}</p>
+        <p className="text-amber-600 text-xs">{t("noAvailability.subtitle")}</p>
       </div>
     );
   }
@@ -133,7 +135,7 @@ export default function AvailableSlots({
       <div className="mb-5 md:mb-6 shrink-0 space-y-1">
         <div className="flex items-center justify-between">
           <h3 className="text-lg md:text-xl font-black text-gray-900 tracking-tight">
-            Available Slots
+            {t("title")}
           </h3>
         </div>
 
@@ -155,7 +157,7 @@ export default function AvailableSlots({
             </div>
           ) : availableSlots.length === 0 ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12 md:py-20">
-              <p className="text-gray-400 font-bold text-sm md:text-base">Sold Out!</p>
+              <p className="text-gray-400 font-bold text-sm md:text-base">{t("soldOut")}</p>
             </motion.div>
           ) : (
             <div className="grid gap-2 md:gap-3">

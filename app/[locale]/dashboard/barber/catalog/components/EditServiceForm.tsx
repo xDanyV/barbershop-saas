@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Edit3, DollarSign, Clock, Save, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type Service = {
     id: string;
@@ -18,6 +19,7 @@ type Props = {
 };
 
 export default function EditServiceForm({ service, onCancel, onSuccess }: Props) {
+    const t = useTranslations("EditServiceForm");
     const [name, setName] = useState(service.name);
     const [price, setPrice] = useState(service.price);
     const [duration, setDuration] = useState(service.duration);
@@ -28,7 +30,6 @@ export default function EditServiceForm({ service, onCancel, onSuccess }: Props)
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         setIsSubmitting(true);
-
         try {
             const res = await fetch(`/api/protected/catalog/${service.id}`, {
                 method: "PATCH",
@@ -36,16 +37,9 @@ export default function EditServiceForm({ service, onCancel, onSuccess }: Props)
                     "Content-Type": "application/json",
                     "x-user-role": "BARBER",
                 },
-                body: JSON.stringify({
-                    name,
-                    price: Number(price),
-                    duration: Number(duration),
-                }),
+                body: JSON.stringify({ name, price: Number(price), duration: Number(duration) }),
             });
-
-            if (res.ok) {
-                onSuccess();
-            }
+            if (res.ok) onSuccess();
         } catch (error) {
             console.error("Update failed", error);
         } finally {
@@ -58,7 +52,6 @@ export default function EditServiceForm({ service, onCancel, onSuccess }: Props)
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             onSubmit={handleSubmit}
-            // Ajuste de max-width y padding responsivo
             className="bg-white border border-gray-100 rounded-3xl shadow-xl shadow-gray-100 p-6 md:p-8 space-y-6 w-full max-w-[95vw] sm:max-w-md mx-auto"
         >
             <div className="flex justify-between items-start gap-4">
@@ -66,8 +59,8 @@ export default function EditServiceForm({ service, onCancel, onSuccess }: Props)
                     <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mb-4">
                         <Edit3 size={28} />
                     </div>
-                    <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Edit Service</h2>
-                    <p className="text-xs md:text-sm text-gray-500">Modify the details for this service.</p>
+                    <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">{t("title")}</h2>
+                    <p className="text-xs md:text-sm text-gray-500">{t("subtitle")}</p>
                 </div>
                 <button
                     type="button"
@@ -81,42 +74,39 @@ export default function EditServiceForm({ service, onCancel, onSuccess }: Props)
             <div className="space-y-4">
                 <div className="space-y-1.5">
                     <label className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400 ml-1 flex items-center gap-2">
-                        Service Name
+                        {t("fields.name")}
                     </label>
                     <input
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Service name"
-                        // text-base en móvil para evitar el auto-zoom de iOS
+                        placeholder={t("fields.namePlaceholder")}
                         className={`${inputStyles} text-base md:text-sm py-3`}
                         required
                     />
                 </div>
 
-                {/* Grid de 2 columnas que se mantiene o se apila según el espacio */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                         <label className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400 ml-1 flex items-center gap-2">
-                            <DollarSign size={12} /> Price
+                            <DollarSign size={12} /> {t("fields.price")}
                         </label>
                         <input
                             type="number"
                             value={price}
                             onChange={(e) => setPrice(Number(e.target.value))}
-                            placeholder="Price"
                             className={`${inputStyles} text-base md:text-sm py-3`}
                             required
                         />
                     </div>
                     <div className="space-y-1.5">
                         <label className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400 ml-1 flex items-center gap-2">
-                            <Clock size={12} /> Duration (min)
+                            <Clock size={12} /> {t("fields.duration")}
                         </label>
                         <input
                             type="number"
                             value={duration}
                             onChange={(e) => setDuration(Number(e.target.value))}
-                            placeholder="Duration"
+                            placeholder={t("fields.durationPlaceholder")}
                             className={`${inputStyles} text-base md:text-sm py-3`}
                             required
                         />
@@ -131,14 +121,14 @@ export default function EditServiceForm({ service, onCancel, onSuccess }: Props)
                     className="w-full bg-indigo-600 text-white py-3.5 md:py-4 rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 text-sm md:text-base"
                 >
                     <Save size={18} />
-                    {isSubmitting ? "Saving..." : "Save Changes"}
+                    {isSubmitting ? t("buttons.saving") : t("buttons.save")}
                 </button>
                 <button
                     type="button"
                     onClick={onCancel}
                     className="w-full bg-gray-50 text-gray-500 py-3 rounded-xl font-semibold hover:bg-gray-100 transition-all text-sm md:text-base"
                 >
-                    Discard Changes
+                    {t("buttons.discard")}
                 </button>
             </div>
         </motion.form>

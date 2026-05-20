@@ -7,6 +7,7 @@ import { Calendar as CalendarIcon, Clock, ChevronLeft } from "lucide-react";
 import CalendarPicker from "./components/CalendarPicker";
 import AvailableSlots from "./components/AvailableSlots";
 import BarberCard from "./components/BarberCard";
+import { useTranslations } from "next-intl";
 
 type Barber = {
   id: string;
@@ -18,6 +19,7 @@ type Barber = {
 };
 
 export default function CustomerDashboard() {
+  const t = useTranslations("CustomerDashboard");
   const searchParams = useSearchParams();
   const router = useRouter();
   const barberId = searchParams.get("barberId");
@@ -60,7 +62,7 @@ export default function CustomerDashboard() {
         className="flex items-center gap-2 text-gray-400 hover:text-indigo-600 font-bold text-[10px] md:text-xs uppercase tracking-widest mb-6 md:mb-8 transition-colors group py-2"
       >
         <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-        Back to Barbers
+        {t("backToBarbers")}
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
@@ -74,7 +76,7 @@ export default function CustomerDashboard() {
             <div className="space-y-2 text-center lg:text-left">
               <div className="flex items-center justify-center lg:justify-start gap-2 text-indigo-600 font-black text-[10px] md:text-xs uppercase tracking-[0.2em]">
                 <CalendarIcon size={14} />
-                Step 1: Select Date
+                {t("step1")}
               </div>
               <h2 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">
                 {displayDate}
@@ -90,7 +92,7 @@ export default function CustomerDashboard() {
             />
           </div>
           <p className="text-center text-[10px] md:text-xs text-gray-400 font-medium px-4 md:px-8">
-            Note: Cancellations are only allowed up to 2 hours before the appointment.
+            {t("note")}
           </p>
         </motion.div>
 
@@ -108,7 +110,7 @@ export default function CustomerDashboard() {
           <div className="bg-gray-50/50 rounded-4xl md:rounded-[2.5rem] py-6 md:py-0">
             <div className="flex items-center justify-center pb-4 gap-2 text-indigo-600 font-black text-[10px] md:text-xs uppercase tracking-[0.2em]">
               <Clock size={14} />
-              Step 2: Choose Time
+              {t("step2")}
             </div>
 
             <AvailableSlots
