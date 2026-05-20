@@ -4,25 +4,19 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Clock, User, Scissors, Calendar as CalendarIcon, History, ChevronRight } from "lucide-react";
+import { Plus, Clock, User, Calendar as CalendarIcon, History } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type Appointment = {
   id: string;
   date: string;
   status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
-  service: {
-    name: string;
-    duration: number;
-    price: number;
-  };
-  barber: {
-    user: {
-      name: string | null;
-    };
-  };
+  service: { name: string; duration: number; price: number };
+  barber: { user: { name: string | null } };
 };
 
 export default function CustomerHome() {
+  const t = useTranslations("CustomerHome");
   const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [history, setHistory] = useState<Appointment[]>([]);
@@ -37,52 +31,40 @@ export default function CustomerHome() {
         const nowMs = Date.now();
         const ONE_HOUR_MS = 60 * 60 * 1000;
 
-        const upcoming = data.filter((a) => {
+        setAppointments(data.filter((a) => {
           const apptMs = new Date(a.date).getTime();
           return a.status !== "CANCELLED" && (apptMs + ONE_HOUR_MS) > nowMs;
-        });
-
-        const history = data.filter((a) => {
+        }));
+        setHistory(data.filter((a) => {
           const apptMs = new Date(a.date).getTime();
           return a.status === "CANCELLED" || (apptMs + ONE_HOUR_MS) <= nowMs;
-        });
-
-        setAppointments(upcoming);
-        setHistory(history);
+        }));
       })
       .catch(() => console.error("Could not load appointments"))
       .finally(() => setLoading(false));
   }, []);
 
   const handleNewBooking = () => {
-    const activeAppointments = appointments.filter(
-      (a) => a.status === "PENDING" || a.status === "CONFIRMED"
-    );
-
-    if (activeAppointments.length >= 2) {
-      toast.error("You can only have a maximum of 2 active appointments.", {
+    const active = appointments.filter((a) => a.status === "PENDING" || a.status === "CONFIRMED");
+    if (active.length >= 2) {
+      toast.error(t("errors.maxAppointments"), {
         id: "limit",
-        icon: '🚫',
+        icon: "🚫",
         style: {
-          borderRadius: '8px',
-          background: '#FFFFFF',
-          color: '#1e293b',
-          border: '1px solid #e2e8f0',
-          fontSize: '14px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          borderRadius: "8px", background: "#FFFFFF", color: "#1e293b",
+          border: "1px solid #e2e8f0", fontSize: "14px",
+          boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
         },
       });
       return;
     }
-
     router.push("/dashboard/customer/barbers");
   };
 
   const handleCancel = async (appointmentId: string, appointmentDate: string) => {
     const hoursUntil = (new Date(appointmentDate).getTime() - Date.now()) / (1000 * 60 * 60);
-
     if (hoursUntil < 2) {
-      toast.error("Appointments cannot be cancelled less than 2 hours before the scheduled time");
+      toast.error(t("errors.tooLate"));
       return;
     }
 
@@ -93,17 +75,12 @@ export default function CustomerHome() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "CANCELLED" }),
       });
-
       const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.error ?? "Could not cancel appointment");
-        return;
-      }
-
+      if (!res.ok) { toast.error(data.error ?? t("errors.cancelFailed")); return; }
       setAppointments((prev) => prev.filter((a) => a.id !== appointmentId));
-      toast.success("Appointment cancelled successfully");
+      toast.success(t("success.cancelled"));
     } catch {
-      toast.error("Network error, please try again");
+      toast.error(t("errors.network"));
     } finally {
       setCancelling(null);
     }
@@ -115,14 +92,11 @@ export default function CustomerHome() {
     <div className="p-4 md:p-8 max-w-2xl mx-auto">
       <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 md:mb-10 gap-6 text-center md:text-left">
         <div>
-          <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
-            My Appointments
-          </h1>
+          <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">{t("title")}</h1>
           <p className="text-gray-500 text-sm md:font-medium mt-1">
-            {showHistory ? "Review your past grooming sessions" : "Your next style is waiting"}
+            {showHistory ? t("subtitleHistory") : t("subtitleUpcoming")}
           </p>
         </div>
-
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -130,7 +104,7 @@ export default function CustomerHome() {
           className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all text-sm md:text-base"
         >
           <Plus size={18} />
-          Book Now
+          {t("bookNow")}
         </motion.button>
       </header>
 
@@ -141,14 +115,14 @@ export default function CustomerHome() {
             className={`flex items-center gap-2 px-6 py-2 text-xs md:text-sm font-bold rounded-xl transition-all ${!showHistory ? "bg-white text-indigo-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
           >
             <CalendarIcon size={16} />
-            Upcoming
+            {t("tabs.upcoming")}
           </button>
           <button
             onClick={() => setShowHistory(true)}
             className={`flex items-center gap-2 px-6 py-2 text-xs md:text-sm font-bold rounded-xl transition-all ${showHistory ? "bg-white text-indigo-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
           >
             <History size={16} />
-            History
+            {t("tabs.history")}
           </button>
         </div>
       </div>
@@ -163,7 +137,7 @@ export default function CustomerHome() {
         ) : list.length === 0 ? (
           <motion.div key="empty" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16 bg-gray-50/50 border-2 border-dashed border-gray-200 rounded-[2.5rem] px-6">
             <CalendarIcon className="text-gray-300 mx-auto mb-4" size={32} />
-            <p className="text-gray-500 font-bold">No appointments found</p>
+            <p className="text-gray-500 font-bold">{t("empty")}</p>
           </motion.div>
         ) : (
           <motion.div
@@ -192,28 +166,19 @@ export default function CustomerHome() {
                             <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">
                               {date.toLocaleDateString("en-US", { month: "short" })}
                             </p>
-                            <p className="text-base font-black text-gray-800 leading-none">
-                              {date.getDate()}
-                            </p>
+                            <p className="text-base font-black text-gray-800 leading-none">{date.getDate()}</p>
                           </div>
                           <div>
-                            <h3 className="font-bold text-gray-900 text-sm line-clamp-1 tracking-tight">
-                              {a.service.name}
-                            </h3>
+                            <h3 className="font-bold text-gray-900 text-sm line-clamp-1 tracking-tight">{a.service.name}</h3>
                             <p className="text-[11px] text-gray-500 font-medium flex items-center gap-1.5 mt-0.5">
                               <span className="text-gray-900 font-semibold">{a.barber.user.name}</span>
                               <span className="text-gray-300">•</span>
-                              <span className="bg-gray-100 px-1.5 py-0.5 rounded text-[10px]">
-                                {formattedTime}
-                              </span>
+                              <span className="bg-gray-100 px-1.5 py-0.5 rounded text-[10px]">{formattedTime}</span>
                             </p>
                           </div>
                         </div>
-                        <span className={`text-[10px] px-3 py-1 rounded-full font-bold tracking-wide border shadow-sm ${a.status === "COMPLETED"
-                            ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                            : "bg-rose-50 text-rose-600 border-rose-100"
-                          }`}>
-                          {a.status}
+                        <span className={`text-[10px] px-3 py-1 rounded-full font-bold tracking-wide border shadow-sm ${a.status === "COMPLETED" ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-rose-50 text-rose-600 border-rose-100"}`}>
+                          {t(`status.${a.status}`)}
                         </span>
                       </motion.div>
                     );
@@ -231,16 +196,14 @@ export default function CustomerHome() {
                         <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest group-hover:text-indigo-200">
                           {date.toLocaleDateString("en-US", { month: "short" })}
                         </p>
-                        <p className="text-2xl md:text-3xl font-black text-indigo-600 leading-none group-hover:text-white">
-                          {date.getDate()}
-                        </p>
+                        <p className="text-2xl md:text-3xl font-black text-indigo-600 leading-none group-hover:text-white">{date.getDate()}</p>
                       </div>
 
                       <div className="flex-1 text-center sm:text-left space-y-2 w-full">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                           <h3 className="font-black text-gray-900 text-base md:text-lg tracking-tight">{a.service.name}</h3>
                           <span className="w-fit mx-auto sm:mx-0 text-[9px] md:text-[10px] px-3 py-0.5 rounded-full font-black uppercase tracking-widest border bg-emerald-50 text-emerald-600 border-emerald-100">
-                            {a.status}
+                            {t(`status.${a.status}`)}
                           </span>
                         </div>
                         <div className="flex flex-wrap justify-center sm:justify-start gap-y-2 gap-x-4 text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-tight">
@@ -253,9 +216,10 @@ export default function CustomerHome() {
                       <div className="shrink-0 flex items-center w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-50 mt-2 sm:mt-0">
                         <button
                           onClick={() => handleCancel(a.id, a.date)}
-                          className="w-full sm:w-auto p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all font-bold text-xs"
+                          disabled={cancelling === a.id}
+                          className="w-full sm:w-auto p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all font-bold text-xs disabled:opacity-40"
                         >
-                          Cancel
+                          {t("cancel")}
                         </button>
                       </div>
                     </motion.div>

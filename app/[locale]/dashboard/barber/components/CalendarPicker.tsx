@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 type Exception = {
   startDate: string;
@@ -13,13 +14,6 @@ type Props = {
   appointmentCounts?: Record<string, number>;
   exceptions?: Exception[];
 };
-
-const monthNames = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
-
-const daysOfWeek = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 function densityStyle(n: number): string {
   if (n <= 0) return "text-gray-600 hover:bg-indigo-50 hover:text-indigo-700";
@@ -37,12 +31,21 @@ function dotColor(n: number, isPast: boolean): string {
   return "bg-red-500";
 }
 
+const MONTH_KEYS = [
+  "january", "february", "march", "april", "may", "june",
+  "july", "august", "september", "october", "november", "december",
+] as const;
+
+const DAY_KEYS = ["su", "mo", "tu", "we", "th", "fr", "sa"] as const;
+
 export default function CalendarPicker({
   selectedDate,
   onChange,
   appointmentCounts = {},
   exceptions = [],
 }: Props) {
+  const t = useTranslations("CalendarPicker");
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -79,6 +82,13 @@ export default function CalendarPicker({
     return d < today;
   };
 
+  const getTooltip = (exception: boolean, count: number): string | undefined => {
+    if (exception) return t("tooltip.blocked");
+    if (count === 1) return t("tooltip.oneAppointment", { count });
+    if (count > 1) return t("tooltip.manyAppointments", { count });
+    return undefined;
+  };
+
   const days = [];
 
   for (let i = 0; i < firstDay; i++) {
@@ -101,13 +111,7 @@ export default function CalendarPicker({
       <button
         key={day}
         onClick={() => onChange(dateString)}
-        title={
-          exception
-            ? "Exception — day blocked"
-            : count > 0
-              ? `${count} appointment${count > 1 ? "s" : ""}`
-              : undefined
-        }
+        title={getTooltip(exception, count)}
         className={`
           h-9 w-9 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl text-xs sm:text-sm flex flex-col items-center justify-center
           transition-all duration-200 relative mx-auto
@@ -147,20 +151,20 @@ export default function CalendarPicker({
   return (
     <div className="w-full max-w-md bg-white border border-gray-100 rounded-3xl sm:rounded-4xl p-4 sm:p-7 shadow-xl shadow-gray-100/50">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
-        <h3 className="font-bold text-gray-800 text-lg">Schedule</h3>
+        <h3 className="font-bold text-gray-800 text-lg">{t("title")}</h3>
         <div className="flex items-center justify-between w-full sm:w-auto gap-2 bg-gray-50 p-1 rounded-xl">
           <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition text-gray-400 hover:text-indigo-600">←</button>
-          <span className="text-xs sm:text-sm font-bold text-gray-700 px-2 min-w-[100px] text-center">
-            {monthNames[currentMonth]} {currentYear}
+          <span className="text-xs sm:text-sm font-bold text-gray-700 px-2 min-w-25 text-center">
+            {t(`monthNames.${MONTH_KEYS[currentMonth]}`)} {currentYear}
           </span>
           <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition text-gray-400 hover:text-indigo-600">→</button>
         </div>
       </div>
 
       <div className="grid grid-cols-7 gap-y-2 sm:gap-y-4 gap-x-1 sm:gap-x-2 text-center">
-        {daysOfWeek.map((d) => (
+        {DAY_KEYS.map((d) => (
           <div key={d} className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-300 py-2">
-            {d}
+            {t(`daysOfWeek.${d}`)}
           </div>
         ))}
         {days}
@@ -168,13 +172,13 @@ export default function CalendarPicker({
 
       <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-50 flex flex-wrap justify-between items-center gap-3 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
         <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-indigo-600" /> Selected
+          <span className="w-2 h-2 rounded-full bg-indigo-600" /> {t("legend.selected")}
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-purple-400" /> Blocked
+          <span className="w-2 h-2 rounded-full bg-purple-400" /> {t("legend.blocked")}
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-amber-400" /> Busy
+          <span className="w-2 h-2 rounded-full bg-amber-400" /> {t("legend.busy")}
         </div>
       </div>
     </div>

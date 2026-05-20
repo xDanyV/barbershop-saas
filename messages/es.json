@@ -122,5 +122,294 @@
         "title": "Servicio en Pausa",
         "waitMessage": "Te esperamos pronto",
         "backButton": "Volver al Inicio"
+    },
+    "CalendarPicker": {
+        "title": "Agenda",
+        "monthNames": {
+            "january": "Enero",
+            "february": "Febrero",
+            "march": "Marzo",
+            "april": "Abril",
+            "may": "Mayo",
+            "june": "Junio",
+            "july": "Julio",
+            "august": "Agosto",
+            "september": "Septiembre",
+            "october": "Octubre",
+            "november": "Noviembre",
+            "december": "Diciembre"
+        },
+        "daysOfWeek": {
+            "su": "Do",
+            "mo": "Lu",
+            "tu": "Ma",
+            "we": "Mi",
+            "th": "Ju",
+            "fr": "Vi",
+            "sa": "Sá"
+        },
+        "tooltip": {
+            "blocked": "Excepción — día bloqueado",
+            "oneAppointment": "{count} cita",
+            "manyAppointments": "{count} citas"
+        },
+        "legend": {
+            "selected": "Seleccionado",
+            "blocked": "Bloqueado",
+            "busy": "Ocupado"
+        }
+    },
+    "DashboardHeader": {
+        "badge": "Gestión de Barbería",
+        "buttons": {
+            "exceptions": "Excepciones",
+            "services": "Servicios",
+            "availability": "Disponibilidad"
+        }
+    },
+    "AppointmentList": {
+        "title": "Citas",
+        "scheduleFor": "Agenda para",
+        "exceptionDay": {
+            "title": "Día bloqueado",
+            "subtitle": "Este día tiene una excepción activa"
+        },
+        "empty": {
+            "title": "Sin citas programadas",
+            "subtitle": "¡Disfruta tu tiempo libre!"
+        }
+    },
+    "AppointmentCard": {
+        "customerDetails": "Detalles del Cliente",
+        "fields": {
+            "phone": "Teléfono",
+            "email": "Correo electrónico",
+            "noPhone": "No provisto",
+            "noEmail": "No provisto"
+        },
+        "status": {
+            "PENDING": "Pendiente",
+            "CONFIRMED": "Confirmada",
+            "COMPLETED": "Completada"
+        },
+        "confirm": "Confirmar",
+        "errors": {
+            "confirmFailed": "No se pudo confirmar la cita",
+            "network": "Error de red"
+        },
+        "success": {
+            "confirmed": "Cita de {name} confirmada"
+        }
+    },
+    "AvailabilityModal": {
+        "triggerButton": "Disponibilidad",
+        "title": "Horario Laboral",
+        "days": {
+            "mon": "Lun",
+            "tue": "Mar",
+            "wed": "Mié",
+            "thu": "Jue",
+            "fri": "Vie",
+            "sat": "Sáb",
+            "sun": "Dom"
+        },
+        "labels": {
+            "activeDays": "Días Activos",
+            "shiftStart": "Inicio de Turno",
+            "shiftEnd": "Fin de Turno",
+            "lunchBreak": "Pausa para Almorzar",
+            "lunchBreakDesc": "Agrega un descanso a tu turno",
+            "breakStart": "Inicio del Descanso",
+            "breakEnd": "Fin del Descanso"
+        },
+        "buttons": {
+            "cancel": "Cancelar",
+            "save": "Guardar Cambios",
+            "saving": "Guardando..."
+        },
+        "errors": {
+            "noDay": "Debes seleccionar al menos un día activo.",
+            "endBeforeStart": "La hora de fin debe ser posterior a la de inicio.",
+            "breakEndBeforeStart": "El fin del descanso debe ser posterior a su inicio.",
+            "breakOutOfRange": "El descanso debe estar dentro de tu horario laboral.",
+            "saveFailed": "Error al guardar la disponibilidad"
+        },
+        "success": {
+            "saved": "Horario actualizado correctamente"
+        }
+    },
+    "ExceptionModal": {
+        "title": "Agregar Excepción",
+        "description": "Selecciona un rango de fechas para bloquear. Todas las citas pendientes y confirmadas dentro de este rango serán canceladas automáticamente.",
+        "fields": {
+            "startDate": "Fecha de inicio",
+            "endDate": "Fecha de fin",
+            "reason": "Motivo (opcional)",
+            "reasonPlaceholder": "Ej. Vacaciones, Emergencia..."
+        },
+        "buttons": {
+            "cancel": "Cancelar",
+            "apply": "Aplicar Excepción",
+            "saving": "Guardando..."
+        },
+        "errors": {
+            "missingDates": "Por favor selecciona fechas de inicio y fin",
+            "startAfterEnd": "La fecha de inicio no puede ser posterior a la de fin",
+            "saveFailed": "Error al guardar la excepción",
+            "network": "Error de red, por favor intenta de nuevo"
+        },
+        "success": {
+            "saved": "Excepción guardada — las citas afectadas han sido canceladas"
+        }
+    },
+    "CatalogPage": {
+        "backToDashboard": "Volver al Dashboard",
+        "backToDashboardShort": "Dashboard",
+        "title": "Catálogo de Servicios",
+        "subtitle": "Administra los servicios y precios de tu barbería.",
+        "buttons": {
+            "createService": "Crear Servicio",
+            "backToList": "Volver a la Lista"
+        }
+    },
+    "ServiceList": {
+        "empty": "Sin servicios aún. Crea tu primer servicio para comenzar tu catálogo.",
+        "duration": "{duration} min",
+        "buttons": {
+            "edit": "Editar",
+            "delete": "Eliminar",
+            "confirm": "Confirmar",
+            "cancel": "Cancelar"
+        },
+        "deleteConfirm": "¿Eliminar \"{name}\"?",
+        "success": {
+            "deleted": "Servicio eliminado"
+        },
+        "errors": {
+            "deleteFailed": "Error al eliminar"
+        }
+    },
+    "EditServiceForm": {
+        "title": "Editar Servicio",
+        "subtitle": "Modifica los detalles de este servicio.",
+        "fields": {
+            "name": "Nombre del Servicio",
+            "namePlaceholder": "Nombre del servicio",
+            "price": "Precio",
+            "duration": "Duración (min)",
+            "durationPlaceholder": "Duración"
+        },
+        "buttons": {
+            "save": "Guardar Cambios",
+            "saving": "Guardando...",
+            "discard": "Descartar Cambios"
+        }
+    },
+    "CreateServiceForm": {
+        "title": "Nuevo Servicio",
+        "subtitle": "Define los detalles de tu nuevo servicio.",
+        "fields": {
+            "name": "Nombre del Servicio",
+            "namePlaceholder": "Ej. Degradado & Barba",
+            "price": "Precio",
+            "duration": "Minutos"
+        },
+        "buttons": {
+            "create": "Crear Servicio",
+            "creating": "Creando...",
+            "cancel": "Cancelar"
+        }
+    },
+    "CustomerDashboard": {
+        "backToBarbers": "Volver a Barberos",
+        "step1": "Paso 1: Selecciona Fecha",
+        "step2": "Paso 2: Elige Horario",
+        "note": "Nota: Las cancelaciones solo se permiten hasta 2 horas antes de la cita."
+    },
+    "CustomerHome": {
+        "title": "Mis Citas",
+        "subtitleUpcoming": "Tu próximo estilo te espera",
+        "subtitleHistory": "Revisa tus sesiones pasadas",
+        "tabs": {
+            "upcoming": "Próximas",
+            "history": "Historial"
+        },
+        "bookNow": "Reservar",
+        "cancel": "Cancelar",
+        "empty": "No se encontraron citas",
+        "status": {
+            "PENDING": "Pendiente",
+            "CONFIRMED": "Confirmada",
+            "CANCELLED": "Cancelada",
+            "COMPLETED": "Completada"
+        },
+        "errors": {
+            "tooLate": "No se pueden cancelar citas con menos de 2 horas de anticipación",
+            "cancelFailed": "No se pudo cancelar la cita",
+            "network": "Error de red, por favor intenta de nuevo",
+            "maxAppointments": "Solo puedes tener un máximo de 2 citas activas."
+        },
+        "success": {
+            "cancelled": "Cita cancelada correctamente"
+        }
+    },
+    "BarbersPage": {
+        "eyebrow": "Personal Profesional",
+        "title": "Nuestros Barberos",
+        "subtitle": "Selecciona un profesional experto para elevar tu estilo.",
+        "selectBarber": "Seleccionar",
+        "empty": {
+            "title": "Sin barberos disponibles",
+            "subtitle": "Por favor vuelve más tarde o contacta soporte."
+        },
+        "fallbackName": "Barbero Experto"
+    },
+    "AvailableSlots": {
+        "title": "Horarios Disponibles",
+        "soldOut": "¡Sin disponibilidad!",
+        "noAvailability": {
+            "title": "Sin disponibilidad",
+            "subtitle": "El barbero no trabaja este día."
+        }
+    },
+    "CalendarPickerCustomer": {
+        "legend": {
+            "selected": "Seleccionado",
+            "today": "Hoy",
+            "unavailable": "No disponible"
+        },
+        "hint": "elige un día activo para ver horarios"
+    },
+    "SlotCard": {
+        "availableServices": "Servicios Disponibles",
+        "loading": "CARGANDO...",
+        "buttons": {
+            "book": "Reservar",
+            "close": "Cerrar",
+            "continue": "Continuar",
+            "completeBooking": "Confirmar Reserva"
+        },
+        "modal": {
+            "title": "Confirmar Reserva",
+            "fields": {
+                "date": "Fecha",
+                "time": "Hora",
+                "service": "Servicio",
+                "total": "Total"
+            }
+        },
+        "errors": {
+            "noService": "Por favor selecciona un servicio",
+            "loadFailed": "No se pudieron cargar los servicios",
+            "bookFailed": "No se pudo reservar la cita",
+            "network": "Error de red, por favor intenta de nuevo"
+        },
+        "success": {
+            "booked": "¡{name} reservado exitosamente!"
+        }
+    },
+    "BarberCard": {
+        "fallbackName": "Barbero Experto",
+        "verified": "Verificado"
     }
 }

@@ -11,7 +11,9 @@ import {
   DollarSign,
   X,
   CheckCircle2,
+  ChevronDown, // <-- Agregamos el icono de flecha
 } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
 
 type Service = {
   id: string;
@@ -33,6 +35,9 @@ export default function SlotCard({
   barberId,
   onBook,
 }: Props) {
+  const t = useTranslations("SlotCard");
+  const locale = useLocale();
+
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<string | null>(null);
@@ -51,9 +56,9 @@ export default function SlotCard({
     fetch(`/api/catalog?barberId=${barberId}`)
       .then((res) => res.json())
       .then((data: Service[]) => setServices(data))
-      .catch(() => toast.error("Could not load services"))
+      .catch(() => toast.error(t("errors.loadFailed")))
       .finally(() => setLoading(false));
-  }, [popoverOpen, barberId, services.length]);
+  }, [popoverOpen, barberId, services.length, t]);
 
   // Cerrar al hacer click afuera
   useEffect(() => {
@@ -80,7 +85,7 @@ export default function SlotCard({
 
   const handleConfirmClick = () => {
     if (!selectedService) {
-      toast.error("Please select a service");
+      toast.error(t("errors.noService"));
       return;
     }
     setPopoverOpen(false);
@@ -119,24 +124,25 @@ export default function SlotCard({
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.error ?? "Could not book appointment");
+        toast.error(data.error ?? t("errors.bookFailed"));
         return;
       }
 
-      toast.success(`${service?.name} booked successfully!`);
+      // La corrección de TypeScript del paso anterior
+      toast.success(t("success.booked", { name: service?.name ?? "Service" }));
       onBook?.(time, selectedService);
 
       setModalOpen(false);
       setSelectedService(null);
       window.location.href = "/dashboard/customer/home";
     } catch {
-      toast.error("Network error, please try again");
+      toast.error(t("errors.network"));
     } finally {
       setBooking(false);
     }
   };
 
-  const formattedDate = selectedDate.toLocaleDateString("en-US", {
+  const formattedDate = selectedDate.toLocaleDateString(locale, {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -145,14 +151,13 @@ export default function SlotCard({
   return (
     <>
       <div ref={containerRef} className="relative">
-        {/* Contenedor principal de la Tarjeta (Ahora actúa como Acordeón) */}
         <div
           className={`group flex flex-col border transition-all duration-500 overflow-hidden ${popoverOpen
             ? "border-indigo-200 bg-white shadow-xl shadow-indigo-100/50 rounded-3xl"
             : "border-gray-100 bg-white hover:border-indigo-100 hover:shadow-md rounded-2xl"
             }`}
         >
-          {/* Header (Siempre visible) */}
+          {/* Header (Siempre visible y totalmente clickeable) */}
           <div
             onClick={handleToggle}
             className="flex items-center justify-between px-4 md:px-5 py-3 md:py-4 cursor-pointer"
@@ -175,17 +180,12 @@ export default function SlotCard({
               </span>
             </div>
 
-            <button
-              className={`px-5 md:px-6 py-2.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all duration-300 ${popoverOpen
-                ? "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                : "bg-gray-900 text-white shadow-lg hover:bg-indigo-600 hover:shadow-indigo-200"
-                }`}
-            >
-              {popoverOpen ? "Close" : "Book"}
-            </button>
+            {/* Nuevo indicador visual de flecha en lugar del botón gigantesco */}
+            <div className={`p-1 transition-transform duration-300 ${popoverOpen ? "rotate-180 text-indigo-500" : "text-gray-300 group-hover:text-indigo-400"}`}>
+              <ChevronDown size={20} strokeWidth={2.5} />
+            </div>
           </div>
 
-          {/* Área expandible (Reemplaza al popover problemático) */}
           <AnimatePresence>
             {popoverOpen && (
               <motion.div
@@ -198,14 +198,14 @@ export default function SlotCard({
                   <div className="h-px w-full bg-linear-to-r from-transparent via-gray-100 to-transparent mb-4" />
 
                   <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-3">
-                    Available Services
+                    {t("availableServices")}
                   </p>
 
                   <div className="space-y-2 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
                     {loading ? (
                       <div className="py-6 text-center">
                         <div className="w-5 h-5 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-2" />
-                        <p className="text-[10px] font-bold text-gray-400">LOADING...</p>
+                        <p className="text-[10px] font-bold text-gray-400">{t("loading")}</p>
                       </div>
                     ) : (
                       services.map((s) => (
@@ -254,7 +254,7 @@ export default function SlotCard({
                     disabled={!selectedService}
                     className="mt-5 w-full py-4 rounded-xl bg-indigo-600 text-white text-xs font-black uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-30 disabled:bg-gray-300 disabled:hover:bg-gray-300 transition-all shadow-lg shadow-indigo-100"
                   >
-                    Continue
+                    {t("buttons.continue")}
                   </button>
                 </div>
               </motion.div>
@@ -263,7 +263,6 @@ export default function SlotCard({
         </div>
       </div>
 
-      {/* Modal de Confirmación (Rediseñado para encajar con el nuevo estilo) */}
       <Transition appear show={modalOpen} as={Fragment}>
         <Dialog
           as="div"
@@ -287,7 +286,7 @@ export default function SlotCard({
               <Dialog.Panel className="w-full max-w-sm bg-white rounded-4xl shadow-2xl p-6 md:p-8 relative overflow-hidden">
                 <div className="flex items-center justify-between mb-6">
                   <Dialog.Title className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">
-                    Confirm Booking
+                    {t("modal.title")}
                   </Dialog.Title>
                   <button
                     onClick={() => setModalOpen(false)}
@@ -299,10 +298,10 @@ export default function SlotCard({
 
                 <div className="space-y-3 mb-8">
                   {[
-                    { icon: CalendarDays, label: "Date", value: formattedDate },
-                    { icon: Clock, label: "Time", value: time },
-                    { icon: Scissors, label: "Service", value: service?.name },
-                    { icon: DollarSign, label: "Total", value: `$${service?.price.toFixed(2)}`, highlight: true },
+                    { icon: CalendarDays, label: t("modal.fields.date"), value: formattedDate },
+                    { icon: Clock, label: t("modal.fields.time"), value: time },
+                    { icon: Scissors, label: t("modal.fields.service"), value: service?.name },
+                    { icon: DollarSign, label: t("modal.fields.total"), value: `$${service?.price?.toFixed(2)}`, highlight: true },
                   ].map((item, idx) => (
                     <div
                       key={idx}
@@ -331,7 +330,7 @@ export default function SlotCard({
                   {booking ? (
                     <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
-                    "Complete Booking"
+                    t("buttons.completeBooking")
                   )}
                 </button>
               </Dialog.Panel>

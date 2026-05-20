@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Mail, Phone, ShieldCheck, Star } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type Barber = {
     id: string;
@@ -17,6 +18,8 @@ type Props = {
 };
 
 export default function BarberCard({ barber }: Props) {
+    const t = useTranslations("BarberCard");
+
     const initials = barber.user.name
         ? barber.user.name
             .split(" ")
@@ -32,7 +35,10 @@ export default function BarberCard({ barber }: Props) {
             animate={{ opacity: 1, y: 0 }}
             className="relative overflow-hidden bg-white border border-gray-100 rounded-4xl p-6 shadow-sm group"
         >
-            <div className="absolute top-4 right-4 bg-emerald-50 text-emerald-600 p-1.5 rounded-full">
+            <div
+                className="absolute top-4 right-4 bg-emerald-50 text-emerald-600 p-1.5 rounded-full"
+                title={t("verified")}
+            >
                 <ShieldCheck size={16} />
             </div>
 
@@ -51,7 +57,7 @@ export default function BarberCard({ barber }: Props) {
                 <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-black text-gray-900 text-lg tracking-tight">
-                            {barber.user.name ?? "Master Barber"}
+                            {barber.user.name ?? t("fallbackName")}
                         </h3>
                     </div>
 
