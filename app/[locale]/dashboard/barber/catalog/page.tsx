@@ -16,7 +16,7 @@ export default function CatalogPage() {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
 
   return (
-    <div className="max-w-5xl mx-auto pb-10 px-4 sm:px-6">
+    <div className="max-w-5xl mx-auto  md:pt-20 pb-24 md:pb-0 px-4 sm:px-6">
 
       <motion.div
         initial={{ opacity: 0, x: -10 }}

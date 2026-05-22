@@ -411,5 +411,123 @@
     "BarberCard": {
         "fallbackName": "Barbero Experto",
         "verified": "Verificado"
+    },
+    "ActiveBarbersList": {
+        "loadingDir": "Cargando directorio de barberos...",
+        "errors": {
+            "fetch": "Error al cargar datos",
+            "format": "Error en el formato de los datos",
+            "connection": "Error de conexión con el servidor",
+            "update": "Error al actualizar el estado"
+        },
+        "toasts": {
+            "updating": "Actualizando estado...",
+            "updatedTo": "Estado actualizado a {status}"
+        },
+        "statusLabels": {
+            "PENDING": "Pendiente",
+            "APPROVED": "Activo",
+            "REJECTED": "Bloqueado"
+        },
+        "confirmModal": {
+            "question": "¿Cambiar estado a",
+            "cancel": "Cancelar",
+            "confirm": "Confirmar"
+        },
+        "empty": "No hay barberos gestionados en el sistema.",
+        "barber": {
+            "noName": "Sin nombre",
+            "yourAccount": "Tu Cuenta (Admin)"
+        },
+        "options": {
+            "APPROVED": "🟢 Activo",
+            "PENDING": "🟠 Pendiente",
+            "REJECTED": "🔴 Bloqueado"
+        }
+    },
+    "CustomersList": {
+        "loadingDir": "Cargando base de clientes...",
+        "errors": {
+            "fetch": "Error al cargar la lista de clientes",
+            "connection": "Error de conexión",
+            "update": "Error al actualizar el estado"
+        },
+        "toasts": {
+            "blocking": "Bloqueando cliente...",
+            "unblocking": "Desbloqueando cliente...",
+            "blocked": "Cliente bloqueado (No podrá agendar)",
+            "unblocked": "Cliente desbloqueado"
+        },
+        "confirmModal": {
+            "question": "¿Seguro que deseas",
+            "actionBlock": "BLOQUEAR",
+            "actionUnblock": "DESBLOQUEAR",
+            "thisCustomer": "a este cliente?",
+            "cancel": "Cancelar",
+            "confirm": "Confirmar"
+        },
+        "searchPlaceholder": "Buscar cliente por nombre, email o teléfono...",
+        "empty": "No se encontraron clientes.",
+        "customer": {
+            "noName": "Sin nombre registrado",
+            "bannedBadge": "Bloqueado",
+            "appointments": "Citas"
+        },
+        "actions": {
+            "allow": "Permitir Citas",
+            "block": "Bloquear"
+        }
+    },
+    "PendingBarbersList": {
+        "loadingDir": "Cargando solicitudes pendientes...",
+        "errors": {
+            "format": "Error en el formato de los datos",
+            "connection": "Error de conexión",
+            "fetchPrefix": "Error"
+        },
+        "empty": "No hay aprobaciones pendientes.",
+        "barber": {
+            "noName": "Sin nombre"
+        },
+        "actions": {
+            "approve": "Aprobar",
+            "reject": "Rechazar"
+        }
+    },
+    "SystemSettings": {
+        "loading": "Cargando configuración...",
+        "errors": {
+            "fetch": "Error al cargar la configuración",
+            "connection": "Error de conexión",
+            "emptyMessage": "Debes escribir un mensaje de mantenimiento si vas a apagar el servicio.",
+            "save": "Error al guardar los cambios"
+        },
+        "toasts": {
+            "saving": "Guardando configuración...",
+            "success": "Configuración global actualizada"
+        },
+        "systemState": {
+            "title": "Estado del Sistema",
+            "active": "🟢 Servicio Abierto y Operativo",
+            "inactive": "🔴 Servicio Cerrado (Mantenimiento)"
+        },
+        "message": {
+            "label": "Mensaje para los clientes (Visible si está apagado)",
+            "placeholder": "Ej: Estamos realizando mejoras en el sistema. Volveremos a las 5:00 PM."
+        },
+        "button": {
+            "saving": "Guardando...",
+            "save": "Guardar Configuración"
+        }
+    },
+    "AdminDashboard": {
+        "title": "Panel de Control",
+        "subtitle": "Gestiona tu personal, clientes y la configuración global.",
+        "tabs": {
+            "pending": "Aceptar Barberos",
+            "barbers": "Administrar Barberos",
+            "customers": "Gestionar Clientes",
+            "settings": "Configuración Global"
+        }
     }
 }
