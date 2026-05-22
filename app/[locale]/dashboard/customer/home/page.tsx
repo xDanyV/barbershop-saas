@@ -89,7 +89,7 @@ export default function CustomerHome() {
   const list = showHistory ? history : appointments;
 
   return (
-    <div className="p-4 md:p-8 max-w-2xl mx-auto">
+    <div className="pb-24 md:pb-0 md:p-8 max-w-2xl mx-auto">
       <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 md:mb-10 gap-6 text-center md:text-left">
         <div>
           <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">{t("title")}</h1>

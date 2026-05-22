@@ -2,57 +2,90 @@
 
 import { useState } from "react";
 import { UserPlus, Users, Settings, ShieldAlert } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
+
 import PendingBarbersList from "./components/PendingBarbersList";
 import ActiveBarbersList from "./components/ActiveBarbersList";
 import CustomersList from "./components/CustomersList";
 import SystemSettings from "./components/SystemSettings";
 
-// Definimos las pestañas disponibles
+// Definimos las pestañas solo con sus identificadores e iconos
 const TABS = [
-    { id: "pending", label: "Aceptar Barberos", icon: UserPlus },
-    { id: "barbers", label: "Administrar Barberos", icon: Users },
-    { id: "customers", label: "Gestionar Clientes", icon: ShieldAlert },
-    { id: "settings", label: "Configuración Global", icon: Settings },
+    { id: "pending", icon: UserPlus },
+    { id: "barbers", icon: Users },
+    { id: "customers", icon: ShieldAlert },
+    { id: "settings", icon: Settings },
 ];
 
 export default function AdminDashboard() {
+    const t = useTranslations("AdminDashboard");
     const [activeTab, setActiveTab] = useState("pending");
 
     return (
-        <div className="space-y-8 p-4 md:p-8 max-w-6xl mx-auto">
-            {/* Header del Admin */}
+        <div className="space-y-6 md:space-y-8 px-4 py-6 md:p-8 max-w-6xl mx-auto">
+            {/* Header del Dashboard */}
             <div>
-                <h1 className="text-3xl font-black text-gray-900 tracking-tight">Admin Control Panel</h1>
-                <p className="text-gray-500 font-medium">Manage your staff, customers, and global shop settings.</p>
+                <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
+                    {t("title")}
+                </h1>
+                <p className="text-sm md:text-base text-gray-500 font-medium mt-1">
+                    {t("subtitle")}
+                </p>
             </div>
 
-            {/* Menú de Navegación (Tabs) */}
-            <div className="flex overflow-x-auto gap-2 pb-2 border-b border-gray-100 no-scrollbar">
-                {TABS.map((tab) => {
-                    const Icon = tab.icon;
-                    const isActive = activeTab === tab.id;
-                    return (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 px-5 py-3 rounded-t-xl font-bold text-sm transition-all whitespace-nowrap ${isActive
-                                    ? "bg-indigo-50 text-indigo-700 border-b-2 border-indigo-600"
-                                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                                }`}
-                        >
-                            <Icon size={18} />
-                            {tab.label}
-                        </button>
-                    );
-                })}
+            {/* Contenedor de Pestañas (Scroll horizontal oculto en móviles) */}
+            <div className="relative border-b border-gray-100">
+                <div className="flex overflow-x-auto gap-2 pb-1 custom-scrollbar">
+                    {TABS.map((tab) => {
+                        const Icon = tab.icon;
+                        const isActive = activeTab === tab.id;
+
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`relative flex items-center gap-2 px-4 md:px-5 py-3 font-bold text-sm transition-colors whitespace-nowrap rounded-t-xl hover:bg-gray-50/50 ${isActive ? "text-indigo-600" : "text-gray-400 hover:text-gray-700"
+                                    }`}
+                            >
+                                <Icon size={18} className={isActive ? "text-indigo-600" : "text-gray-400"} />
+                                <span>{t(`tabs.${tab.id}`)}</span>
+
+                                {/* Indicador Animado de Pestaña Activa */}
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="activeTabIndicator"
+                                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
+                                        initial={false}
+                                        transition={{
+                                            type: "spring",
+                                            stiffness: 500,
+                                            damping: 30
+                                        }}
+                                    />
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
-            {/* Contenedor Dinámico: Renderiza el componente según el tab activo */}
-            <div className="pt-4">
-                {activeTab === "pending" && <PendingBarbersList />}
-                {activeTab === "barbers" && <ActiveBarbersList />}
-                {activeTab === "customers" && <CustomersList />}
-                {activeTab === "settings" && <SystemSettings />}
+            {/* Renderizado de Componentes con Animación de Cross-fade */}
+            <div className="pt-2 md:pt-4">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={activeTab}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        {activeTab === "pending" && <PendingBarbersList />}
+                        {activeTab === "barbers" && <ActiveBarbersList />}
+                        {activeTab === "customers" && <CustomersList />}
+                        {activeTab === "settings" && <SystemSettings />}
+                    </motion.div>
+                </AnimatePresence>
             </div>
         </div>
     );

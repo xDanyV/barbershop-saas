@@ -26,7 +26,7 @@ export default function BarbersPage() {
     }, []);
 
     return (
-        <div className="p-4 md:p-8 max-w-5xl mx-auto">
+        <div className="pb-24 md:pb-0 md:p-8 max-w-5xl mx-auto">
             <header className="mb-8 md:mb-12 text-center md:text-left">
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}

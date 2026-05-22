@@ -411,5 +411,123 @@
     "BarberCard": {
         "fallbackName": "Master Barber",
         "verified": "Verified"
+    },
+    "ActiveBarbersList": {
+        "loadingDir": "Loading barbers directory...",
+        "errors": {
+            "fetch": "Error loading data",
+            "format": "Data format error",
+            "connection": "Server connection error",
+            "update": "Error updating status"
+        },
+        "toasts": {
+            "updating": "Updating status...",
+            "updatedTo": "Status updated to {status}"
+        },
+        "statusLabels": {
+            "PENDING": "Pending",
+            "APPROVED": "Active",
+            "REJECTED": "Blocked"
+        },
+        "confirmModal": {
+            "question": "Change status to",
+            "cancel": "Cancel",
+            "confirm": "Confirm"
+        },
+        "empty": "No managed barbers in the system.",
+        "barber": {
+            "noName": "No name",
+            "yourAccount": "Your Account (Admin)"
+        },
+        "options": {
+            "APPROVED": "🟢 Active",
+            "PENDING": "🟠 Pending",
+            "REJECTED": "🔴 Blocked"
+        }
+    },
+    "CustomersList": {
+        "loadingDir": "Loading customer database...",
+        "errors": {
+            "fetch": "Error loading customers list",
+            "connection": "Connection error",
+            "update": "Error updating status"
+        },
+        "toasts": {
+            "blocking": "Blocking customer...",
+            "unblocking": "Unblocking customer...",
+            "blocked": "Customer blocked (Cannot book)",
+            "unblocked": "Customer unblocked"
+        },
+        "confirmModal": {
+            "question": "Are you sure you want to",
+            "actionBlock": "BLOCK",
+            "actionUnblock": "UNBLOCK",
+            "thisCustomer": "this customer?",
+            "cancel": "Cancel",
+            "confirm": "Confirm"
+        },
+        "searchPlaceholder": "Search customer by name, email or phone...",
+        "empty": "No customers found.",
+        "customer": {
+            "noName": "No registered name",
+            "bannedBadge": "Blocked",
+            "appointments": "Appts"
+        },
+        "actions": {
+            "allow": "Allow Booking",
+            "block": "Block"
+        }
+    },
+    "PendingBarbersList": {
+        "loadingDir": "Loading pending requests...",
+        "errors": {
+            "format": "Data format error",
+            "connection": "Connection error",
+            "fetchPrefix": "Error"
+        },
+        "empty": "No pending approvals.",
+        "barber": {
+            "noName": "No name"
+        },
+        "actions": {
+            "approve": "Approve",
+            "reject": "Reject"
+        }
+    },
+    "SystemSettings": {
+        "loading": "Loading settings...",
+        "errors": {
+            "fetch": "Error loading settings",
+            "connection": "Connection error",
+            "emptyMessage": "You must enter a maintenance message if you are turning off the service.",
+            "save": "Error saving changes"
+        },
+        "toasts": {
+            "saving": "Saving settings...",
+            "success": "Global settings updated"
+        },
+        "systemState": {
+            "title": "System Status",
+            "active": "🟢 Service Open and Operational",
+            "inactive": "🔴 Service Closed (Maintenance)"
+        },
+        "message": {
+            "label": "Message for customers (Visible if turned off)",
+            "placeholder": "Ex: We are making system improvements. We will be back at 5:00 PM."
+        },
+        "button": {
+            "saving": "Saving...",
+            "save": "Save Settings"
+        }
+    },
+    "AdminDashboard": {
+        "title": "Admin Control Panel",
+        "subtitle": "Manage your staff, customers, and global shop settings.",
+        "tabs": {
+            "pending": "Pending Barbers",
+            "barbers": "Manage Barbers",
+            "customers": "Manage Customers",
+            "settings": "Global Settings"
+        }
     }
 }

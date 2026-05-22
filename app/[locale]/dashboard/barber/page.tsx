@@ -127,7 +127,7 @@ export default function BarberDashboard() {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full"
+      className="w-full pb-24 md:pb-0"
     >
       <DashboardHeader onExceptionAdded={refreshExceptions} />
 

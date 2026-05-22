@@ -56,7 +56,7 @@ export default function CustomerDashboard() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-10">
+    <div className="max-w-6xl mx-auto px-3 pb-24 md:pb-0 md:p-10">
       <button
         onClick={() => router.push("/dashboard/customer/barbers")}
         className="flex items-center gap-2 text-gray-400 hover:text-indigo-600 font-bold text-[10px] md:text-xs uppercase tracking-widest mb-6 md:mb-8 transition-colors group py-2"
