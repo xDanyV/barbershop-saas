@@ -12,6 +12,10 @@ export async function GET(
         const startParam = searchParams.get("start");
         const endParam = searchParams.get("end");
 
+        // The client also sends its timezone offset so we can format
+        // slot times in the user's local timezone, not the server's (UTC).
+        const tzOffset = parseInt(searchParams.get("tzOffset") ?? "0", 10);
+
         if (!startParam || !endParam) {
             return NextResponse.json(
                 { error: "start and end are required" },
@@ -34,19 +38,32 @@ export async function GET(
 
         const bookedSlots = appointments
             .filter((a: any) => {
-                // PENDING y CONFIRMED siempre bloquean
+                // PENDING and CONFIRMED always block the slot
                 if (a.status !== "CANCELLED") return true;
 
-                // CANCELLED solo bloquea si está dentro de la ventana de 2 horas
-                const hoursUntil = (new Date(a.date).getTime() - now.getTime()) / (1000 * 60 * 60);
+                // CANCELLED only blocks within the 2-hour window
+                const hoursUntil =
+                    (new Date(a.date).getTime() - now.getTime()) / (1000 * 60 * 60);
                 return hoursUntil < 2;
             })
-            .map((a: any) =>
-                new Date(a.date).toLocaleTimeString("en-US", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                })
-            );
+            .map((a: any) => {
+                // Apply the client's UTC offset so the formatted time matches
+                // what generateSlots() produces in the browser.
+                // tzOffset is getTimezoneOffset() which returns minutes BEHIND UTC
+                // (e.g. UTC-6 → 360, UTC+1 → -60).
+                const utcMs = new Date(a.date).getTime();
+                const localMs = utcMs - tzOffset * 60 * 1000;
+                const localDate = new Date(localMs);
+
+                const hours = localDate.getUTCHours();
+                const minutes = localDate.getUTCMinutes();
+                const period = hours >= 12 ? "PM" : "AM";
+                const hours12 = hours % 12 || 12;
+
+                return `${hours12.toString().padStart(2, "0")}:${minutes
+                    .toString()
+                    .padStart(2, "0")} ${period}`;
+            });
 
         return NextResponse.json(bookedSlots);
 

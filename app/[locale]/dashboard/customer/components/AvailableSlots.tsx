@@ -46,28 +46,18 @@ export default function AvailableSlots({
     const endOfDay = new Date(selectedDate);
     endOfDay.setHours(23, 59, 59, 999);
 
+    // Send the browser's timezone offset so the server formats booked slot
+    // times in local time, matching the format generateSlots() produces.
+    const tzOffset = new Date().getTimezoneOffset();
+
     fetch(
-      `/api/appointments/barber/${barberId}/booked?start=${startOfDay.toISOString()}&end=${endOfDay.toISOString()}`
+      `/api/appointments/barber/${barberId}/booked?start=${startOfDay.toISOString()}&end=${endOfDay.toISOString()}&tzOffset=${tzOffset}`
     )
       .then((res) => res.json())
       .then((data: string[]) => {
-        // Normalize every booked slot to the same "HH:MM AM/PM" format
-        // used by generateSlots so the includes() comparison works correctly.
-        // The API may return ISO strings ("2025-05-26T08:00:00.000Z") OR
-        // already-formatted strings ("08:00 AM"). We handle both.
-        const normalized = data.map((raw) => {
-          // If it looks like an ISO string, parse it and reformat
-          if (raw.includes("T") || raw.includes("-")) {
-            const d = new Date(raw);
-            return d.toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-            });
-          }
-          // Already a time string — return as-is
-          return raw;
-        });
-        setBookedSlots(normalized);
+        // Server now returns pre-formatted "HH:MM AM/PM" strings
+        // adjusted to the browser's local timezone via the tzOffset param.
+        setBookedSlots(data);
       })
       .catch((err) => console.error("Could not load booked slots", err))
       .finally(() => setLoading(false));
