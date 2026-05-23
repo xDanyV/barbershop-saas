@@ -127,7 +127,7 @@ export default function CustomersList() {
             </div>
 
             {/* Contenedor con altura máxima y scroll interno. Incluye el pb-24 para que el navbar no estorbe */}
-            <div className="max-h-[600px] md:max-h-[700px] overflow-y-auto pr-1 pb-24 md:pb-0 custom-scrollbar">
+            <div className="max-h-150 md:max-h-175 overflow-y-auto pr-1 pb-24 md:pb-0 custom-scrollbar">
                 <div className="grid gap-4">
                     <AnimatePresence mode="popLayout">
                         {filteredCustomers.length === 0 ? (
@@ -150,7 +150,7 @@ export default function CustomersList() {
                                         </div>
                                         <div className="min-w-0">
                                             <h3 className="font-black text-gray-900 flex flex-wrap items-center gap-2">
-                                                <span className="truncate max-w-[150px] sm:max-w-xs">{customer.name || t("customer.noName")}</span>
+                                                <span className="truncate max-w-37.5 sm:max-w-xs">{customer.name || t("customer.noName")}</span>
                                                 {customer.isBanned && (
                                                     <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase tracking-widest shrink-0">
                                                         {t("customer.bannedBadge")}

@@ -18,11 +18,11 @@ export default function AvailableSlots({
   barberId,
 }: Props) {
   const t = useTranslations("AvailableSlots");
-
   const [availability, setAvailability] = useState<any[]>([]);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Fetch barber availability (working hours & days)
   useEffect(() => {
     async function fetchAvailability() {
       try {
@@ -37,8 +37,10 @@ export default function AvailableSlots({
     fetchAvailability();
   }, [barberId]);
 
+  // Fetch booked slots for the selected date and normalize to 12h format
   useEffect(() => {
     setLoading(true);
+
     const startOfDay = new Date(selectedDate);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(selectedDate);
@@ -48,19 +50,40 @@ export default function AvailableSlots({
       `/api/appointments/barber/${barberId}/booked?start=${startOfDay.toISOString()}&end=${endOfDay.toISOString()}`
     )
       .then((res) => res.json())
-      .then((data: string[]) => setBookedSlots(data))
+      .then((data: string[]) => {
+        // Normalize every booked slot to the same "HH:MM AM/PM" format
+        // used by generateSlots so the includes() comparison works correctly.
+        // The API may return ISO strings ("2025-05-26T08:00:00.000Z") OR
+        // already-formatted strings ("08:00 AM"). We handle both.
+        const normalized = data.map((raw) => {
+          // If it looks like an ISO string, parse it and reformat
+          if (raw.includes("T") || raw.includes("-")) {
+            const d = new Date(raw);
+            return d.toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+          }
+          // Already a time string — return as-is
+          return raw;
+        });
+        setBookedSlots(normalized);
+      })
       .catch((err) => console.error("Could not load booked slots", err))
       .finally(() => setLoading(false));
   }, [selectedDate, barberId]);
 
-  const timeToMinutes = (timeStr: string) => {
+  // Convert any time string (12h or 24h) to total minutes
+  const timeToMinutes = (timeStr: string): number => {
     if (timeStr.includes("M")) {
+      // 12h format: "08:00 AM" / "01:30 PM"
       const [time, modifier] = timeStr.split(" ");
       let [hours, minutes] = time.split(":").map(Number);
       if (modifier === "PM" && hours < 12) hours += 12;
       if (modifier === "AM" && hours === 12) hours = 0;
       return hours * 60 + minutes;
     }
+    // 24h format: "08:00"
     const [hours, minutes] = timeStr.split(":").map(Number);
     return hours * 60 + minutes;
   };
@@ -68,7 +91,8 @@ export default function AvailableSlots({
   const dayOfWeek = selectedDate.getDay();
   const schedule = availability.find((a) => a.dayOfWeek === dayOfWeek);
 
-  function generateSlots(start: string, end: string, interval = 60) {
+  // Generate hourly slots between start and end time
+  function generateSlots(start: string, end: string, interval = 60): string[] {
     const slots: string[] = [];
     const [startHour, startMinute] = start.split(":").map(Number);
     const [endHour, endMinute] = end.split(":").map(Number);
@@ -96,21 +120,20 @@ export default function AvailableSlots({
     : [];
 
   const availableSlots = allSlots.filter((slot) => {
+    // Remove already-booked slots (normalized comparison)
     if (bookedSlots.includes(slot)) return false;
 
+    // Remove slots that fall within the break window
     if (schedule?.breakStart && schedule?.breakEnd) {
       const slotMin = timeToMinutes(slot);
       const breakStartMin = timeToMinutes(schedule.breakStart);
       const breakEndMin = timeToMinutes(schedule.breakEnd);
-
-      if (slotMin >= breakStartMin && slotMin < breakEndMin) {
-        return false;
-      }
+      if (slotMin >= breakStartMin && slotMin < breakEndMin) return false;
     }
 
+    // Remove past slots for today
     const now = new Date();
     const isToday = selectedDate.toDateString() === now.toDateString();
-
     if (isToday) {
       const slotMin = timeToMinutes(slot);
       const nowMin = now.getHours() * 60 + now.getMinutes();
@@ -138,12 +161,9 @@ export default function AvailableSlots({
             {t("title")}
           </h3>
         </div>
-
         <div className="flex items-center gap-2 text-[10px] md:text-xs font-bold text-gray-400">
           <CalendarCheck size={14} className="text-indigo-500" />
-          <span>
-            {schedule.startTime} — {schedule.endTime}
-          </span>
+          <span>{schedule.startTime} — {schedule.endTime}</span>
         </div>
       </div>
 
@@ -156,7 +176,11 @@ export default function AvailableSlots({
               ))}
             </div>
           ) : availableSlots.length === 0 ? (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12 md:py-20">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-12 md:py-20"
+            >
               <p className="text-gray-400 font-bold text-sm md:text-base">{t("soldOut")}</p>
             </motion.div>
           ) : (
@@ -172,7 +196,10 @@ export default function AvailableSlots({
                     time={slot}
                     selectedDate={selectedDate}
                     barberId={barberId}
-                    onBook={(bookedTime) => setBookedSlots((prev) => [...prev, bookedTime])}
+                    onBook={(bookedTime) =>
+                      // Immediately hide the booked slot without refetching
+                      setBookedSlots((prev) => [...prev, bookedTime])
+                    }
                   />
                 </motion.div>
               ))}
