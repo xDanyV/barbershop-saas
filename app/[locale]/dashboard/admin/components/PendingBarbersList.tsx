@@ -65,7 +65,7 @@ export default function PendingBarbersList() {
             )}
 
             {/* Contenedor con altura máxima y scroll interno. Incluye el pb-24 para el navbar */}
-            <div className="max-h-[600px] md:max-h-[700px] overflow-y-auto pr-1 pb-24 md:pb-0 custom-scrollbar">
+            <div className="max-h-150 md:max-h-175 overflow-y-auto pr-1 pb-24 md:pb-0 custom-scrollbar">
                 <div className="grid gap-4">
                     <AnimatePresence mode="popLayout">
                         {Array.isArray(barbers) && barbers.length === 0 ? (
