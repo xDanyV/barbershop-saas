@@ -23,33 +23,44 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "startDate and endDate are required" }, { status: 400 });
         }
 
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
+        const [sYear, sMonth, sDay] = startDate.split("-").map(Number);
+        const start = new Date(sYear, sMonth - 1, sDay, 0, 0, 0, 0);
 
-        // Creates the exception
-        const exception = await prisma.barberException.create({
-            data: {
-                barberId: barber.id,
-                startDate: start,
-                endDate: end,
-                reason: reason ?? null,
-            },
+        const [eYear, eMonth, eDay] = endDate.split("-").map(Number);
+        const end = new Date(eYear, eMonth - 1, eDay, 23, 59, 59, 999);
+
+        const result = await prisma.$transaction(async (tx) => {
+            const exception = await tx.barberException.create({
+                data: {
+                    barberId: barber.id,
+                    startDate: start,
+                    endDate: end,
+                    reason: reason ?? null,
+                },
+            });
+
+            const cancelledAppointments = await tx.appointment.updateMany({
+                where: {
+                    barberId: barber.id,
+                    status: { in: ["PENDING", "CONFIRMED"] },
+                    date: { gte: start, lte: end },
+                },
+                data: { status: "CANCELLED" },
+            });
+
+            return {
+                exception,
+                cancelledCount: cancelledAppointments.count
+            };
         });
 
-        // Cancels any appointments that fall within the exception period
-        await prisma.appointment.updateMany({
-            where: {
-                barberId: barber.id,
-                status: { in: ["PENDING", "CONFIRMED"] },
-                date: { gte: start, lte: end },
-            },
-            data: { status: "CANCELLED" },
-        });
-
-        return NextResponse.json(exception, { status: 201 });
+        return NextResponse.json({
+            ...result.exception,
+            appointmentsCancelled: result.cancelledCount
+        }, { status: 201 });
 
     } catch (error) {
+        console.error("Exception creation error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

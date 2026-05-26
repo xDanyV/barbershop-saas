@@ -239,28 +239,31 @@
         }
     },
     "ExceptionModal": {
-        "title": "Agregar Excepción",
-        "description": "Selecciona un rango de fechas para bloquear. Todas las citas pendientes y confirmadas dentro de este rango serán canceladas automáticamente.",
+        "title": "Solicitar Día Libre",
+        "description": "Bloquea tu calendario por vacaciones, enfermedad o asuntos personales.",
         "fields": {
-            "startDate": "Fecha de inicio",
-            "endDate": "Fecha de fin",
-            "reason": "Motivo (opcional)",
-            "reasonPlaceholder": "Ej. Vacaciones, Emergencia..."
+            "startDate": "Fecha de Inicio",
+            "endDate": "Fecha de Fin",
+            "reason": "Motivo (Opcional)",
+            "reasonPlaceholder": "Ej: Cita médica, viaje familiar..."
+        },
+        "errors": {
+            "missingDates": "Por favor selecciona ambas fechas.",
+            "invalidDates": "La fecha de fin no puede ser anterior a la de inicio.",
+            "connection": "Error de red. Intenta nuevamente.",
+            "server": "No se pudo guardar la excepción."
+        },
+        "toasts": {
+            "saving": "Guardando excepción...",
+            "successClean": "Día libre guardado correctamente.",
+            "successWithCancellations": "Día libre guardado. Se cancelaron {count} citas de forma automática."
         },
         "buttons": {
             "cancel": "Cancelar",
-            "apply": "Aplicar Excepción",
+            "save": "Guardar Excepción",
             "saving": "Guardando..."
         },
-        "errors": {
-            "missingDates": "Por favor selecciona fechas de inicio y fin",
-            "startAfterEnd": "La fecha de inicio no puede ser posterior a la de fin",
-            "saveFailed": "Error al guardar la excepción",
-            "network": "Error de red, por favor intenta de nuevo"
-        },
-        "success": {
-            "saved": "Excepción guardada — las citas afectadas han sido canceladas"
-        }
+        "warning": "Si tienes citas agendadas en este rango de fechas, <strong>serán canceladas automáticamente</strong> para liberar tu agenda."
     },
     "CatalogPage": {
         "backToDashboard": "Volver al Dashboard",

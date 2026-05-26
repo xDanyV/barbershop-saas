@@ -239,28 +239,31 @@
         }
     },
     "ExceptionModal": {
-        "title": "Add Exception",
-        "description": "Select a date range to block. All pending and confirmed appointments within this range will be automatically cancelled.",
+        "title": "Request Time Off",
+        "description": "Block your calendar for vacations, sick leave, or personal days.",
         "fields": {
-            "startDate": "Start date",
-            "endDate": "End date",
-            "reason": "Reason (optional)",
-            "reasonPlaceholder": "e.g. Vacation, Emergency..."
+            "startDate": "Start Date",
+            "endDate": "End Date",
+            "reason": "Reason (Optional)",
+            "reasonPlaceholder": "Ex: Medical appointment, family trip..."
+        },
+        "errors": {
+            "missingDates": "Please select both start and end dates.",
+            "invalidDates": "End date cannot be before start date.",
+            "connection": "Network error. Please try again.",
+            "server": "Could not save the exception."
+        },
+        "toasts": {
+            "saving": "Saving time off...",
+            "successClean": "Time off saved successfully.",
+            "successWithCancellations": "Time off saved. {count} conflicting appointments were automatically cancelled."
         },
         "buttons": {
             "cancel": "Cancel",
-            "apply": "Apply Exception",
+            "save": "Save Time Off",
             "saving": "Saving..."
         },
-        "errors": {
-            "missingDates": "Please select start and end dates",
-            "startAfterEnd": "Start date cannot be after end date",
-            "saveFailed": "Failed to save exception",
-            "network": "Network error, please try again"
-        },
-        "success": {
-            "saved": "Exception saved — affected appointments have been cancelled"
-        }
+        "warning": "If you have scheduled appointments in this date range, they <strong>will be automatically cancelled</strong> to free up your schedule."
     },
     "CatalogPage": {
         "backToDashboard": "Back to Dashboard",
