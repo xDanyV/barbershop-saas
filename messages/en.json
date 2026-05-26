@@ -532,5 +532,12 @@
             "customers": "Manage Customers",
             "settings": "Global Settings"
         }
+    },
+    "BannedCustomerScreen": {
+        "title": "Account Suspended",
+        "subtitle": "Access Restricted",
+        "message": "Your account has been temporarily suspended due to a violation of our policies or multiple missed appointments. You cannot book new appointments at this time.",
+        "home": "Go to Home",
+        "logout": "Log Out"
     }
 }
