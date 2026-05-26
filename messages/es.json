@@ -532,5 +532,12 @@
             "customers": "Gestionar Clientes",
             "settings": "Configuración Global"
         }
+    },
+    "BannedCustomerScreen": {
+        "title": "Cuenta Suspendida",
+        "subtitle": "Acceso Restringido",
+        "message": "Tu cuenta ha sido suspendida temporalmente por violar nuestras políticas o por múltiples inasistencias. No puedes agendar nuevas citas en este momento.",
+        "home": "Ir al Inicio",
+        "logout": "Cerrar Sesión"
     }
 }
