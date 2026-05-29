@@ -20,14 +20,24 @@ export async function POST(request: NextRequest) {
         const { startDate, endDate, reason } = body;
 
         if (!startDate || !endDate) {
-            return NextResponse.json({ error: "startDate and endDate are required" }, { status: 400 });
+            return NextResponse.json(
+                { error: "startDate and endDate are required" },
+                { status: 400 }
+            );
         }
 
-        const [sYear, sMonth, sDay] = startDate.split("-").map(Number);
-        const start = new Date(sYear, sMonth - 1, sDay, 0, 0, 0, 0);
+        const [sYear, sMonth, sDay] = startDate.split("T")[0].split("-").map(Number);
+        const [eYear, eMonth, eDay] = endDate.split("T")[0].split("-").map(Number);
 
-        const [eYear, eMonth, eDay] = endDate.split("-").map(Number);
-        const end = new Date(eYear, eMonth - 1, eDay, 23, 59, 59, 999);
+        const start = new Date(Date.UTC(sYear, sMonth - 1, sDay, 0, 0, 0, 0));
+        const end = new Date(Date.UTC(eYear, eMonth - 1, eDay, 23, 59, 59, 999));
+
+        if (start > end) {
+            return NextResponse.json(
+                { error: "startDate cannot be after endDate" },
+                { status: 400 }
+            );
+        }
 
         const result = await prisma.$transaction(async (tx) => {
             const exception = await tx.barberException.create({
@@ -50,17 +60,24 @@ export async function POST(request: NextRequest) {
 
             return {
                 exception,
-                cancelledCount: cancelledAppointments.count
+                cancelledCount: cancelledAppointments.count,
             };
         });
 
-        return NextResponse.json({
-            ...result.exception,
-            appointmentsCancelled: result.cancelledCount
-        }, { status: 201 });
+        return NextResponse.json(
+            {
+                ...result.exception,
+                appointmentsCancelled: result.cancelledCount,
+                cancelledCount: result.cancelledCount,
+            },
+            { status: 201 }
+        );
 
     } catch (error) {
         console.error("Exception creation error:", error);
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+        return NextResponse.json(
+            { error: "Internal server error" },
+            { status: 500 }
+        );
     }
 }

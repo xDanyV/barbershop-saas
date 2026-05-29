@@ -379,7 +379,8 @@
         "legend": {
             "selected": "Selected",
             "today": "Today",
-            "unavailable": "Unavailable"
+            "unavailable": "Unavailable",
+            "exception": "Blocked"
         },
         "hint": "choose an active day to see slots"
     },
