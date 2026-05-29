@@ -29,7 +29,6 @@ body {
   font-family: inherit;
 }
 
-/* navigation (month + arrows) */
 .custom-calendar .react-calendar__navigation {
   display: flex;
   gap: 8px;
@@ -52,7 +51,6 @@ body {
   grid-template-columns: repeat(7, 1fr);
 }
 
-/* weekday labels */
 .custom-calendar .react-calendar__month-view__weekdays {
   text-transform: uppercase;
   font-size: 0.7rem;
@@ -65,30 +63,26 @@ body {
   font-weight: 500;
 }
 
-/* hover */
 .custom-calendar .react-calendar__tile:enabled:hover {
   background: #eef2ff;
 }
 
-/* selected day */
 .custom-calendar .react-calendar__tile--active {
   background: #4f46e5 !important;
   color: white !important;
 }
 
-/* today */
 .custom-calendar .react-calendar__tile--now {
   background: #e0e7ff !important;
   color: #1e3a8a !important;
 }
 
-/* disabled days */
 .custom-calendar .react-calendar__tile:disabled {
   color: #d1d5db;
   background: transparent;
 }
 
-/* exception days — override disabled styles */
+/* exception days inside .custom-calendar */
 .custom-calendar .react-calendar__tile.exception-day,
 .custom-calendar .react-calendar__tile.exception-day:disabled,
 .custom-calendar .react-calendar__tile.exception-day:enabled:hover,
@@ -98,7 +92,6 @@ body {
   opacity: 1 !important;
 }
 
-/* tooltip text inside exception days */
 .exception-tooltip {
   font-size: 9px;
   color: #b91c1c;
@@ -107,7 +100,8 @@ body {
   margin-top: 2px;
 }
 
-/* react-calendar custom styles */
+/* ── react-calendar shared base styles ─────────────────────────────────── */
+
 .react-calendar {
   width: 100% !important;
   border: none !important;
@@ -181,15 +175,54 @@ body {
   font-weight: 400 !important;
 }
 
-.exception-day {
-  text-decoration: line-through !important;
-  color: #9ca3af !important;
-}
-
 .react-calendar__tile:enabled:hover {
   background-color: #eef2ff !important;
   color: #4f46e5 !important;
 }
+
+/* ── Exception day — used in customer CalendarPicker ───────────────────── */
+/* Must come AFTER :disabled rules to win the specificity battle.           */
+/* All four selectors needed to override react-calendar's disabled styles.  */
+
+.react-calendar__tile.exception-day,
+.react-calendar__tile.exception-day:disabled,
+.react-calendar__tile.exception-day:enabled:hover,
+.react-calendar__tile.exception-day:enabled:focus {
+  background-color: #faf5ff !important;
+  /* lavender */
+  color: #7c3aed !important;
+  /* purple-700 */
+  cursor: not-allowed !important;
+  font-weight: 700 !important;
+  opacity: 1 !important;
+  text-decoration: none !important;
+  /* removes the line-through from old rule */
+}
+
+/* Dot indicator below the number */
+.react-calendar__tile.exception-day::after {
+  content: "";
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #a855f7;
+  margin: 3px auto 0;
+  flex-shrink: 0;
+}
+
+/* ── Unavailable day (not a working day or past) ───────────────────────── */
+.react-calendar__tile.unavailable-day,
+.react-calendar__tile.unavailable-day:disabled,
+.react-calendar__tile.unavailable-day:enabled:hover {
+  background-color: transparent !important;
+  color: #d1d5db !important;
+  cursor: not-allowed !important;
+  font-weight: 400 !important;
+  text-decoration: none !important;
+}
+
+/* ── calendar-container overrides (customer booking view) ──────────────── */
 
 .calendar-container .react-calendar {
   width: 100% !important;
@@ -201,7 +234,6 @@ body {
   padding: 0.5rem;
 }
 
-/* Ajuste de los azulejos (días) para que sean cuadrados y táctiles */
 .calendar-container .react-calendar__tile {
   padding: 1rem 0.5rem !important;
   aspect-ratio: 1 / 1;
@@ -215,6 +247,28 @@ body {
   transition: all 0.2s;
 }
 
+.calendar-container .react-calendar__tile--active {
+  background: #4f46e5 !important;
+  color: white !important;
+  border-radius: 1rem !important;
+}
+
+.calendar-container .react-calendar__tile--now {
+  background: #fee2e2 !important;
+  color: #ef4444 !important;
+}
+
+/* exception-day inside calendar-container — re-assert with higher specificity */
+.calendar-container .react-calendar__tile.exception-day,
+.calendar-container .react-calendar__tile.exception-day:disabled,
+.calendar-container .react-calendar__tile.exception-day:enabled:hover {
+  background-color: #faf5ff !important;
+  color: #7c3aed !important;
+  cursor: not-allowed !important;
+  font-weight: 700 !important;
+  text-decoration: none !important;
+}
+
 @media (max-width: 640px) {
   .calendar-container .react-calendar__tile {
     padding: 0.75rem 0.25rem !important;
@@ -226,16 +280,7 @@ body {
   }
 }
 
-.calendar-container .react-calendar__tile--active {
-  background: #4f46e5 !important;
-  color: white !important;
-  border-radius: 1rem !important;
-}
-
-.calendar-container .react-calendar__tile--now {
-  background: #fee2e2 !important;
-  color: #ef4444 !important;
-}
+/* ── Custom scrollbar ──────────────────────────────────────────────────── */
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;

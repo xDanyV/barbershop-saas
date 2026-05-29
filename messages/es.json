@@ -379,7 +379,8 @@
         "legend": {
             "selected": "Seleccionado",
             "today": "Hoy",
-            "unavailable": "No disponible"
+            "unavailable": "No disponible",
+            "exception": "Bloqueado"
         },
         "hint": "elige un día activo para ver horarios"
     },

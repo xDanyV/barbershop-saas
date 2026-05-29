@@ -33,7 +33,12 @@ export default function ExceptionModal({ open, onClose, onSuccess }: Props) {
             return;
         }
 
-        if (new Date(startDate) > new Date(endDate)) {
+        const [sy, sm, sd] = startDate.split("-").map(Number);
+        const [ey, em, ed] = endDate.split("-").map(Number);
+        const start = new Date(sy, sm - 1, sd);
+        const end = new Date(ey, em - 1, ed);
+
+        if (start > end) {
             toast.error(t("errors.invalidDates"));
             return;
         }
@@ -55,10 +60,9 @@ export default function ExceptionModal({ open, onClose, onSuccess }: Props) {
                 return;
             }
 
-
-            if (data.appointmentsCancelled > 0) {
+            if (data.cancelledCount > 0) {
                 toast.success(
-                    t("toasts.successWithCancellations", { count: data.appointmentsCancelled }),
+                    t("toasts.successWithCancellations", { count: data.cancelledCount }),
                     { id: loadingToast, duration: 6000 }
                 );
             } else {
