@@ -151,12 +151,14 @@
         "tooltip": {
             "blocked": "Exception — day blocked",
             "oneAppointment": "{count} appointment",
-            "manyAppointments": "{count} appointments"
+            "manyAppointments": "{count} appointments",
+            "nonWorking": "Not a working day"
         },
         "legend": {
             "selected": "Selected",
             "blocked": "Blocked",
-            "busy": "Busy"
+            "busy": "Busy",
+            "nonWorking": "Day off"
         }
     },
     "DashboardHeader": {
@@ -354,6 +356,12 @@
         },
         "success": {
             "cancelled": "Appointment cancelled successfully"
+        },
+        "cancelConfirm": {
+            "title": "Cancel appointment?",
+            "description": "This will cancel your {service} appointment.",
+            "confirm": "Yes, cancel",
+            "keep": "Keep it"
         }
     },
     "BarbersPage": {

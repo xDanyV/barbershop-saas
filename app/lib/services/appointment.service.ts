@@ -30,6 +30,25 @@ export async function createAppointment(data: {
         throw new Error(validationError);
     }
 
+    // --- NUEVA VALIDACIÓN: Límite de 2 citas activas a futuro ---
+    const now = new Date();
+    const activeUpcomingAppointments = await prisma.appointment.count({
+        where: {
+            userId,
+            status: {
+                in: ["PENDING", "CONFIRMED"],
+            },
+            date: {
+                gt: now, // Solo cuenta las citas cuya fecha sea estrictamente mayor a "ahora"
+            },
+        },
+    });
+
+    if (activeUpcomingAppointments >= 2) {
+        throw new Error("No puedes tener más de 2 citas activas programadas al mismo tiempo");
+    }
+    // -------------------------------------------------------------
+
     // Check for existing appointments at the same time for the same barber
     const existing = await prisma.appointment.findFirst({
         where: {
@@ -44,6 +63,7 @@ export async function createAppointment(data: {
     if (existing) {
         throw new Error("Time slot not available");
     }
+
     // Check if barber has an exception on this date
     const exception = await prisma.barberException.findFirst({
         where: {
@@ -120,10 +140,9 @@ export async function getBarberAppointments(barberId: string) {
         where: {
             barberId,
             status: { not: "CANCELLED" },
-            //date: { gte: new Date() } // Optionally filter out past appointments
         },
         include: {
-            user: {// Include user details but exclude sensitive info
+            user: {
                 select: {
                     id: true,
                     name: true,

@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     if (user.isBanned) {
       return NextResponse.json(
         { error: "Account suspended. You cannot book appointments." },
-        { status: 403 } // 403 = Forbidden
+        { status: 403 } 
       );
     }
 
