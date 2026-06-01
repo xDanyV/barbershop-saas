@@ -46,6 +46,8 @@ export default function CalendarPicker({ selectedDate, setSelectedDate, barberId
           setExceptions(excList);
         }
 
+        // Auto-select the first available day once we have the schedule.
+        // Start from tomorrow to avoid selecting today (slots may be gone).
         const firstAvailable = findFirstAvailableDay(availDays, excList);
         if (firstAvailable) {
           setSelectedDate(firstAvailable);
@@ -58,8 +60,12 @@ export default function CalendarPicker({ selectedDate, setSelectedDate, barberId
       }
     }
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [barberId]);
 
+  // ─── Helpers ────────────────────────────────────────────────────────────────
+
+  /** Returns true if the given date falls within any exception range. */
   const isException = (date: Date): boolean => {
     return exceptions.some((e) => {
       const [sy, sm, sd] = e.startDate.split("T")[0].split("-").map(Number);
@@ -68,6 +74,7 @@ export default function CalendarPicker({ selectedDate, setSelectedDate, barberId
       const start = new Date(sy, sm - 1, sd, 0, 0, 0, 0);
       const end = new Date(ey, em - 1, ed, 23, 59, 59, 999);
 
+      // Use noon to avoid DST edge cases
       const check = new Date(date);
       check.setHours(12, 0, 0, 0);
 
@@ -75,29 +82,39 @@ export default function CalendarPicker({ selectedDate, setSelectedDate, barberId
     });
   };
 
-  const isPastOrToday = (date: Date): boolean => {
+  /** Returns true if the date is today or in the past. */
+  const isPastDate = (date: Date): boolean => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const d = new Date(date);
     d.setHours(0, 0, 0, 0);
-    return d <= today;
+    // Strictly less than today — today itself is allowed.
+    // Past slots within today are filtered in AvailableSlots by time comparison.
+    return d < today;
   };
 
+  /** Returns true if the date is fully disabled (not selectable). */
   const isDisabled = (date: Date): boolean => {
     return (
-      isPastOrToday(date) ||
+      isPastDate(date) ||
       !availability.includes(date.getDay()) ||
       isException(date)
     );
   };
 
+  /**
+   * Walks forward from today up to 60 days to find the first day that:
+   * - is a working day for the barber
+   * - is not blocked by an exception
+   */
   function findFirstAvailableDay(
     availDays: number[],
     excList: Exception[]
   ): Date | null {
     const candidate = new Date();
     candidate.setHours(0, 0, 0, 0);
-    candidate.setDate(candidate.getDate() + 1); 
+    // Start from today — remaining slots for today are shown if any exist.
+    // AvailableSlots filters out past hours within the day.
 
     for (let i = 0; i < 60; i++) {
       const dayOfWeek = candidate.getDay();
@@ -119,16 +136,28 @@ export default function CalendarPicker({ selectedDate, setSelectedDate, barberId
       candidate.setDate(candidate.getDate() + 1);
     }
 
-    return null;
+    return null; // no availability in the next 60 days
   }
 
+  // ─── Tile class ─────────────────────────────────────────────────────────────
+
+  /**
+   * Returns a CSS class for each calendar tile:
+   * - "exception-day"    → purple, blocked by barber exception
+   * - "unavailable-day"  → gray, not a working day or past
+   * - "calendar-tile"    → default available style
+   */
   const getTileClass = ({ date, view }: { date: Date; view: string }) => {
     if (view !== "month") return null;
-    if (isPastOrToday(date)) return "unavailable-day";
+    // Check exception FIRST — before isPastOrToday — so future exceptions
+    // get their purple style instead of falling into "unavailable-day".
     if (isException(date)) return "exception-day";
+    if (isPastDate(date)) return "unavailable-day";
     if (!availability.includes(date.getDay())) return "unavailable-day";
     return "calendar-tile";
   };
+
+  // ─── Render ─────────────────────────────────────────────────────────────────
 
   if (!ready) {
     return (
@@ -149,19 +178,25 @@ export default function CalendarPicker({ selectedDate, setSelectedDate, barberId
           value={selectedDate}
           onChange={(value) => {
             const picked = value as Date;
+            // Extra guard: ignore clicks on disabled tiles
             if (!isDisabled(picked)) {
               setSelectedDate(picked);
             }
           }}
           locale={locale}
           className="w-ful! border-none! font-sans!"
-          tileDisabled={({ date, view }) =>
-            view === "month" ? isDisabled(date) : false
-          }
+          tileDisabled={({ date, view }) => {
+            if (view !== "month") return false;
+            // Exception days are visually distinct but NOT marked as :disabled —
+            // react-calendar's disabled class would override our exception-day styles.
+            // Clicks on exception days are blocked in onChange instead.
+            return isPastDate(date) || !availability.includes(date.getDay());
+          }}
           tileClassName={getTileClass}
         />
       </div>
 
+      {/* Legend */}
       <div className="mt-4 md:mt-6 grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-y-3 gap-x-4 px-2 md:px-4 py-3 border-t border-gray-50">
         <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">
           <div className="w-2 h-2 rounded-full bg-indigo-600" />
@@ -175,7 +210,7 @@ export default function CalendarPicker({ selectedDate, setSelectedDate, barberId
           <div className="w-2 h-2 rounded-full bg-gray-200" />
           <span>{t("legend.unavailable")}</span>
         </div>
-
+        {/* New: exception legend item */}
         <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">
           <div className="w-2 h-2 rounded-full bg-purple-400" />
           <span>{t("legend.exception")}</span>

@@ -151,12 +151,14 @@
         "tooltip": {
             "blocked": "Excepción — día bloqueado",
             "oneAppointment": "{count} cita",
-            "manyAppointments": "{count} citas"
+            "manyAppointments": "{count} citas",
+            "nonWorking": "Día no laborable"
         },
         "legend": {
             "selected": "Seleccionado",
             "blocked": "Bloqueado",
-            "busy": "Ocupado"
+            "busy": "Ocupado",
+            "nonWorking": "Día libre"
         }
     },
     "DashboardHeader": {
@@ -354,6 +356,12 @@
         },
         "success": {
             "cancelled": "Cita cancelada correctamente"
+        },
+        "cancelConfirm": {
+            "title": "¿Cancelar cita?",
+            "description": "Esto cancelará tu cita de {service}.",
+            "confirm": "Sí, cancelar",
+            "keep": "Mantener"
         }
     },
     "BarbersPage": {

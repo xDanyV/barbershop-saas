@@ -71,13 +71,21 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
   };
 
   const buildDateTime = (): string => {
+    // Parse time string (e.g. "08:00 AM" or "01:30 PM")
     const [timePart, modifier] = time.split(" ");
     let [hours, minutes] = timePart.split(":").map(Number);
     if (modifier === "PM" && hours !== 12) hours += 12;
     if (modifier === "AM" && hours === 12) hours = 0;
-    const date = new Date(selectedDate);
-    date.setHours(hours, minutes, 0, 0);
-    return date.toISOString();
+
+    // Build the datetime in local time and convert to a true UTC ISO string.
+    // new Date(year, month, day, h, m) creates a LOCAL time Date object,
+    // and toISOString() correctly converts it to UTC.
+    // This is what the server needs to validate "is this in the past?" correctly.
+    const year  = selectedDate.getFullYear();
+    const month = selectedDate.getMonth(); // 0-indexed
+    const day   = selectedDate.getDate();
+
+    return new Date(year, month, day, hours, minutes, 0, 0).toISOString();
   };
 
   const handleFinalConfirm = async () => {
@@ -123,20 +131,21 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
   });
 
   const modalFields = [
-    { icon: CalendarDays, label: t("modal.fields.date"), value: formattedDate, highlight: false },
-    { icon: Clock, label: t("modal.fields.time"), value: time, highlight: false },
-    { icon: Scissors, label: t("modal.fields.service"), value: service?.name, highlight: false },
-    { icon: DollarSign, label: t("modal.fields.total"), value: `$${service?.price.toFixed(2)}`, highlight: true },
+    { icon: CalendarDays, label: t("modal.fields.date"),    value: formattedDate,               highlight: false },
+    { icon: Clock,        label: t("modal.fields.time"),    value: time,                        highlight: false },
+    { icon: Scissors,     label: t("modal.fields.service"), value: service?.name,               highlight: false },
+    { icon: DollarSign,   label: t("modal.fields.total"),   value: `$${service?.price.toFixed(2)}`, highlight: true },
   ];
 
   return (
     <>
       <div ref={containerRef} className="relative">
         <div
-          className={`group flex flex-col border transition-all duration-500 overflow-hidden ${popoverOpen
-            ? "border-indigo-200 bg-white shadow-xl shadow-indigo-100/50 rounded-3xl"
-            : "border-gray-100 bg-white hover:border-indigo-100 hover:shadow-md rounded-2xl"
-            }`}
+          className={`group flex flex-col border transition-all duration-500 overflow-hidden ${
+            popoverOpen
+              ? "border-indigo-200 bg-white shadow-xl shadow-indigo-100/50 rounded-3xl"
+              : "border-gray-100 bg-white hover:border-indigo-100 hover:shadow-md rounded-2xl"
+          }`}
         >
           {/* Header — always visible */}
           <div
@@ -145,16 +154,18 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
           >
             <div className="flex items-center gap-3 md:gap-4">
               <div
-                className={`p-2 rounded-xl transition-all duration-300 ${popoverOpen
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
-                  : "bg-gray-50 text-gray-400 group-hover:bg-indigo-50 group-hover:text-indigo-600"
-                  }`}
+                className={`p-2 rounded-xl transition-all duration-300 ${
+                  popoverOpen
+                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
+                    : "bg-gray-50 text-gray-400 group-hover:bg-indigo-50 group-hover:text-indigo-600"
+                }`}
               >
                 <Clock size={18} strokeWidth={2.5} />
               </div>
               <span
-                className={`font-black tracking-tight text-lg md:text-xl transition-colors ${popoverOpen ? "text-indigo-900" : "text-gray-700"
-                  }`}
+                className={`font-black tracking-tight text-lg md:text-xl transition-colors ${
+                  popoverOpen ? "text-indigo-900" : "text-gray-700"
+                }`}
               >
                 {time}
               </span>
@@ -163,10 +174,11 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
             <motion.div
               animate={{ rotate: popoverOpen ? 180 : 0 }}
               transition={{ duration: 0.25, ease: "easeInOut" }}
-              className={`p-2 rounded-xl transition-colors duration-300 ${popoverOpen
-                ? "text-indigo-600 bg-indigo-50"
-                : "text-gray-400 group-hover:text-indigo-500 group-hover:bg-indigo-50"
-                }`}
+              className={`p-2 rounded-xl transition-colors duration-300 ${
+                popoverOpen
+                  ? "text-indigo-600 bg-indigo-50"
+                  : "text-gray-400 group-hover:text-indigo-500 group-hover:bg-indigo-50"
+              }`}
             >
               <ChevronDown size={20} strokeWidth={2.5} />
             </motion.div>
@@ -199,10 +211,11 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
                         <button
                           key={s.id}
                           onClick={() => setSelectedService(s.id)}
-                          className={`w-full flex items-center justify-between p-3.5 rounded-2xl border-2 transition-all duration-200 ${selectedService === s.id
-                            ? "border-indigo-600 bg-indigo-50 shadow-sm"
-                            : "border-transparent bg-gray-50 hover:bg-gray-100"
-                            }`}
+                          className={`w-full flex items-center justify-between p-3.5 rounded-2xl border-2 transition-all duration-200 ${
+                            selectedService === s.id
+                              ? "border-indigo-600 bg-indigo-50 shadow-sm"
+                              : "border-transparent bg-gray-50 hover:bg-gray-100"
+                          }`}
                         >
                           <div className="text-left min-w-0 flex-1">
                             <p className={`text-sm font-black truncate ${selectedService === s.id ? "text-indigo-900" : "text-gray-700"}`}>

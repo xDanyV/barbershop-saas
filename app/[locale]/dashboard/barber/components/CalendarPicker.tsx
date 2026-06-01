@@ -13,6 +13,7 @@ type Props = {
   onChange: (date: string) => void;
   appointmentCounts?: Record<string, number>;
   exceptions?: Exception[];
+  workingDays?: number[]; // 0=Sun,1=Mon,...6=Sat — days the barber works
 };
 
 function densityStyle(n: number): string {
@@ -43,6 +44,7 @@ export default function CalendarPicker({
   onChange,
   appointmentCounts = {},
   exceptions = [],
+  workingDays,
 }: Props) {
   const t = useTranslations("CalendarPicker");
 
@@ -66,24 +68,34 @@ export default function CalendarPicker({
   };
 
   const isException = (dateString: string): boolean => {
-    const date = new Date(dateString);
+    const [dy, dm, dd] = dateString.split("-").map(Number);
+    const date = new Date(dy, dm - 1, dd, 12, 0, 0, 0); 
+
     return exceptions.some((e) => {
-      const start = new Date(e.startDate);
-      const end = new Date(e.endDate);
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
+      const [sy, sm, sd] = e.startDate.split("T")[0].split("-").map(Number);
+      const [ey, em, ed] = e.endDate.split("T")[0].split("-").map(Number);
+      const start = new Date(sy, sm - 1, sd, 0, 0, 0, 0);
+      const end   = new Date(ey, em - 1, ed, 23, 59, 59, 999);
       return date >= start && date <= end;
     });
   };
 
   const isPastDate = (dateString: string): boolean => {
-    const d = new Date(dateString);
-    d.setHours(0, 0, 0, 0);
+    const [dy, dm, dd] = dateString.split("-").map(Number);
+    const d = new Date(dy, dm - 1, dd, 0, 0, 0, 0);
     return d < today;
   };
 
-  const getTooltip = (exception: boolean, count: number): string | undefined => {
+  const isNonWorkingDay = (dateString: string): boolean => {
+    if (!workingDays || workingDays.length === 0) return false;
+    const [dy, dm, dd] = dateString.split("-").map(Number);
+    const dayOfWeek = new Date(dy, dm - 1, dd).getDay();
+    return !workingDays.includes(dayOfWeek);
+  };
+
+  const getTooltip = (exception: boolean, nonWorking: boolean, count: number): string | undefined => {
     if (exception) return t("tooltip.blocked");
+    if (nonWorking) return t("tooltip.nonWorking");
     if (count === 1) return t("tooltip.oneAppointment", { count });
     if (count > 1) return t("tooltip.manyAppointments", { count });
     return undefined;
@@ -106,22 +118,25 @@ export default function CalendarPicker({
     const dotCount = Math.min(count, 3);
     const exception = isException(dateString);
     const isPast = isPastDate(dateString);
+    const nonWorking = isNonWorkingDay(dateString);
 
     days.push(
       <button
         key={day}
         onClick={() => onChange(dateString)}
-        title={getTooltip(exception, count)}
+        title={getTooltip(exception, nonWorking, count)}
         className={`
           h-9 w-9 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl text-xs sm:text-sm flex flex-col items-center justify-center
           transition-all duration-200 relative mx-auto
           ${isSelected
             ? "bg-indigo-600 text-white shadow-md z-10"
             : exception
-              ? "bg-purple-50 border border-purple-200 text-purple-400"
-              : isPast
-                ? "bg-gray-100 border border-gray-200 text-gray-400 hover:bg-gray-200"
-                : densityStyle(count)
+              ? "bg-purple-50 border border-purple-200 text-purple-400 cursor-default"
+              : nonWorking
+                ? "text-gray-300 cursor-default"
+                : isPast
+                  ? "bg-gray-100 border border-gray-200 text-gray-400 hover:bg-gray-200"
+                  : densityStyle(count)
           }
           ${isToday && !isSelected ? "ring-2 ring-indigo-400 ring-offset-1" : ""}
         `}
@@ -134,7 +149,7 @@ export default function CalendarPicker({
           <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-purple-400 mt-0.5" />
         )}
 
-        {count > 0 && !isSelected && !exception && (
+        {count > 0 && !isSelected && !exception && !nonWorking && (
           <div className="flex gap-0.5 mt-0.5">
             {Array.from({ length: dotCount }).map((_, i) => (
               <span
@@ -180,6 +195,11 @@ export default function CalendarPicker({
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-amber-400" /> {t("legend.busy")}
         </div>
+        {workingDays && workingDays.length > 0 && (
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-gray-200" /> {t("legend.nonWorking")}
+          </div>
+        )}
       </div>
     </div>
   );
