@@ -41,7 +41,10 @@ model Business {
   ownerId String
   owner   User   @relation("BusinessOwner", fields: [ownerId], references: [id])
 
-  settings BusinessSettings?
+  settings     BusinessSettings?
+  barbers      Barber[]
+  services     Service[]
+  appointments Appointment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -57,14 +60,21 @@ model BusinessSettings {
 }
 
 model Appointment {
-  id        String            @id @default(uuid())
-  date      DateTime
+  id   String   @id @default(uuid())
+  date DateTime
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id])
+
   serviceId String
-  service   Service           @relation(fields: [serviceId], references: [id])
-  userId    String
-  user      User              @relation(fields: [userId], references: [id])
-  barberId  String
-  barber    Barber            @relation(fields: [barberId], references: [id])
+  service   Service @relation(fields: [serviceId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  barberId String
+  barber   Barber @relation(fields: [barberId], references: [id])
+
   status    AppointmentStatus @default(PENDING)
   createdAt DateTime          @default(now())
 }
@@ -77,12 +87,18 @@ enum AppointmentStatus {
 }
 
 model Barber {
-  id           String            @id @default(uuid())
-  userId       String            @unique
-  user         User              @relation(fields: [userId], references: [id])
-  status       BarberStatus      @default(PENDING)
-  active       Boolean           @default(true)
-  createdAt    DateTime          @default(now())
+  id String @id @default(uuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id])
+
+  status    BarberStatus @default(PENDING)
+  active    Boolean      @default(true)
+  createdAt DateTime     @default(now())
+
   appointments Appointment[]
   availability Availability[]
   exceptions   BarberException[]
@@ -118,10 +134,15 @@ model Service {
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
 
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id])
+
   barberId String
   barber   Barber @relation(fields: [barberId], references: [id])
 
   appointments Appointment[]
+
+  @@unique([businessId, name, barberId])
 }
 
 model BarberException {
