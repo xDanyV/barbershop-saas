@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
 import { useTranslations } from "next-intl";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function RegisterPage() {
     const t = useTranslations("Register");
@@ -227,31 +228,37 @@ export default function RegisterPage() {
 
                             {/* Contraseñas */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div className="relative">
-                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">{t("form.password")}</label>
-                                    <input
-                                        name="password"
-                                        type={showPassword ? "text" : "password"}
-                                        placeholder="••••••••"
-                                        value={form.password}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full bg-[#0f0f16] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 pr-10 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-8.5 text-gray-500 hover:text-gray-300 transition-colors"
-                                    >
-                                        {showPassword ? (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
-                                        ) : (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-                                        )}
-                                    </button>
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">
+                                        {t("form.password")}
+                                    </label>
+
+                                    <div className="relative">
+                                        <input
+                                            name="password"
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="••••••••"
+                                            value={form.password}
+                                            onChange={handleChange}
+                                            required
+                                            className="w-full bg-[#0f0f16] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 pr-10 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
+                                        />
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+                                        >
+                                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="relative">
-                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">{t("form.confirmPassword")}</label>
+
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">
+                                        {t("form.confirmPassword")}
+                                    </label>
+
                                     <input
                                         name="confirmPassword"
                                         type={showPassword ? "text" : "password"}
@@ -260,8 +267,8 @@ export default function RegisterPage() {
                                         onChange={handleChange}
                                         required
                                         className={`w-full bg-[#0f0f16] border text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none transition-all ${form.confirmPassword && form.password !== form.confirmPassword
-                                            ? "border-red-500/50 focus:border-red-500 focus:ring-1 focus:ring-red-500/50"
-                                            : "border-white/10 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50"
+                                                ? "border-red-500/50 focus:border-red-500 focus:ring-1 focus:ring-red-500/50"
+                                                : "border-white/10 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50"
                                             }`}
                                     />
                                 </div>
