@@ -11,7 +11,7 @@ export async function createCatalogService(
     throw new Error("Only barbers can create services");
   }
 
-  if (!name || !price || !duration) {
+  if (!name || !price || !duration || !barberId) {
     throw new Error("Missing required fields");
   }
 
@@ -23,12 +23,26 @@ export async function createCatalogService(
     throw new Error("Duration must be greater than 0");
   }
 
+  const barber = await prisma.barber.findUnique({
+    where: { id: barberId },
+    select: {
+      id: true,
+      businessId: true,
+      active: true,
+    },
+  });
+
+  if (!barber || !barber.active) {
+    throw new Error("Barber not available");
+  }
+
   return prisma.service.create({
     data: {
       name,
       price,
       duration,
       barberId,
+      businessId: barber.businessId,
     },
   });
 }
@@ -56,7 +70,6 @@ export async function updateCatalogService(
     throw new Error("Service not found");
   }
 
-  // Verifies that the service belongs to the barber
   if (existing.barberId !== barberId) {
     throw new Error("Not authorized");
   }
@@ -92,7 +105,6 @@ export async function deleteCatalogService(
     throw new Error("Service not found");
   }
 
-  // Verifies that the service belongs to the barber
   if (existing.barberId !== barberId) {
     throw new Error("Not authorized");
   }

@@ -14,13 +14,34 @@ export async function createAppointment(data: {
         throw new Error("Date, service, and barber are required");
     }
 
-    // Check if barber exists and is active
     const barber = await prisma.barber.findUnique({
         where: { id: barberId },
+        select: {
+            id: true,
+            active: true,
+            businessId: true,
+        },
     });
 
     if (!barber || !barber.active) {
         throw new Error("Barber not available");
+    }
+
+    const service = await prisma.service.findFirst({
+        where: {
+            id: serviceId,
+            barberId,
+            businessId: barber.businessId,
+            active: true,
+        },
+        select: {
+            id: true,
+            businessId: true,
+        },
+    });
+
+    if (!service) {
+        throw new Error("Service not available for this barber");
     }
 
     const startDate = new Date(date);
@@ -30,7 +51,6 @@ export async function createAppointment(data: {
         throw new Error(validationError);
     }
 
-    // --- NUEVA VALIDACIÓN: Límite de 2 citas activas a futuro ---
     const now = new Date();
     const activeUpcomingAppointments = await prisma.appointment.count({
         where: {
@@ -39,7 +59,7 @@ export async function createAppointment(data: {
                 in: ["PENDING", "CONFIRMED"],
             },
             date: {
-                gt: now, // Solo cuenta las citas cuya fecha sea estrictamente mayor a "ahora"
+                gt: now,
             },
         },
     });
@@ -47,11 +67,10 @@ export async function createAppointment(data: {
     if (activeUpcomingAppointments >= 2) {
         throw new Error("No puedes tener más de 2 citas activas programadas al mismo tiempo");
     }
-    // -------------------------------------------------------------
 
-    // Check for existing appointments at the same time for the same barber
     const existing = await prisma.appointment.findFirst({
         where: {
+            businessId: barber.businessId,
             barberId,
             date: startDate,
             status: {
@@ -64,7 +83,6 @@ export async function createAppointment(data: {
         throw new Error("Time slot not available");
     }
 
-    // Check if barber has an exception on this date
     const exception = await prisma.barberException.findFirst({
         where: {
             barberId,
@@ -82,6 +100,7 @@ export async function createAppointment(data: {
             userId,
             barberId,
             serviceId,
+            businessId: barber.businessId,
             date: startDate,
         },
     });
@@ -107,6 +126,7 @@ export async function getUserAppointments(userId: string) {
                 },
             },
             service: true,
+            business: true,
         },
     });
 }
@@ -119,21 +139,22 @@ export async function getAllAppointments() {
                     id: true,
                     name: true,
                     email: true,
-                    phone: true
-                }
+                    phone: true,
+                },
             },
             barber: true,
-            service: true
+            service: true,
+            business: true,
         },
         orderBy: {
-            date: "asc"
-        }
-    })
+            date: "asc",
+        },
+    });
 }
 
 export async function getBarberAppointments(barberId: string) {
     if (!barberId) {
-        throw new Error("Barber ID is required")
+        throw new Error("Barber ID is required");
     }
 
     return await prisma.appointment.findMany({
@@ -147,25 +168,23 @@ export async function getBarberAppointments(barberId: string) {
                     id: true,
                     name: true,
                     email: true,
-                    phone: true
-                }
+                    phone: true,
+                },
             },
-            service: true
+            service: true,
+            business: true,
         },
         orderBy: {
-            date: "asc"
-        }
-    })
+            date: "asc",
+        },
+    });
 }
 
-const allowedTransitions: Record<
-    AppointmentStatus,
-    AppointmentStatus[]
-> = {
+const allowedTransitions: Record<AppointmentStatus, AppointmentStatus[]> = {
     PENDING: ["CONFIRMED", "CANCELLED"],
     CONFIRMED: ["CANCELLED"],
     CANCELLED: [],
-    COMPLETED: []
+    COMPLETED: [],
 };
 
 export async function updateAppointmentStatus(
@@ -194,20 +213,17 @@ export async function updateAppointmentStatus(
     }
 
     const currentStatus = appointment.status;
-
-    const isAllowed =
-        allowedTransitions[currentStatus].includes(newStatus);
+    const isAllowed = allowedTransitions[currentStatus].includes(newStatus);
 
     if (!isAllowed) {
-        throw new Error(
-            `Cannot change status from ${currentStatus} to ${newStatus}`
-        );
+        throw new Error(`Cannot change status from ${currentStatus} to ${newStatus}`);
     }
 
     if (role === "CUSTOMER" && newStatus === "CANCELLED") {
         const now = new Date();
         const appointmentDate = new Date(appointment.date);
-        const hoursUntilAppointment = (appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+        const hoursUntilAppointment =
+            (appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
         if (hoursUntilAppointment < 2) {
             throw new Error("Appointments cannot be cancelled less than 2 hours before the scheduled time");

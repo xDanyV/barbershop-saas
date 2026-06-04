@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
-import { createBarberFromUser } from "@/lib/services/barber.service";
 
 export async function POST(req: Request) {
     try {
@@ -44,7 +43,7 @@ export async function POST(req: Request) {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const finalRole = (isFirstUser && role === "BARBER") ? "ADMIN" : (role || "CUSTOMER");
+        const finalRole = isFirstUser ? "ADMIN" : "CUSTOMER";
 
         const newUser = await prisma.user.create({
             data: {
@@ -55,10 +54,6 @@ export async function POST(req: Request) {
                 role: finalRole,
             },
         });
-
-        if (role === "BARBER" || finalRole === "ADMIN") {
-            await createBarberFromUser(newUser.id, isFirstUser);
-        }
 
         return NextResponse.json(
             { message: "User created successfully" },
