@@ -45,6 +45,8 @@ model Business {
   barbers      Barber[]
   services     Service[]
   appointments Appointment[]
+  gallery      BusinessGallery[]
+  posts        BusinessPost[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -160,4 +162,30 @@ model SystemSettings {
   isServiceActive    Boolean  @default(true)
   maintenanceMessage String   @default("El servicio está temporalmente inactivo. Por favor, vuelve más tarde.")
   updatedAt          DateTime @updatedAt
+}
+
+model BusinessGallery {
+  id         String   @id @default(uuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id])
+
+  imageUrl String
+  caption  String?
+  position Int     @default(0)
+  active   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+}
+
+model BusinessPost {
+  id         String   @id @default(uuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id])
+
+  content  String
+  imageUrl String?
+  active   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
