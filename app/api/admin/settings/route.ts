@@ -6,19 +6,40 @@ export async function GET() {
     try {
         const headersList = await headers();
         const role = headersList.get("x-user-role");
+        const businessId = headersList.get("x-business-id");
 
-        if (role !== "ADMIN") {
+        if (role !== "ADMIN" && role !== "OWNER") {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
-        // Buscamos la configuración o la creamos si es la primera vez que se accede
+        if (role === "OWNER") {
+            if (!businessId) {
+                return NextResponse.json({ error: "Business context is required" }, { status: 403 });
+            }
+
+            let settings = await prisma.businessSettings.findUnique({
+                where: { businessId },
+            });
+
+            if (!settings) {
+                settings = await prisma.businessSettings.create({
+                    data: {
+                        businessId,
+                        isServiceActive: true,
+                    },
+                });
+            }
+
+            return NextResponse.json(settings);
+        }
+
         let settings = await prisma.systemSettings.findUnique({
-            where: { id: "global" }
+            where: { id: "global" },
         });
 
         if (!settings) {
             settings = await prisma.systemSettings.create({
-                data: { id: "global", isServiceActive: true }
+                data: { id: "global", isServiceActive: true },
             });
         }
 
@@ -33,19 +54,37 @@ export async function PATCH(req: Request) {
     try {
         const headersList = await headers();
         const role = headersList.get("x-user-role");
+        const businessId = headersList.get("x-business-id");
 
-        if (role !== "ADMIN") {
+        if (role !== "ADMIN" && role !== "OWNER") {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
         const body = await req.json();
         const { isServiceActive, maintenanceMessage } = body;
 
-        // Upsert garantiza que si por alguna razón no existe, lo crea al intentar actualizar
+        if (role === "OWNER") {
+            if (!businessId) {
+                return NextResponse.json({ error: "Business context is required" }, { status: 403 });
+            }
+
+            const updatedSettings = await prisma.businessSettings.upsert({
+                where: { businessId },
+                update: { isServiceActive, maintenanceMessage },
+                create: {
+                    businessId,
+                    isServiceActive,
+                    maintenanceMessage,
+                },
+            });
+
+            return NextResponse.json({ success: true, settings: updatedSettings });
+        }
+
         const updatedSettings = await prisma.systemSettings.upsert({
             where: { id: "global" },
             update: { isServiceActive, maintenanceMessage },
-            create: { id: "global", isServiceActive, maintenanceMessage }
+            create: { id: "global", isServiceActive, maintenanceMessage },
         });
 
         return NextResponse.json({ success: true, settings: updatedSettings });

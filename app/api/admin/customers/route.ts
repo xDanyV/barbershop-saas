@@ -6,14 +6,28 @@ export async function GET() {
     try {
         const headersList = await headers();
         const role = headersList.get("x-user-role");
+        const businessId = headersList.get("x-business-id");
 
-        if (role !== "ADMIN") {
+        if (role !== "ADMIN" && role !== "OWNER") {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+        }
+
+        if (role === "OWNER" && !businessId) {
+            return NextResponse.json({ error: "Business context is required" }, { status: 403 });
         }
 
         const customers = await prisma.user.findMany({
             where: {
                 role: "CUSTOMER",
+                ...(role === "OWNER"
+                    ? {
+                        appointments: {
+                            some: {
+                                businessId: businessId!,
+                            },
+                        },
+                    }
+                    : {}),
             },
             select: {
                 id: true,
@@ -21,16 +35,16 @@ export async function GET() {
                 email: true,
                 phone: true,
                 createdAt: true,
-                isBanned: true, // <--- Ahora traemos este dato
+                isBanned: true,
                 _count: {
                     select: {
                         appointments: true,
-                    }
-                }
+                    },
+                },
             },
             orderBy: {
-                createdAt: "desc"
-            }
+                createdAt: "desc",
+            },
         });
 
         return NextResponse.json(customers);
@@ -40,14 +54,18 @@ export async function GET() {
     }
 }
 
-// NUEVO: Método para bloquear/desbloquear clientes
 export async function PATCH(req: Request) {
     try {
         const headersList = await headers();
         const role = headersList.get("x-user-role");
+        const businessId = headersList.get("x-business-id");
 
-        if (role !== "ADMIN") {
+        if (role !== "ADMIN" && role !== "OWNER") {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+        }
+
+        if (role === "OWNER" && !businessId) {
+            return NextResponse.json({ error: "Business context is required" }, { status: 403 });
         }
 
         const body = await req.json();
@@ -55,6 +73,22 @@ export async function PATCH(req: Request) {
 
         if (!customerId || typeof isBanned !== "boolean") {
             return NextResponse.json({ error: "Invalid data" }, { status: 400 });
+        }
+
+        if (role === "OWNER") {
+            const hasAppointmentInBusiness = await prisma.appointment.findFirst({
+                where: {
+                    userId: customerId,
+                    businessId: businessId!,
+                },
+                select: {
+                    id: true,
+                },
+            });
+
+            if (!hasAppointmentInBusiness) {
+                return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+            }
         }
 
         const updatedCustomer = await prisma.user.update({

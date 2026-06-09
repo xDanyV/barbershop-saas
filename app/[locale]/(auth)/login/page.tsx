@@ -34,11 +34,22 @@ export default function LoginPage() {
         return;
       }
 
+      if (data.user.role === "ADMIN" || data.user.role === "OWNER") {
+        window.location.href = "/dashboard/admin";
+        return;
+      }
+
       if (data.user.role === "BARBER") {
         window.location.href = "/dashboard/barber";
-      } else {
-        window.location.href = "/dashboard/customer/home";
+        return;
       }
+
+      if (data.user.role === "CUSTOMER") {
+        window.location.href = "/dashboard/customer/home";
+        return;
+      }
+
+      window.location.href = "/login";
 
     } catch {
       setError(t("errors.generic"));

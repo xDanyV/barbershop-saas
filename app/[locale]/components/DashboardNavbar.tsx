@@ -14,7 +14,7 @@ export default function DashboardNavbar({ role }: { role: string }) {
 
     let menuItems = [];
 
-    if (role === "ADMIN") {
+    if (role === "ADMIN" || role === "OWNER") {
         menuItems = [
             { name: t("menu.adminControl"), path: "/dashboard/admin", icon: ShieldCheck },
             { name: t("menu.myAppointments"), path: "/dashboard/barber", icon: CalendarDays },
@@ -83,7 +83,19 @@ export default function DashboardNavbar({ role }: { role: string }) {
                 <div className="flex items-center gap-10">
                     <div
                         className="flex items-center gap-2 cursor-pointer"
-                        onClick={() => router.push(role === "BARBER" ? "/dashboard/barber" : "/dashboard/customer/home")}
+                        onClick={() => {
+                            if (role === "ADMIN" || role === "OWNER") {
+                                router.push("/dashboard/admin");
+                                return;
+                            }
+
+                            if (role === "BARBER") {
+                                router.push("/dashboard/barber");
+                                return;
+                            }
+
+                            router.push("/dashboard/customer/home");
+                        }}
                     >
                         <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center font-bold shadow-inner shrink-0">
                             B

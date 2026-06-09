@@ -76,35 +76,47 @@ export async function proxy(request: NextRequest) {
       }
     }
 
-    // --- PROTECCIÓN DE RUTAS POR ROL ---
     if (pathnameWithoutLocale.startsWith("/dashboard/barber")) {
-      const canAccess = payload.role === "BARBER" || payload.role === "ADMIN";
+      const canAccess =
+        payload.role === "BARBER" ||
+        payload.role === "ADMIN" ||
+        payload.role === "OWNER";
+
       if (!canAccess) {
         return NextResponse.redirect(new URL(`${localePrefix}/dashboard/customer/home`, request.url));
       }
     }
 
     if (pathnameWithoutLocale.startsWith("/dashboard/customer") && payload.role !== "CUSTOMER") {
+      if (payload.role === "OWNER" || payload.role === "ADMIN") {
+        return NextResponse.redirect(new URL(`${localePrefix}/dashboard/admin`, request.url));
+      }
+
       return NextResponse.redirect(new URL(`${localePrefix}/dashboard/barber`, request.url));
     }
 
-    if (pathnameWithoutLocale.startsWith("/dashboard/admin") && payload.role !== "ADMIN") {
-      return NextResponse.redirect(new URL(`${localePrefix}/dashboard/barber`, request.url));
+    if (pathnameWithoutLocale.startsWith("/dashboard/admin")) {
+      const canAccess = payload.role === "ADMIN" || payload.role === "OWNER";
+
+      if (!canAccess) {
+        if (payload.role === "CUSTOMER") {
+          return NextResponse.redirect(new URL(`${localePrefix}/dashboard/customer/home`, request.url));
+        }
+
+        return NextResponse.redirect(new URL(`${localePrefix}/dashboard/barber`, request.url));
+      }
     }
 
-    // --- LA MAGIA CORREGIDA: INYECCIÓN DIRECTA ---
-    // Modificamos directamente las cabeceras de la petición entrante
     request.headers.set("x-user-id", String(payload.userId));
     request.headers.set("x-user-role", String(payload.role));
+
     if (payload.barberId) request.headers.set("x-barber-id", String(payload.barberId));
     if (payload.barberStatus) request.headers.set("x-barber-status", String(payload.barberStatus));
+    if (payload.businessId) request.headers.set("x-business-id", String(payload.businessId));
 
     if (isProtectedApi) {
-      // Para APIs, Next.js usa NextResponse.next() con las cabeceras mutadas
       return NextResponse.next({ request: { headers: request.headers } });
     } else {
-      // Para páginas, le entregamos el "request" ya modificado a next-intl 
-      // para que arrastre tus cabeceras hasta el Panel de Control
       return intlMiddleware(request);
     }
 

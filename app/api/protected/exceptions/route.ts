@@ -1,19 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+function canManageExceptions(role: string | null) {
+    return role === "BARBER" || role === "OWNER" || role === "ADMIN";
+}
+
 export async function POST(request: NextRequest) {
     try {
-        const userId = request.headers.get("x-user-id");
         const role = request.headers.get("x-user-role");
+        const barberId = request.headers.get("x-barber-id");
+        const businessId = request.headers.get("x-business-id");
 
-        if (!userId || (role !== "BARBER" && role !== "ADMIN")) {
+        if (!canManageExceptions(role) || !barberId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const barber = await prisma.barber.findUnique({ where: { userId } });
-
-        if (!barber) {
-            return NextResponse.json({ error: "Barber not found" }, { status: 404 });
         }
 
         const body = await request.json();
@@ -24,6 +23,22 @@ export async function POST(request: NextRequest) {
                 { error: "startDate and endDate are required" },
                 { status: 400 }
             );
+        }
+
+        const barber = await prisma.barber.findUnique({
+            where: { id: barberId },
+            select: {
+                id: true,
+                businessId: true,
+            },
+        });
+
+        if (!barber) {
+            return NextResponse.json({ error: "Barber not found" }, { status: 404 });
+        }
+
+        if (role === "OWNER" && businessId && barber.businessId !== businessId) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
         const [sYear, sMonth, sDay] = startDate.split("T")[0].split("-").map(Number);
@@ -52,6 +67,7 @@ export async function POST(request: NextRequest) {
             const cancelledAppointments = await tx.appointment.updateMany({
                 where: {
                     barberId: barber.id,
+                    businessId: barber.businessId,
                     status: { in: ["PENDING", "CONFIRMED"] },
                     date: { gte: start, lte: end },
                 },
@@ -72,9 +88,9 @@ export async function POST(request: NextRequest) {
             },
             { status: 201 }
         );
-
     } catch (error) {
         console.error("Exception creation error:", error);
+
         return NextResponse.json(
             { error: "Internal server error" },
             { status: 500 }

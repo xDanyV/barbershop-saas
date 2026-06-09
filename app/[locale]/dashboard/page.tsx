@@ -4,7 +4,7 @@ import { jwtVerify } from "jose";
 
 type JWTPayload = {
   userId: string;
-  role: "BARBER" | "CUSTOMER";
+  role: "CUSTOMER" | "BARBER" | "OWNER" | "ADMIN";
 };
 
 export default async function DashboardPage() {
@@ -14,23 +14,26 @@ export default async function DashboardPage() {
   if (!token) redirect("/login");
 
   const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-  let user;
-  //Do not use try catch for "redirect", it will cause hydration issues. Instead, we can use a simple if statement to check if the token is valid and redirect accordingly.
+  let user: JWTPayload;
+
   try {
     const result = await jwtVerify(token, secret);
-    user = result.payload;
+    user = result.payload as JWTPayload;
   } catch {
     redirect("/login");
-  }
-
-  if (user.role === "BARBER") {
-    redirect("/dashboard/barber");
   }
 
   if (user.role === "CUSTOMER") {
     redirect("/dashboard/customer");
   }
 
-  redirect("/login");
+  if (user.role === "BARBER") {
+    redirect("/dashboard/barber");
+  }
 
+  if (user.role === "OWNER" || user.role === "ADMIN") {
+    redirect("/dashboard/admin");
+  }
+
+  redirect("/login");
 }

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { Role } from "@prisma/client";
+import { Role, BarberStatus } from "@prisma/client";
 
 function createSlug(name: string) {
     return name
@@ -78,6 +78,11 @@ export async function POST(req: NextRequest) {
             select: {
                 id: true,
                 role: true,
+                barberProfile: {
+                    select: {
+                        id: true,
+                    },
+                },
             },
         });
 
@@ -111,6 +116,16 @@ export async function POST(req: NextRequest) {
                 await tx.user.update({
                     where: { id: user.id },
                     data: { role: Role.OWNER },
+                });
+            }
+
+            if (!user.barberProfile) {
+                await tx.barber.create({
+                    data: {
+                        userId: user.id,
+                        businessId: newBusiness.id,
+                        status: BarberStatus.APPROVED,
+                    },
                 });
             }
 

@@ -39,23 +39,24 @@ export async function POST(req: Request) {
       throw new Error("JWT_SECRET not defined");
     }
 
-    // LÓGICA DE ROLES: Buscamos el perfil si es BARBER o ADMIN
-    const isBarberOrAdmin = user.role === "BARBER" || user.role === "ADMIN";
-
-    const barberProfile = isBarberOrAdmin
-      ? await prisma.barber.findUnique({ where: { userId: user.id } })
-      : null;
+    const barberProfile = await prisma.barber.findUnique({
+      where: { userId: user.id },
+      select: {
+        id: true,
+        status: true,
+        businessId: true,
+      },
+    });
 
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
-    // Generar JWT con información de Barbero (ID y Estatus)
     const token = await new SignJWT({
       userId: user.id,
       role: user.role,
-      // Incluimos barberId y barberStatus solo si existen
       ...(barberProfile && {
         barberId: barberProfile.id,
-        barberStatus: barberProfile.status
+        barberStatus: barberProfile.status,
+        businessId: barberProfile.businessId,
       }),
     })
       .setProtectedHeader({ alg: "HS256" })
@@ -71,7 +72,8 @@ export async function POST(req: Request) {
         ...safeUser,
         ...(barberProfile && {
           barberId: barberProfile.id,
-          barberStatus: barberProfile.status
+          barberStatus: barberProfile.status,
+          businessId: barberProfile.businessId,
         }),
       },
     });

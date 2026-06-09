@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/prisma";
 
+function canManageCatalog(role: string) {
+  return role === "BARBER" || role === "OWNER" || role === "ADMIN";
+}
+
 export async function createCatalogService(
   name: string,
   price: number,
@@ -7,8 +11,8 @@ export async function createCatalogService(
   role: string,
   barberId: string
 ) {
-  if (role !== "BARBER" && role !== "ADMIN") {
-    throw new Error("Only barbers can create services");
+  if (!canManageCatalog(role)) {
+    throw new Error("Only barbers or owners can create services");
   }
 
   if (!name || !price || !duration || !barberId) {
@@ -58,8 +62,8 @@ export async function updateCatalogService(
   role: string,
   barberId: string
 ) {
-  if (role !== "BARBER" && role !== "ADMIN") {
-    throw new Error("Only barbers can update services");
+  if (!canManageCatalog(role)) {
+    throw new Error("Only barbers or owners can update services");
   }
 
   const existing = await prisma.service.findUnique({
@@ -93,8 +97,8 @@ export async function deleteCatalogService(
   role: string,
   barberId: string
 ) {
-  if (role !== "BARBER" && role !== "ADMIN") {
-    throw new Error("Only barbers can delete services");
+  if (!canManageCatalog(role)) {
+    throw new Error("Only barbers or owners can delete services");
   }
 
   const existing = await prisma.service.findUnique({
