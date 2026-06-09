@@ -194,7 +194,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
 
                             <div>
                                 <Link
-                                    href={`/${locale}/login`}
+                                    href={`/${locale}/business/${business.slug}/book`}
                                     className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-5 py-3 rounded-xl transition-colors"
                                 >
                                     <CalendarDays size={18} />
