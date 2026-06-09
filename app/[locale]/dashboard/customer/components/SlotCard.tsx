@@ -4,7 +4,15 @@ import { useState, useRef, useEffect, Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { CalendarDays, Clock, Scissors, DollarSign, X, CheckCircle2, ChevronDown } from "lucide-react";
+import {
+  CalendarDays,
+  Clock,
+  Scissors,
+  DollarSign,
+  X,
+  CheckCircle2,
+  ChevronDown,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 
 type Service = {
@@ -18,7 +26,7 @@ type Props = {
   time: string;
   selectedDate: Date;
   barberId: string;
-  onBook?: (bookedTime: string) => void; // only time needed — parent tracks booked slots
+  onBook?: (bookedTime: string) => void;
 };
 
 export default function SlotCard({ time, selectedDate, barberId, onBook }: Props) {
@@ -33,10 +41,11 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
   const containerRef = useRef<HTMLDivElement>(null);
   const service = services.find((s) => s.id === selectedService);
 
-  // Load services only when card is first opened
   useEffect(() => {
     if (!popoverOpen || services.length > 0) return;
+
     setLoading(true);
+
     fetch(`/api/catalog?barberId=${barberId}`)
       .then((res) => res.json())
       .then((data: Service[]) => setServices(data))
@@ -44,7 +53,6 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
       .finally(() => setLoading(false));
   }, [popoverOpen, barberId, services.length, t]);
 
-  // Close on outside click
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -52,7 +60,11 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
         setSelectedService(null);
       }
     }
-    if (popoverOpen) document.addEventListener("mousedown", handleClickOutside);
+
+    if (popoverOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [popoverOpen]);
 
@@ -66,31 +78,45 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
       toast.error(t("errors.noService"));
       return;
     }
+
     setPopoverOpen(false);
     setModalOpen(true);
   };
 
   const buildDateTime = (): string => {
-    // Parse time string (e.g. "08:00 AM" or "01:30 PM")
     const [timePart, modifier] = time.split(" ");
     let [hours, minutes] = timePart.split(":").map(Number);
+
     if (modifier === "PM" && hours !== 12) hours += 12;
     if (modifier === "AM" && hours === 12) hours = 0;
 
-    // Build the datetime in local time and convert to a true UTC ISO string.
-    // new Date(year, month, day, h, m) creates a LOCAL time Date object,
-    // and toISOString() correctly converts it to UTC.
-    // This is what the server needs to validate "is this in the past?" correctly.
-    const year  = selectedDate.getFullYear();
-    const month = selectedDate.getMonth(); // 0-indexed
-    const day   = selectedDate.getDate();
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+    const day = selectedDate.getDate();
 
     return new Date(year, month, day, hours, minutes, 0, 0).toISOString();
   };
 
+  const getLoginRedirectUrl = () => {
+    const currentPath = window.location.pathname + window.location.search;
+    const localeMatch = window.location.pathname.match(/^\/(en|es)/);
+    const localePrefix = localeMatch ? localeMatch[0] : "";
+
+    return `${localePrefix}/login?redirectTo=${encodeURIComponent(currentPath)}`;
+  };
+
+  const getCustomerHomeUrl = () => {
+    const localeMatch = window.location.pathname.match(/^\/(en|es)/);
+    const localePrefix = localeMatch ? localeMatch[0] : "";
+
+    return `${localePrefix}/dashboard/customer/home`;
+  };
+
   const handleFinalConfirm = async () => {
     if (!selectedService) return;
+
     setBooking(true);
+
     try {
       const res = await fetch("/api/protected/appointments", {
         method: "POST",
@@ -102,21 +128,27 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
+
+      if (res.status === 401) {
+        toast.error("Inicia sesión para reservar esta cita");
+        window.location.href = getLoginRedirectUrl();
+        return;
+      }
 
       if (!res.ok) {
-        toast.error(data.error ?? t("errors.bookFailed"));
+        toast.error(data?.error ?? t("errors.bookFailed"));
         return;
       }
 
       toast.success(t("success.booked", { name: service?.name ?? "" }));
 
-      // Notify parent to immediately remove this slot from the list
       onBook?.(time);
 
       setModalOpen(false);
       setSelectedService(null);
-      window.location.href = "/dashboard/customer/home";
+
+      window.location.href = getCustomerHomeUrl();
     } catch {
       toast.error(t("errors.network"));
     } finally {
@@ -131,41 +163,58 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
   });
 
   const modalFields = [
-    { icon: CalendarDays, label: t("modal.fields.date"),    value: formattedDate,               highlight: false },
-    { icon: Clock,        label: t("modal.fields.time"),    value: time,                        highlight: false },
-    { icon: Scissors,     label: t("modal.fields.service"), value: service?.name,               highlight: false },
-    { icon: DollarSign,   label: t("modal.fields.total"),   value: `$${service?.price.toFixed(2)}`, highlight: true },
+    {
+      icon: CalendarDays,
+      label: t("modal.fields.date"),
+      value: formattedDate,
+      highlight: false,
+    },
+    {
+      icon: Clock,
+      label: t("modal.fields.time"),
+      value: time,
+      highlight: false,
+    },
+    {
+      icon: Scissors,
+      label: t("modal.fields.service"),
+      value: service?.name,
+      highlight: false,
+    },
+    {
+      icon: DollarSign,
+      label: t("modal.fields.total"),
+      value: `$${service?.price.toFixed(2)}`,
+      highlight: true,
+    },
   ];
 
   return (
     <>
       <div ref={containerRef} className="relative">
         <div
-          className={`group flex flex-col border transition-all duration-500 overflow-hidden ${
-            popoverOpen
+          className={`group flex flex-col border transition-all duration-500 overflow-hidden ${popoverOpen
               ? "border-indigo-200 bg-white shadow-xl shadow-indigo-100/50 rounded-3xl"
               : "border-gray-100 bg-white hover:border-indigo-100 hover:shadow-md rounded-2xl"
-          }`}
+            }`}
         >
-          {/* Header — always visible */}
           <div
             onClick={handleToggle}
             className="flex items-center justify-between px-4 md:px-5 py-3 md:py-4 cursor-pointer"
           >
             <div className="flex items-center gap-3 md:gap-4">
               <div
-                className={`p-2 rounded-xl transition-all duration-300 ${
-                  popoverOpen
+                className={`p-2 rounded-xl transition-all duration-300 ${popoverOpen
                     ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
                     : "bg-gray-50 text-gray-400 group-hover:bg-indigo-50 group-hover:text-indigo-600"
-                }`}
+                  }`}
               >
                 <Clock size={18} strokeWidth={2.5} />
               </div>
+
               <span
-                className={`font-black tracking-tight text-lg md:text-xl transition-colors ${
-                  popoverOpen ? "text-indigo-900" : "text-gray-700"
-                }`}
+                className={`font-black tracking-tight text-lg md:text-xl transition-colors ${popoverOpen ? "text-indigo-900" : "text-gray-700"
+                  }`}
               >
                 {time}
               </span>
@@ -174,17 +223,15 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
             <motion.div
               animate={{ rotate: popoverOpen ? 180 : 0 }}
               transition={{ duration: 0.25, ease: "easeInOut" }}
-              className={`p-2 rounded-xl transition-colors duration-300 ${
-                popoverOpen
+              className={`p-2 rounded-xl transition-colors duration-300 ${popoverOpen
                   ? "text-indigo-600 bg-indigo-50"
                   : "text-gray-400 group-hover:text-indigo-500 group-hover:bg-indigo-50"
-              }`}
+                }`}
             >
               <ChevronDown size={20} strokeWidth={2.5} />
             </motion.div>
           </div>
 
-          {/* Expandable service selector */}
           <AnimatePresence>
             {popoverOpen && (
               <motion.div
@@ -204,31 +251,47 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
                     {loading ? (
                       <div className="py-6 text-center">
                         <div className="w-5 h-5 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-2" />
-                        <p className="text-[10px] font-bold text-gray-400">{t("loading")}</p>
+                        <p className="text-[10px] font-bold text-gray-400">
+                          {t("loading")}
+                        </p>
                       </div>
                     ) : (
                       services.map((s) => (
                         <button
                           key={s.id}
                           onClick={() => setSelectedService(s.id)}
-                          className={`w-full flex items-center justify-between p-3.5 rounded-2xl border-2 transition-all duration-200 ${
-                            selectedService === s.id
+                          className={`w-full flex items-center justify-between p-3.5 rounded-2xl border-2 transition-all duration-200 ${selectedService === s.id
                               ? "border-indigo-600 bg-indigo-50 shadow-sm"
                               : "border-transparent bg-gray-50 hover:bg-gray-100"
-                          }`}
+                            }`}
                         >
                           <div className="text-left min-w-0 flex-1">
-                            <p className={`text-sm font-black truncate ${selectedService === s.id ? "text-indigo-900" : "text-gray-700"}`}>
+                            <p
+                              className={`text-sm font-black truncate ${selectedService === s.id
+                                  ? "text-indigo-900"
+                                  : "text-gray-700"
+                                }`}
+                            >
                               {s.name}
                             </p>
+
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-[10px] font-bold text-gray-400">{s.duration} MIN</span>
+                              <span className="text-[10px] font-bold text-gray-400">
+                                {s.duration} MIN
+                              </span>
                               <span className="w-1 h-1 rounded-full bg-gray-300" />
-                              <span className="text-[10px] font-black text-emerald-500">${s.price}</span>
+                              <span className="text-[10px] font-black text-emerald-500">
+                                ${s.price}
+                              </span>
                             </div>
                           </div>
+
                           {selectedService === s.id && (
-                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-indigo-600 ml-3 shrink-0">
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="text-indigo-600 ml-3 shrink-0"
+                            >
                               <CheckCircle2 size={20} className="fill-indigo-100" />
                             </motion.div>
                           )}
@@ -251,9 +314,12 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
         </div>
       </div>
 
-      {/* Confirmation modal */}
       <Transition appear show={modalOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-9999" onClose={() => !booking && setModalOpen(false)}>
+        <Dialog
+          as="div"
+          className="relative z-9999"
+          onClose={() => !booking && setModalOpen(false)}
+        >
           <Transition.Child as={Fragment}>
             <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm" />
           </Transition.Child>
@@ -261,14 +327,19 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <Transition.Child
               as={Fragment}
-              enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95"
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel className="w-full max-w-sm bg-white rounded-4xl shadow-2xl p-6 md:p-8 relative overflow-hidden">
                 <div className="flex items-center justify-between mb-6">
                   <Dialog.Title className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">
                     {t("modal.title")}
                   </Dialog.Title>
+
                   <button
                     onClick={() => setModalOpen(false)}
                     className="p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-400 transition-colors"
@@ -279,13 +350,29 @@ export default function SlotCard({ time, selectedDate, barberId, onBook }: Props
 
                 <div className="space-y-3 mb-8">
                   {modalFields.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-4 p-3.5 bg-gray-50 rounded-2xl">
-                      <div className={`p-2.5 rounded-xl ${item.highlight ? "bg-emerald-100 text-emerald-600" : "bg-white text-indigo-500 shadow-sm"}`}>
+                    <div
+                      key={idx}
+                      className="flex items-center gap-4 p-3.5 bg-gray-50 rounded-2xl"
+                    >
+                      <div
+                        className={`p-2.5 rounded-xl ${item.highlight
+                            ? "bg-emerald-100 text-emerald-600"
+                            : "bg-white text-indigo-500 shadow-sm"
+                          }`}
+                      >
                         <item.icon size={18} />
                       </div>
+
                       <div>
-                        <p className="text-[10px] text-gray-400 uppercase font-black tracking-wider">{item.label}</p>
-                        <p className={`font-bold ${item.highlight ? "text-emerald-600 text-lg" : "text-gray-900"}`}>
+                        <p className="text-[10px] text-gray-400 uppercase font-black tracking-wider">
+                          {item.label}
+                        </p>
+                        <p
+                          className={`font-bold ${item.highlight
+                              ? "text-emerald-600 text-lg"
+                              : "text-gray-900"
+                            }`}
+                        >
                           {item.value}
                         </p>
                       </div>

@@ -14,6 +14,19 @@ export default function LoginPage() {
 
   const [showPassword, setShowPassword] = useState(false);
 
+  const getSafeRedirectPath = () => {
+    const params = new URLSearchParams(window.location.search);
+    const redirectTo = params.get("redirectTo");
+
+    if (!redirectTo) return null;
+
+    if (!redirectTo.startsWith("/") || redirectTo.startsWith("//")) {
+      return null;
+    }
+
+    return redirectTo;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -34,6 +47,13 @@ export default function LoginPage() {
         return;
       }
 
+      const safeRedirectPath = getSafeRedirectPath();
+
+      if (safeRedirectPath) {
+        window.location.href = safeRedirectPath;
+        return;
+      }
+
       if (data.user.role === "ADMIN" || data.user.role === "OWNER") {
         window.location.href = "/dashboard/admin";
         return;
@@ -50,7 +70,6 @@ export default function LoginPage() {
       }
 
       window.location.href = "/login";
-
     } catch {
       setError(t("errors.generic"));
     } finally {
@@ -60,12 +79,9 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4 relative overflow-hidden">
-
-      {/* Background glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-xl h-75 bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-64 h-64 bg-indigo-900/15 blur-[100px] rounded-full pointer-events-none" />
 
-      {/* Grid background */}
       <div
         className="absolute inset-0 opacity-[0.03]"
         style={{
@@ -75,8 +91,6 @@ export default function LoginPage() {
       />
 
       <div className="relative z-10 w-full max-w-sm sm:max-w-md">
-
-        {/* Logo */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -88,7 +102,6 @@ export default function LoginPage() {
           </Link>
         </motion.div>
 
-        {/* Card */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -98,16 +111,17 @@ export default function LoginPage() {
           <h1 className="text-xl sm:text-2xl font-black text-white mb-1 tracking-tight">
             {t("title")}
           </h1>
+
           <p className="text-gray-500 text-xs sm:text-sm mb-6 sm:mb-8 leading-relaxed">
             {t("subtitle")}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-
             <div>
               <label className="text-xs font-medium text-gray-400 mb-1.5 block">
                 {t("form.email")}
               </label>
+
               <input
                 type="email"
                 placeholder={t("form.emailPlaceholder")}
@@ -143,7 +157,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Error message */}
             {error && (
               <motion.p
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -168,12 +181,9 @@ export default function LoginPage() {
                 t("buttons.signIn")
               )}
             </button>
-
           </form>
-
         </motion.div>
 
-        {/* Register redirect */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -188,7 +198,6 @@ export default function LoginPage() {
             {t("register.action")}
           </Link>
         </motion.p>
-
       </div>
     </main>
   );
