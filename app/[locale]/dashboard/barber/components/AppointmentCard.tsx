@@ -11,6 +11,8 @@ import {
   Phone,
   ExternalLink,
   MessageCircle,
+  XCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -21,6 +23,8 @@ import {
 } from "@headlessui/react";
 import { useTranslations } from "next-intl";
 
+type AppointmentStatus = "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
+
 type Appointment = {
   id: string;
   customerName: string;
@@ -28,21 +32,28 @@ type Appointment = {
   customerPhone: string;
   service: string;
   time: string;
-  status: "PENDING" | "CONFIRMED" | "COMPLETED";
+  status: AppointmentStatus;
 };
 
 type Props = {
   appointment: Appointment;
   onConfirm?: (id: string) => void;
+  onCancel?: (id: string) => void;
 };
 
-export default function AppointmentCard({ appointment, onConfirm }: Props) {
+export default function AppointmentCard({
+  appointment,
+  onConfirm,
+  onCancel,
+}: Props) {
   const t = useTranslations("AppointmentCard");
-  const [status, setStatus] = useState(appointment.status);
-  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<AppointmentStatus>(appointment.status);
+  const [loadingConfirm, setLoadingConfirm] = useState(false);
+  const [loadingCancel, setLoadingCancel] = useState(false);
 
   const handleConfirm = async () => {
-    setLoading(true);
+    setLoadingConfirm(true);
+
     try {
       const res = await fetch(
         `/api/protected/appointments/${appointment.id}/confirm`,
@@ -64,15 +75,112 @@ export default function AppointmentCard({ appointment, onConfirm }: Props) {
     } catch {
       toast.error(t("errors.network"));
     } finally {
-      setLoading(false);
+      setLoadingConfirm(false);
     }
   };
 
-  const statusStyles = {
+  const executeCancel = async () => {
+    setLoadingCancel(true);
+
+    try {
+      const res = await fetch(`/api/protected/appointments/${appointment.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "CANCELLED" }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        toast.error(data?.error || "No se pudo cancelar la cita");
+        return;
+      }
+
+      setStatus("CANCELLED");
+      onCancel?.(appointment.id);
+
+      toast.success(`Cita de ${appointment.customerName} cancelada`, {
+        style: {
+          borderRadius: "12px",
+          background: "#FFF",
+          color: "#1e293b",
+          border: "1px solid #bbf7d0",
+          fontSize: "13px",
+        },
+      });
+    } catch {
+      toast.error(t("errors.network"));
+    } finally {
+      setLoadingCancel(false);
+    }
+  };
+
+  const confirmCancel = () => {
+    toast(
+      (toastInstance) => (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col gap-3 p-1 min-w-55"
+        >
+          <div className="flex items-start gap-2">
+            <div className="p-1.5 bg-red-50 rounded-lg shrink-0">
+              <AlertTriangle size={14} className="text-red-500" />
+            </div>
+
+            <div>
+              <p className="text-sm font-black text-gray-900 leading-tight">
+                Cancelar cita
+              </p>
+
+              <p className="text-[11px] text-gray-500 mt-0.5 font-medium">
+                ¿Seguro que quieres cancelar la cita de {appointment.customerName} para {appointment.service}?
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                toast.dismiss(toastInstance.id);
+                executeCancel();
+              }}
+              className="flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors active:scale-95"
+            >
+              Cancelar cita
+            </button>
+
+            <button
+              onClick={() => toast.dismiss(toastInstance.id)}
+              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-2 rounded-xl text-xs font-bold transition-colors active:scale-95"
+            >
+              Mantener
+            </button>
+          </div>
+        </motion.div>
+      ),
+      {
+        duration: 6000,
+        position: "bottom-center",
+        style: {
+          borderRadius: "16px",
+          padding: "12px",
+          background: "#fff",
+          boxShadow: "0 20px 40px -8px rgba(0,0,0,0.15)",
+          border: "1px solid #f1f5f9",
+        },
+      }
+    );
+  };
+
+  const statusStyles: Record<AppointmentStatus, string> = {
     CONFIRMED: "bg-emerald-50 text-emerald-700 border-emerald-100",
     COMPLETED: "bg-gray-50 text-gray-500 border-gray-100",
     PENDING: "bg-amber-50 text-amber-700 border-amber-100",
+    CANCELLED: "bg-red-50 text-red-700 border-red-100",
   };
+
+  const canCancel = status === "PENDING" || status === "CONFIRMED";
 
   return (
     <Popover className="relative">
@@ -86,18 +194,30 @@ export default function AppointmentCard({ appointment, onConfirm }: Props) {
             <PopoverButton className="flex items-center gap-3 md:gap-4 focus:outline-none group/btn text-left cursor-pointer min-w-0 flex-1">
               <div
                 className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center transition-colors ${status === "PENDING"
-                    ? "bg-amber-50 text-amber-500"
+                  ? "bg-amber-50 text-amber-500"
+                  : status === "CANCELLED"
+                    ? "bg-red-50 text-red-500"
                     : "bg-indigo-50 text-indigo-500"
                   }`}
               >
-                {status === "COMPLETED" ? <CheckCircle2 size={20} /> : <User size={20} />}
+                {status === "COMPLETED" ? (
+                  <CheckCircle2 size={20} />
+                ) : status === "CANCELLED" ? (
+                  <XCircle size={20} />
+                ) : (
+                  <User size={20} />
+                )}
               </div>
 
               <div className="min-w-0">
                 <p className="font-bold text-gray-900 group-hover/btn:text-indigo-600 transition-colors flex items-center gap-1 text-sm md:text-base">
                   <span className="truncate">{appointment.customerName}</span>
-                  <ExternalLink size={12} className="opacity-0 group-hover/btn:opacity-100 transition-opacity text-gray-400 shrink-0" />
+                  <ExternalLink
+                    size={12}
+                    className="opacity-0 group-hover/btn:opacity-100 transition-opacity text-gray-400 shrink-0"
+                  />
                 </p>
+
                 <div className="flex items-center gap-2 text-[11px] md:text-xs text-gray-500 mt-0.5">
                   <span className="flex items-center gap-1 truncate">
                     <Scissors size={12} className="shrink-0" />
@@ -128,8 +248,11 @@ export default function AppointmentCard({ appointment, onConfirm }: Props) {
                         <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                           <Phone size={14} />
                         </div>
+
                         <div className="min-w-0">
-                          <p className="text-xs text-gray-400 font-medium leading-none">{t("fields.phone")}</p>
+                          <p className="text-xs text-gray-400 font-medium leading-none">
+                            {t("fields.phone")}
+                          </p>
                           <p className="text-sm font-bold text-gray-700 truncate">
                             {appointment.customerPhone || t("fields.noPhone")}
                           </p>
@@ -152,8 +275,11 @@ export default function AppointmentCard({ appointment, onConfirm }: Props) {
                       <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                         <Mail size={14} />
                       </div>
+
                       <div className="min-w-0">
-                        <p className="text-xs text-gray-400 font-medium leading-none">{t("fields.email")}</p>
+                        <p className="text-xs text-gray-400 font-medium leading-none">
+                          {t("fields.email")}
+                        </p>
                         <p className="text-sm font-bold text-gray-700 truncate">
                           {appointment.customerEmail || t("fields.noEmail")}
                         </p>
@@ -171,18 +297,30 @@ export default function AppointmentCard({ appointment, onConfirm }: Props) {
               {appointment.time}
             </div>
 
-            <div className="flex gap-2 items-center">
-              <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border shrink-0 ${statusStyles[status]}`}>
-                {t(`status.${status}`)}
+            <div className="flex flex-wrap gap-2 items-center justify-end">
+              <span
+                className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border shrink-0 ${statusStyles[status]}`}
+              >
+                {status === "CANCELLED" ? "CANCELADA" : t(`status.${status}`)}
               </span>
 
               {status === "PENDING" && (
                 <button
                   onClick={handleConfirm}
-                  disabled={loading}
-                  className="text-[11px] md:text-xs px-3 md:px-4 py-1.5 rounded-full bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all cursor-pointer whitespace-nowrap"
+                  disabled={loadingConfirm || loadingCancel}
+                  className="text-[11px] md:text-xs px-3 md:px-4 py-1.5 rounded-full bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all cursor-pointer whitespace-nowrap disabled:opacity-50"
                 >
-                  {loading ? "..." : t("confirm")}
+                  {loadingConfirm ? "..." : t("confirm")}
+                </button>
+              )}
+
+              {canCancel && (
+                <button
+                  onClick={confirmCancel}
+                  disabled={loadingCancel || loadingConfirm}
+                  className="text-[11px] md:text-xs px-3 md:px-4 py-1.5 rounded-full bg-red-50 text-red-600 border border-red-100 font-bold hover:bg-red-600 hover:text-white transition-all cursor-pointer whitespace-nowrap disabled:opacity-50"
+                >
+                  {loadingCancel ? "..." : "Cancelar"}
                 </button>
               )}
             </div>

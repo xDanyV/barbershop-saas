@@ -9,6 +9,8 @@ export async function PATCH(
   try {
     const userId = request.headers.get("x-user-id");
     const role = request.headers.get("x-user-role");
+    const barberId = request.headers.get("x-barber-id");
+    const businessId = request.headers.get("x-business-id");
 
     if (!userId || !role) {
       return NextResponse.json(
@@ -17,19 +19,30 @@ export async function PATCH(
       );
     }
 
-    const { id } = await context.params;
     const body = await request.json();
-    const { status } = body;
+    const { status } = body as { status: AppointmentStatus };
 
-    const updatedAppointment = await updateAppointmentStatus(
+    if (!status) {
+      return NextResponse.json(
+        { error: "Status is required" },
+        { status: 400 }
+      );
+    }
+
+    const { id } = await context.params;
+
+    const updated = await updateAppointmentStatus(
       id,
-      status as AppointmentStatus,
+      status,
       userId,
-      role
+      role,
+      {
+        barberId,
+        businessId,
+      }
     );
 
-    return NextResponse.json(updatedAppointment);
-
+    return NextResponse.json(updated);
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Internal error";

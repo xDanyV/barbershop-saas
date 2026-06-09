@@ -191,7 +191,11 @@ export async function updateAppointmentStatus(
     appointmentId: string,
     newStatus: AppointmentStatus,
     userId: string,
-    role: string
+    role: string,
+    context?: {
+        barberId?: string | null;
+        businessId?: string | null;
+    }
 ) {
     if (!appointmentId) {
         throw new Error("Appointment ID is required");
@@ -199,39 +203,59 @@ export async function updateAppointmentStatus(
 
     const appointment = await prisma.appointment.findUnique({
         where: { id: appointmentId },
-        include: { barber: true },
+        include: {
+            barber: {
+                select: {
+                    id: true,
+                    userId: true,
+                    businessId: true,
+                },
+            },
+        },
     });
 
     if (!appointment) {
         throw new Error("Appointment not found");
     }
 
-    if (role === "BARBER") {
-        if (appointment.barber.userId !== userId) {
-            throw new Error("Not authorized");
-        }
-    }
-
     const currentStatus = appointment.status;
     const isAllowed = allowedTransitions[currentStatus].includes(newStatus);
 
     if (!isAllowed) {
-        throw new Error(`Cannot change status from ${currentStatus} to ${newStatus}`);
+        throw new Error(
+            `Cannot change status from ${currentStatus} to ${newStatus}`
+        );
     }
 
-    if (role === "CUSTOMER" && newStatus === "CANCELLED") {
+    if (role === "CUSTOMER") {
+        if (newStatus !== "CANCELLED") {
+            throw new Error("Customers can only cancel appointments");
+        }
+
+        if (appointment.userId !== userId) {
+            throw new Error("Not authorized");
+        }
+
         const now = new Date();
         const appointmentDate = new Date(appointment.date);
         const hoursUntilAppointment =
             (appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
         if (hoursUntilAppointment < 2) {
-            throw new Error("Appointments cannot be cancelled less than 2 hours before the scheduled time");
+            throw new Error(
+                "Appointments cannot be cancelled less than 2 hours before the scheduled time"
+            );
         }
-
-        if (appointment.userId !== userId) {
+    } else if (role === "BARBER") {
+        if (!context?.barberId || appointment.barberId !== context.barberId) {
             throw new Error("Not authorized");
         }
+    } else if (role === "OWNER") {
+        if (!context?.businessId || appointment.businessId !== context.businessId) {
+            throw new Error("Not authorized");
+        }
+    } else if (role !== "ADMIN") {
+        throw new Error("Not authorized");
     }
 
     return prisma.appointment.update({
