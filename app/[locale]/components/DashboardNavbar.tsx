@@ -4,7 +4,14 @@ import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Toaster, toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { LogOut, CalendarDays, Scissors, BookOpen, ShieldCheck } from "lucide-react";
+import {
+    LogOut,
+    CalendarDays,
+    Scissors,
+    BookOpen,
+    ShieldCheck,
+    Store,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 
 export default function DashboardNavbar({ role }: { role: string }) {
@@ -14,9 +21,14 @@ export default function DashboardNavbar({ role }: { role: string }) {
 
     let menuItems = [];
 
-    if (role === "ADMIN" || role === "OWNER") {
+    if (role === "ADMIN") {
         menuItems = [
             { name: t("menu.adminControl"), path: "/dashboard/admin", icon: ShieldCheck },
+        ];
+    } else if (role === "OWNER") {
+        menuItems = [
+            { name: t("menu.adminControl"), path: "/dashboard/admin", icon: ShieldCheck },
+            { name: "Mi negocio", path: "/dashboard/admin/my-business", icon: Store },
             { name: t("menu.myAppointments"), path: "/dashboard/barber", icon: CalendarDays },
             { name: t("menu.catalog"), path: "/dashboard/barber/catalog", icon: Scissors },
         ];
@@ -31,6 +43,18 @@ export default function DashboardNavbar({ role }: { role: string }) {
             { name: t("menu.book"), path: "/dashboard/customer/barbers", icon: BookOpen },
         ];
     }
+
+    const getHomePath = () => {
+        if (role === "ADMIN" || role === "OWNER") {
+            return "/dashboard/admin";
+        }
+
+        if (role === "BARBER") {
+            return "/dashboard/barber";
+        }
+
+        return "/dashboard/customer/home";
+    };
 
     const handleLogout = async () => {
         await fetch("/api/logout", { method: "POST" });
@@ -67,35 +91,22 @@ export default function DashboardNavbar({ role }: { role: string }) {
                 console.error("Error checking appointments:", error);
             }
         }
+
         router.push(path);
     };
 
     return (
         <>
-            {/* ── Desktop Navbar (top) ── */}
             <motion.header
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.4 }}
                 className="hidden md:flex bg-indigo-950 text-white px-8 py-3 justify-between items-center shadow-lg border-b border-indigo-800/50 sticky top-0 z-50"
             >
-                {/* Logo + nav */}
                 <div className="flex items-center gap-10">
                     <div
                         className="flex items-center gap-2 cursor-pointer"
-                        onClick={() => {
-                            if (role === "ADMIN" || role === "OWNER") {
-                                router.push("/dashboard/admin");
-                                return;
-                            }
-
-                            if (role === "BARBER") {
-                                router.push("/dashboard/barber");
-                                return;
-                            }
-
-                            router.push("/dashboard/customer/home");
-                        }}
+                        onClick={() => router.push(getHomePath())}
                     >
                         <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center font-bold shadow-inner shrink-0">
                             B
@@ -107,7 +118,8 @@ export default function DashboardNavbar({ role }: { role: string }) {
 
                     <nav className="flex gap-1">
                         {menuItems.map((item) => {
-                            const isActive = pathname === item.path;
+                            const isActive = pathname === item.path || pathname.endsWith(item.path);
+
                             return (
                                 <button
                                     key={item.path}
@@ -128,7 +140,6 @@ export default function DashboardNavbar({ role }: { role: string }) {
                     </nav>
                 </div>
 
-                {/* Logout */}
                 <motion.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
@@ -140,7 +151,6 @@ export default function DashboardNavbar({ role }: { role: string }) {
                 </motion.button>
             </motion.header>
 
-            {/* ── Mobile Top Bar (logo only) ── */}
             <motion.header
                 initial={{ y: -10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -149,7 +159,7 @@ export default function DashboardNavbar({ role }: { role: string }) {
             >
                 <div
                     className="flex items-center gap-2 cursor-pointer"
-                    onClick={() => router.push(role === "BARBER" ? "/dashboard/barber" : "/dashboard/customer/home")}
+                    onClick={() => router.push(getHomePath())}
                 >
                     <div className="w-7 h-7 bg-indigo-500 rounded-md flex items-center justify-center font-bold text-sm shrink-0">
                         B
@@ -168,7 +178,6 @@ export default function DashboardNavbar({ role }: { role: string }) {
                 </motion.button>
             </motion.header>
 
-            {/* ── Mobile Bottom Nav ── */}
             <motion.nav
                 initial={{ y: 80, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -177,7 +186,7 @@ export default function DashboardNavbar({ role }: { role: string }) {
             >
                 <div className="flex items-center justify-around py-2">
                     {menuItems.map((item) => {
-                        const isActive = pathname === item.path;
+                        const isActive = pathname === item.path || pathname.endsWith(item.path);
                         const Icon = item.icon;
 
                         return (
