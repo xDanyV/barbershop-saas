@@ -41,6 +41,7 @@ export default function DashboardNavbar({ role }: { role: string }) {
         menuItems = [
             { name: t("menu.myAppointments"), path: "/dashboard/customer/home", icon: CalendarDays },
             { name: t("menu.book"), path: "/dashboard/customer/barbers", icon: BookOpen },
+            { name: "Crear negocio", path: "/dashboard/business/new", icon: Store },
         ];
     }
 
