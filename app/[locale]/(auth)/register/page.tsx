@@ -12,7 +12,14 @@ export default function RegisterPage() {
     const t = useTranslations("Register");
     const router = useRouter();
     const [role, setRole] = useState<"CUSTOMER" | "BARBER" | null>(null);
-    const [form, setForm] = useState({ name: "", phone: "", email: "", password: "", confirmPassword: "" });
+    const [form, setForm] = useState({
+        name: "",
+        phone: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        businessSlug: "",
+    });
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -31,6 +38,12 @@ export default function RegisterPage() {
             setError("Please select an account type");
             return;
         }
+
+        if (role === "BARBER" && !form.businessSlug.trim()) {
+            setError("Please enter the business slug or public business link");
+            return;
+        }
+
         if (form.password !== form.confirmPassword) {
             setError("Passwords do not match");
             return;
@@ -125,7 +138,10 @@ export default function RegisterPage() {
                             {/* Customer option */}
                             <button
                                 type="button"
-                                onClick={() => setRole("CUSTOMER")}
+                                onClick={() => {
+                                    setRole("CUSTOMER");
+                                    setForm((prev) => ({ ...prev, businessSlug: "" }));
+                                }}
                                 className={`w-full p-5 rounded-xl border text-left transition-all duration-300 ${role === "CUSTOMER"
                                     ? "bg-indigo-600/10 border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.15)]"
                                     : "bg-white/2 border-white/5 hover:border-white/10 hover:bg-white/4"
@@ -226,6 +242,36 @@ export default function RegisterPage() {
                                 />
                             </div>
 
+                            {role === "BARBER" && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="bg-indigo-500/5 border border-indigo-500/20 rounded-2xl p-4"
+                                >
+                                    <label className="text-xs font-semibold text-indigo-300 mb-2 block uppercase tracking-wider">
+                                        Business slug or public link
+                                    </label>
+
+                                    <input
+                                        name="businessSlug"
+                                        type="text"
+                                        placeholder="barberia-el-nuevo-rey"
+                                        value={form.businessSlug}
+                                        onChange={handleChange}
+                                        required={role === "BARBER"}
+                                        className="w-full bg-[#0f0f16] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
+                                    />
+
+                                    <p className="text-[11px] text-gray-500 mt-2 leading-relaxed">
+                                        You can enter only the slug, like{" "}
+                                        <span className="text-indigo-300 font-bold">
+                                            barberia-el-nuevo-rey
+                                        </span>
+                                        , or paste the full public business link.
+                                    </p>
+                                </motion.div>
+                            )}
+
                             {/* Contraseñas */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
@@ -267,8 +313,8 @@ export default function RegisterPage() {
                                         onChange={handleChange}
                                         required
                                         className={`w-full bg-[#0f0f16] border text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none transition-all ${form.confirmPassword && form.password !== form.confirmPassword
-                                                ? "border-red-500/50 focus:border-red-500 focus:ring-1 focus:ring-red-500/50"
-                                                : "border-white/10 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50"
+                                            ? "border-red-500/50 focus:border-red-500 focus:ring-1 focus:ring-red-500/50"
+                                            : "border-white/10 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50"
                                             }`}
                                     />
                                 </div>
