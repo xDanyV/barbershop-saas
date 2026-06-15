@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, CalendarCheck } from "lucide-react";
+import { Clock } from "lucide-react";
 import SlotCard from "./SlotCard";
 import { useTranslations } from "next-intl";
 
@@ -135,59 +135,89 @@ export default function AvailableSlots({
 
   if (!schedule) {
     return (
-      <div className="bg-amber-50 border border-amber-100 rounded-3xl md:rounded-4xl p-6 md:p-8 text-center">
-        <Clock className="mx-auto text-amber-400 mb-2" size={24} />
-        <p className="text-amber-800 font-bold">{t("noAvailability.title")}</p>
-        <p className="text-amber-600 text-xs">{t("noAvailability.subtitle")}</p>
+      <div className="rounded-3xl border border-amber-100 bg-amber-50/70 p-6 md:p-8 text-center">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-amber-500 shadow-sm">
+          <Clock size={22} />
+        </div>
+
+        <p className="text-sm md:text-base font-black text-amber-900">
+          {t("noAvailability.title")}
+        </p>
+
+        <p className="mt-1 text-xs md:text-sm text-amber-700">
+          {t("noAvailability.subtitle")}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-100 rounded-4xl md:rounded-[2.5rem] shadow-xl shadow-gray-100/50 p-5 md:p-6 flex flex-col h-100 md:h-125">
-      <div className="mb-5 md:mb-6 shrink-0 space-y-1">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg md:text-xl font-black text-gray-900 tracking-tight">
-            {t("title")}
+    <div className="rounded-3xl border border-gray-100 bg-white p-4 md:p-5">
+      <div className="mb-4 flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-xl md:text-2xl font-black tracking-tight text-gray-900">
+            Horarios disponibles
           </h3>
         </div>
-        <div className="flex items-center gap-2 text-[10px] md:text-xs font-bold text-gray-400">
-          <CalendarCheck size={14} className="text-indigo-500" />
-          <span>{schedule.startTime} — {schedule.endTime}</span>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex items-center rounded-2xl bg-indigo-50 px-3 py-2 text-[11px] font-black text-indigo-600">
+            {schedule.startTime} — {schedule.endTime}
+          </div>
+
+          {!loading && (
+            <div className="inline-flex items-center rounded-2xl bg-gray-50 px-3 py-2 text-[11px] font-black text-gray-500">
+              {availableSlots.length} disponible
+              {availableSlots.length === 1 ? "" : "s"}
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-visible pr-1 md:pr-2 custom-scrollbar">
+      <div className="max-h-140 overflow-y-auto overflow-x-visible pr-1 md:max-h-155 md:pr-2 custom-scrollbar">
         <AnimatePresence mode="popLayout">
           {loading ? (
-            <div className="space-y-3">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-14 md:h-16 bg-gray-50 animate-pulse rounded-xl md:rounded-2xl w-full" />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                  key={i}
+                  className="h-16 w-full animate-pulse rounded-2xl bg-gray-50"
+                />
               ))}
             </div>
           ) : availableSlots.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-12 md:py-20"
+              className="flex min-h-64 flex-col items-center justify-center rounded-3xl border border-dashed border-gray-200 bg-gray-50 px-6 py-12 text-center"
             >
-              <p className="text-gray-400 font-bold text-sm md:text-base">{t("soldOut")}</p>
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-gray-400 shadow-sm">
+                <Clock size={24} />
+              </div>
+
+              <p className="text-sm md:text-base font-black text-gray-700">
+                {t("soldOut")}
+              </p>
+
+              <p className="mt-2 max-w-sm text-xs md:text-sm text-gray-400">
+                Intenta seleccionar otra fecha o cambiar de barbero para ver más horarios.
+              </p>
             </motion.div>
           ) : (
-            <div className="grid gap-2 md:gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {availableSlots.map((slot, index) => (
                 <motion.div
                   key={slot}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  transition={{ delay: index * 0.03 }}
+                  className="min-w-0"
                 >
                   <SlotCard
                     time={slot}
                     selectedDate={selectedDate}
                     barberId={barberId}
                     onBook={(bookedTime) =>
-                      // Immediately hide the booked slot without refetching
                       setBookedSlots((prev) => [...prev, bookedTime])
                     }
                   />

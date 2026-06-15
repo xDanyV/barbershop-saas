@@ -129,22 +129,30 @@ export default function CustomerHome() {
 
   const executeCancel = async (appointmentId: string) => {
     setCancelling(appointmentId);
+
     try {
-      const res = await fetch(`/api/protected/appointments/${appointmentId}/confirm`, {
+      const res = await fetch(`/api/protected/appointments/${appointmentId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "CANCELLED" }),
       });
+
       const data = await res.json();
+
       if (!res.ok) {
         toast.error(data.error ?? t("errors.cancelFailed"));
         return;
       }
+
       setAppointments((prev) => prev.filter((a) => a.id !== appointmentId));
+
       toast.success(t("success.cancelled"), {
         style: {
-          borderRadius: "12px", background: "#f0fdf4",
-          color: "#166534", border: "1px solid #bbf7d0", fontSize: "13px",
+          borderRadius: "12px",
+          background: "#f0fdf4",
+          color: "#166534",
+          border: "1px solid #bbf7d0",
+          fontSize: "13px",
         },
       });
     } catch {
@@ -280,8 +288,8 @@ export default function CustomerHome() {
                           </div>
                         </div>
                         <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold tracking-wide border ${a.status === "COMPLETED"
-                            ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                            : "bg-rose-50 text-rose-600 border-rose-100"
+                          ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                          : "bg-rose-50 text-rose-600 border-rose-100"
                           }`}>
                           {t(`status.${a.status}`)}
                         </span>
@@ -318,8 +326,8 @@ export default function CustomerHome() {
                               {a.service.name}
                             </h3>
                             <span className={`w-fit mx-auto sm:mx-0 text-[9px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-widest border ${a.status === "CONFIRMED"
-                                ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                                : "bg-amber-50 text-amber-600 border-amber-100"
+                              ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                              : "bg-amber-50 text-amber-600 border-amber-100"
                               }`}>
                               {t(`status.${a.status}`)}
                             </span>

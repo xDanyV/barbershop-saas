@@ -83,7 +83,6 @@ model Appointment {
   status    AppointmentStatus @default(PENDING)
   createdAt DateTime          @default(now())
 
-  @@unique([businessId, barberId, date])
   @@index([businessId])
   @@index([barberId])
   @@index([userId])
