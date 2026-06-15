@@ -4,7 +4,7 @@ import BusinessHero from "./components/BusinessHero";
 import BarberCarousel from "./components/BarberCarousel";
 import BusinessGallery from "./components/BusinessGallery";
 import BusinessPosts from "./components/BusinessPosts";
-import BusinessContactCard from "./components/BusinessContactCard";
+import FloatingContactCard from "./components/FloatingContactCard";
 import BusinessCTA from "./components/BusinessCTA";
 import BusinessPublicNavbar from "./components/BusinessPublicNavbar";
 import { groupServicesByName } from "./lib/business-page.utils";
@@ -157,7 +157,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                 <aside className="space-y-6">
                     <BusinessGallery gallery={business.gallery} />
 
-                    <BusinessContactCard
+                    <FloatingContactCard
                         phone={business.phone}
                         address={business.address}
                     />

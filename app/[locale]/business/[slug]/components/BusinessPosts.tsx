@@ -1,6 +1,7 @@
-import { Megaphone, Newspaper } from "lucide-react";
+import { Newspaper } from "lucide-react";
 import { PublicBusinessPost } from "../lib/business-page.types";
 import { formatDate } from "../lib/business-page.utils";
+import LightboxImage from "./LightboxImage";
 
 type Props = {
     posts: PublicBusinessPost[];
@@ -38,7 +39,7 @@ export default function BusinessPosts({ posts }: Props) {
             {latestPosts.length === 0 ? (
                 <div className="min-h-48 md:min-h-56 rounded-3xl border border-dashed border-white/10 bg-black/20 flex flex-col items-center justify-center text-center px-6">
                     <div className="w-14 h-14 rounded-2xl bg-white/5 text-gray-500 flex items-center justify-center mb-4">
-                        <Megaphone size={26} />
+                        <Newspaper size={26} />
                     </div>
 
                     <p className="text-gray-300 font-black text-lg">
@@ -50,19 +51,18 @@ export default function BusinessPosts({ posts }: Props) {
                     </p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {latestPosts.map((post, index) => (
+                <div className="columns-1 md:columns-2 gap-4">
+                    {latestPosts.map((post) => (
                         <article
                             key={post.id}
-                            className={`bg-black/20 border border-white/10 rounded-3xl overflow-hidden ${index === 0 ? "md:col-span-2" : ""
-                                }`}
+                            className="break-inside-avoid mb-4 bg-black/20 border border-white/10 rounded-3xl overflow-hidden"
                         >
                             {post.imageUrl && (
-                                <img
+                                <LightboxImage
                                     src={post.imageUrl}
-                                    alt="Publicación"
-                                    className={`w-full object-cover border-b border-white/10 ${index === 0 ? "h-64 md:h-80" : "h-48"
-                                        }`}
+                                    alt="Imagen de publicación"
+                                    caption={post.content}
+                                    imageClassName="w-full h-auto max-h-[560px] object-contain bg-black/30"
                                 />
                             )}
 

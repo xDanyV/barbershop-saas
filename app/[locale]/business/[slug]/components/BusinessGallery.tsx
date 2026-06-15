@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, ImageIcon } from "lucide-react";
 import { PublicBusinessGalleryItem } from "../lib/business-page.types";
+import LightboxImage from "./LightboxImage";
 
 type Props = {
     gallery: PublicBusinessGalleryItem[];
@@ -89,16 +90,20 @@ export default function BusinessGallery({ gallery }: Props) {
 
             <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black/20">
                 <AnimatePresence mode="wait">
-                    <motion.img
+                    <motion.div
                         key={activeImage.id}
-                        src={activeImage.imageUrl}
-                        alt={activeImage.caption || "Foto del negocio"}
                         initial={{ opacity: 0, scale: 1.04 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.98 }}
                         transition={{ duration: 0.25 }}
-                        className="w-full h-72 object-cover"
-                    />
+                    >
+                        <LightboxImage
+                            src={activeImage.imageUrl}
+                            alt={activeImage.caption || "Foto del negocio"}
+                            caption={activeImage.caption}
+                            imageClassName="w-full h-72 object-contain bg-black/30"
+                        />
+                    </motion.div>
                 </AnimatePresence>
 
                 {activeImage.caption && (
