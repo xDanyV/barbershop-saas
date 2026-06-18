@@ -64,6 +64,12 @@ async function getAuthFromRequest(req: Request) {
     }
 }
 
+function assertOwner(role: string) {
+    if (role !== "OWNER") {
+        throw new UploadThingError("Only business owners can upload this image");
+    }
+}
+
 export const ourFileRouter = {
     barberProfileImage: f({
         image: {
@@ -73,6 +79,54 @@ export const ourFileRouter = {
     })
         .middleware(async ({ req }) => {
             const auth = await getAuthFromRequest(req);
+
+            return {
+                userId: auth.userId,
+                role: auth.role,
+                businessId: auth.businessId,
+            };
+        })
+        .onUploadComplete(async ({ metadata, file }) => {
+            return {
+                uploadedBy: metadata.userId,
+                url: file.ufsUrl,
+            };
+        }),
+
+    businessLogoImage: f({
+        image: {
+            maxFileSize: "2MB",
+            maxFileCount: 1,
+        },
+    })
+        .middleware(async ({ req }) => {
+            const auth = await getAuthFromRequest(req);
+
+            assertOwner(auth.role);
+
+            return {
+                userId: auth.userId,
+                role: auth.role,
+                businessId: auth.businessId,
+            };
+        })
+        .onUploadComplete(async ({ metadata, file }) => {
+            return {
+                uploadedBy: metadata.userId,
+                url: file.ufsUrl,
+            };
+        }),
+
+    businessCoverImage: f({
+        image: {
+            maxFileSize: "8MB",
+            maxFileCount: 1,
+        },
+    })
+        .middleware(async ({ req }) => {
+            const auth = await getAuthFromRequest(req);
+
+            assertOwner(auth.role);
 
             return {
                 userId: auth.userId,

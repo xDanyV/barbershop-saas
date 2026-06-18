@@ -1,6 +1,7 @@
 "use client";
 
-import type { FormEvent } from "react";
+import type { ChangeEvent, FormEvent } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
     Building2,
@@ -11,7 +12,11 @@ import {
     Save,
     ToggleLeft,
     ToggleRight,
+    Trash2,
+    UploadCloud,
 } from "lucide-react";
+import toast from "react-hot-toast";
+import { useUploadThing } from "@/lib/uploadthing";
 
 export type BusinessForm = {
     name: string;
@@ -36,12 +41,95 @@ type Props = {
     onUpdateField: UpdateBusinessField;
 };
 
+type ImageField = "logoUrl" | "coverUrl";
+
 export default function BusinessProfileForm({
     form,
     saving,
     onSubmit,
     onUpdateField,
 }: Props) {
+    const [uploadingField, setUploadingField] = useState<ImageField | null>(null);
+
+    const { startUpload: startLogoUpload } = useUploadThing("businessLogoImage", {
+        onClientUploadComplete: (res) => {
+            const uploadedUrl = res?.[0]?.serverData?.url ?? res?.[0]?.url;
+
+            if (!uploadedUrl) {
+                toast.error("No se pudo obtener la URL del logo");
+                setUploadingField(null);
+                return;
+            }
+
+            onUpdateField("logoUrl", uploadedUrl);
+            toast.success("Logo subido. Guarda los cambios para aplicarlo.");
+            setUploadingField(null);
+        },
+        onUploadError: (error) => {
+            console.error("Logo upload error:", error);
+            toast.error(error.message || "No se pudo subir el logo");
+            setUploadingField(null);
+        },
+    });
+
+    const { startUpload: startCoverUpload } = useUploadThing("businessCoverImage", {
+        onClientUploadComplete: (res) => {
+            const uploadedUrl = res?.[0]?.serverData?.url ?? res?.[0]?.url;
+
+            if (!uploadedUrl) {
+                toast.error("No se pudo obtener la URL de la portada");
+                setUploadingField(null);
+                return;
+            }
+
+            onUpdateField("coverUrl", uploadedUrl);
+            toast.success("Portada subida. Guarda los cambios para aplicarla.");
+            setUploadingField(null);
+        },
+        onUploadError: (error) => {
+            console.error("Cover upload error:", error);
+            toast.error(error.message || "No se pudo subir la portada");
+            setUploadingField(null);
+        },
+    });
+
+    const handleUploadSelected = async (
+        field: ImageField,
+        event: ChangeEvent<HTMLInputElement>
+    ) => {
+        const file = event.target.files?.[0];
+
+        event.target.value = "";
+
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            toast.error("Selecciona una imagen válida");
+            return;
+        }
+
+        const maxSizeInMb = field === "logoUrl" ? 2 : 8;
+        const maxSizeInBytes = maxSizeInMb * 1024 * 1024;
+
+        if (file.size > maxSizeInBytes) {
+            toast.error(`La imagen no debe pesar más de ${maxSizeInMb}MB`);
+            return;
+        }
+
+        setUploadingField(field);
+
+        if (field === "logoUrl") {
+            await startLogoUpload([file]);
+            return;
+        }
+
+        await startCoverUpload([file]);
+    };
+
+    const isUploadingLogo = uploadingField === "logoUrl";
+    const isUploadingCover = uploadingField === "coverUrl";
+    const isUploadingAnyImage = uploadingField !== null;
+
     return (
         <form
             onSubmit={onSubmit}
@@ -153,35 +241,147 @@ export default function BusinessProfileForm({
                         <div>
                             <h2 className="font-black text-gray-900">Imágenes</h2>
                             <p className="text-xs text-gray-500">
-                                Por ahora usa links de imagen.
+                                Sube el logo y la portada pública.
                             </p>
                         </div>
                     </div>
 
-                    <div>
-                        <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
-                            Logo URL
-                        </label>
+                    <div className="rounded-3xl border border-gray-100 bg-gray-50 p-4 space-y-3">
+                        <div className="flex items-center justify-between gap-3">
+                            <div>
+                                <p className="text-xs font-black text-gray-900">
+                                    Logo
+                                </p>
+                                <p className="text-[11px] font-bold text-gray-400">
+                                    Imagen cuadrada recomendada. Máximo 2MB.
+                                </p>
+                            </div>
 
-                        <input
-                            value={form.logoUrl}
-                            onChange={(e) => onUpdateField("logoUrl", e.target.value)}
-                            className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                            placeholder="https://..."
-                        />
+                            {form.logoUrl && (
+                                <button
+                                    type="button"
+                                    onClick={() => onUpdateField("logoUrl", "")}
+                                    className="text-red-400 hover:text-red-600"
+                                    title="Quitar logo"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <div className="w-16 h-16 rounded-3xl bg-white border border-gray-100 overflow-hidden flex items-center justify-center text-gray-300 shrink-0">
+                                {form.logoUrl ? (
+                                    <img
+                                        src={form.logoUrl}
+                                        alt="Logo del negocio"
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <ImageIcon size={22} />
+                                )}
+                            </div>
+
+                            <div className="flex-1">
+                                <input
+                                    id="business-logo-upload"
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    disabled={isUploadingAnyImage}
+                                    onChange={(event) =>
+                                        handleUploadSelected("logoUrl", event)
+                                    }
+                                />
+
+                                <label
+                                    htmlFor="business-logo-upload"
+                                    className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-4 py-3 text-xs font-black text-white shadow-sm shadow-indigo-100 transition-all ${isUploadingAnyImage
+                                            ? "opacity-50 pointer-events-none cursor-not-allowed"
+                                            : "hover:bg-indigo-500 cursor-pointer"
+                                        }`}
+                                >
+                                    {isUploadingLogo ? (
+                                        <Loader2 size={16} className="animate-spin" />
+                                    ) : (
+                                        <UploadCloud size={16} />
+                                    )}
+
+                                    {isUploadingLogo
+                                        ? "Subiendo..."
+                                        : form.logoUrl
+                                            ? "Cambiar logo"
+                                            : "Subir logo"}
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
-                    <div>
-                        <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
-                            Portada URL
-                        </label>
+                    <div className="rounded-3xl border border-gray-100 bg-gray-50 p-4 space-y-3">
+                        <div className="flex items-center justify-between gap-3">
+                            <div>
+                                <p className="text-xs font-black text-gray-900">
+                                    Portada
+                                </p>
+                                <p className="text-[11px] font-bold text-gray-400">
+                                    Imagen horizontal recomendada. Máximo 8MB.
+                                </p>
+                            </div>
+
+                            {form.coverUrl && (
+                                <button
+                                    type="button"
+                                    onClick={() => onUpdateField("coverUrl", "")}
+                                    className="text-red-400 hover:text-red-600"
+                                    title="Quitar portada"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="rounded-3xl bg-white border border-gray-100 overflow-hidden h-32 flex items-center justify-center text-gray-300">
+                            {form.coverUrl ? (
+                                <img
+                                    src={form.coverUrl}
+                                    alt="Portada del negocio"
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <ImageIcon size={24} />
+                            )}
+                        </div>
 
                         <input
-                            value={form.coverUrl}
-                            onChange={(e) => onUpdateField("coverUrl", e.target.value)}
-                            className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                            placeholder="https://..."
+                            id="business-cover-upload"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={isUploadingAnyImage}
+                            onChange={(event) =>
+                                handleUploadSelected("coverUrl", event)
+                            }
                         />
+
+                        <label
+                            htmlFor="business-cover-upload"
+                            className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-4 py-3 text-xs font-black text-white shadow-sm shadow-indigo-100 transition-all ${isUploadingAnyImage
+                                    ? "opacity-50 pointer-events-none cursor-not-allowed"
+                                    : "hover:bg-indigo-500 cursor-pointer"
+                                }`}
+                        >
+                            {isUploadingCover ? (
+                                <Loader2 size={16} className="animate-spin" />
+                            ) : (
+                                <UploadCloud size={16} />
+                            )}
+
+                            {isUploadingCover
+                                ? "Subiendo..."
+                                : form.coverUrl
+                                    ? "Cambiar portada"
+                                    : "Subir portada"}
+                        </label>
                     </div>
                 </motion.section>
 
@@ -240,7 +440,7 @@ export default function BusinessProfileForm({
 
                 <button
                     type="submit"
-                    disabled={saving}
+                    disabled={saving || isUploadingAnyImage}
                     className="w-full py-4 rounded-2xl bg-indigo-600 text-white text-sm font-black hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
                 >
                     {saving ? (
