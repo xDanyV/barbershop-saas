@@ -114,6 +114,7 @@ model Barber {
   availability Availability[]
   exceptions   BarberException[]
   services     Service[]
+  profileImageUrl String?
 
   @@index([businessId])
 }

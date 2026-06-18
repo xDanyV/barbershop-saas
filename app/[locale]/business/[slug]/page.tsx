@@ -44,6 +44,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                 },
                 select: {
                     id: true,
+                    profileImageUrl: true,
                     user: {
                         select: {
                             name: true,
@@ -129,7 +130,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
     const barbersForCarousel = business.barbers.map((barber) => ({
         id: barber.id,
         name: barber.user.name || "Barbero",
-        imageUrl: null,
+        imageUrl: barber.profileImageUrl || null,
     }));
 
     return (

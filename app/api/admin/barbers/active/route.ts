@@ -14,7 +14,10 @@ export async function GET() {
         }
 
         if (role === "OWNER" && !businessId) {
-            return NextResponse.json({ error: "Business context is required" }, { status: 403 });
+            return NextResponse.json(
+                { error: "Business context is required" },
+                { status: 403 }
+            );
         }
 
         const managedBarbers = await prisma.barber.findMany({
@@ -24,7 +27,14 @@ export async function GET() {
                 },
                 ...(role === "OWNER" ? { businessId: businessId! } : {}),
             },
-            include: {
+            select: {
+                id: true,
+                userId: true,
+                businessId: true,
+                status: true,
+                active: true,
+                createdAt: true,
+                profileImageUrl: true,
                 user: {
                     select: {
                         name: true,
@@ -32,6 +42,9 @@ export async function GET() {
                         phone: true,
                     },
                 },
+            },
+            orderBy: {
+                createdAt: "desc",
             },
         });
 
@@ -43,6 +56,9 @@ export async function GET() {
         return NextResponse.json(barbersWithSelfFlag);
     } catch (error) {
         console.error("Error fetching managed barbers:", error);
-        return NextResponse.json({ error: "Failed to fetch barbers" }, { status: 500 });
+        return NextResponse.json(
+            { error: "Failed to fetch barbers" },
+            { status: 500 }
+        );
     }
 }

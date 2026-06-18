@@ -19,6 +19,7 @@ import BarberCard from "@/[locale]/dashboard/customer/components/BarberCard";
 
 type Barber = {
     id: string;
+    profileImageUrl: string | null;
     user: {
         name: string | null;
         email: string;
@@ -151,14 +152,19 @@ export default function BusinessBookingClient({ locale, business }: Props) {
                                                 >
                                                     <div className="flex items-center gap-4">
                                                         <div
-                                                            className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black shrink-0 ${isSelected
-                                                                ? "bg-indigo-600 text-white"
-                                                                : "bg-white text-indigo-600"
+                                                            className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black shrink-0 overflow-hidden ${isSelected
+                                                                    ? "bg-indigo-600 text-white"
+                                                                    : "bg-white text-indigo-600"
                                                                 }`}
                                                         >
-                                                            {getInitials(
-                                                                barber.user.name ||
-                                                                "Barbero"
+                                                            {barber.profileImageUrl ? (
+                                                                <img
+                                                                    src={barber.profileImageUrl}
+                                                                    alt={barber.user.name || "Barbero"}
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                getInitials(barber.user.name || "Barbero")
                                                             )}
                                                         </div>
 

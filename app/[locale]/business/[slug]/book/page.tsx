@@ -33,6 +33,7 @@ export default async function BusinessBookPage({ params }: BookPageProps) {
                 },
                 select: {
                     id: true,
+                    profileImageUrl: true,
                     user: {
                         select: {
                             name: true,
