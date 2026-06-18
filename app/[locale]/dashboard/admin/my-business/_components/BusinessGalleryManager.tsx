@@ -1,5 +1,6 @@
 "use client";
 
+import type { ChangeEvent, FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import toast from "react-hot-toast";
@@ -9,8 +10,10 @@ import {
     Loader2,
     Plus,
     Trash2,
+    UploadCloud,
     X,
 } from "lucide-react";
+import { useUploadThing } from "@/lib/uploadthing";
 
 type GalleryItem = {
     id: string;
@@ -25,8 +28,30 @@ export default function BusinessGalleryManager() {
     const [caption, setCaption] = useState("");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const { startUpload } = useUploadThing("businessGalleryImage", {
+        onClientUploadComplete: (res) => {
+            const uploadedUrl = res?.[0]?.serverData?.url ?? res?.[0]?.url;
+
+            if (!uploadedUrl) {
+                toast.error("No se pudo obtener la URL de la imagen");
+                setUploading(false);
+                return;
+            }
+
+            setImageUrl(uploadedUrl);
+            toast.success("Imagen subida. Ahora puedes agregarla a la galería.");
+            setUploading(false);
+        },
+        onUploadError: (error) => {
+            console.error("Gallery upload error:", error);
+            toast.error(error.message || "No se pudo subir la imagen");
+            setUploading(false);
+        },
+    });
 
     const loadGallery = async () => {
         try {
@@ -67,20 +92,50 @@ export default function BusinessGalleryManager() {
     const resetForm = () => {
         setImageUrl("");
         setCaption("");
+        setUploading(false);
+    };
+
+    const handleOpenModal = () => {
+        resetForm();
+        setIsModalOpen(true);
     };
 
     const handleCloseModal = () => {
-        if (saving) return;
+        if (saving || uploading) return;
 
         setIsModalOpen(false);
         resetForm();
     };
 
-    const handleCreateImage = async (e: React.FormEvent) => {
+    const handleUploadSelected = async (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+
+        event.target.value = "";
+
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            toast.error("Selecciona una imagen válida");
+            return;
+        }
+
+        const maxSizeInMb = 8;
+        const maxSizeInBytes = maxSizeInMb * 1024 * 1024;
+
+        if (file.size > maxSizeInBytes) {
+            toast.error(`La imagen no debe pesar más de ${maxSizeInMb}MB`);
+            return;
+        }
+
+        setUploading(true);
+        await startUpload([file]);
+    };
+
+    const handleCreateImage = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if (!imageUrl.trim()) {
-            toast.error("La URL de la imagen es obligatoria");
+            toast.error("Primero sube una imagen");
             return;
         }
 
@@ -175,7 +230,7 @@ export default function BusinessGalleryManager() {
 
                         <button
                             type="button"
-                            onClick={() => setIsModalOpen(true)}
+                            onClick={handleOpenModal}
                             className="px-4 py-2.5 rounded-xl bg-purple-600 text-white text-xs font-black hover:bg-purple-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-100"
                         >
                             <Plus size={15} />
@@ -205,7 +260,7 @@ export default function BusinessGalleryManager() {
 
                         <button
                             type="button"
-                            onClick={() => setIsModalOpen(true)}
+                            onClick={handleOpenModal}
                             className="mt-5 px-5 py-3 rounded-2xl bg-purple-600 text-white text-sm font-black hover:bg-purple-700 transition-all flex items-center gap-2"
                         >
                             <Plus size={16} />
@@ -287,7 +342,7 @@ export default function BusinessGalleryManager() {
                                             Agregar imagen
                                         </h3>
                                         <p className="text-xs text-gray-500 mt-0.5">
-                                            Añade una foto para la galería pública.
+                                            Sube una foto para la galería pública.
                                         </p>
                                     </div>
                                 </div>
@@ -295,7 +350,7 @@ export default function BusinessGalleryManager() {
                                 <button
                                     type="button"
                                     onClick={handleCloseModal}
-                                    disabled={saving}
+                                    disabled={saving || uploading}
                                     className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-500 flex items-center justify-center disabled:opacity-50"
                                 >
                                     <X size={17} />
@@ -303,18 +358,58 @@ export default function BusinessGalleryManager() {
                             </div>
 
                             <form onSubmit={handleCreateImage} className="p-5 space-y-4">
-                                <div>
-                                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
-                                        Imagen URL
-                                    </label>
-
+                                <div className="rounded-3xl border border-dashed border-purple-200 bg-purple-50/40 p-5">
                                     <input
-                                        value={imageUrl}
-                                        onChange={(e) => setImageUrl(e.target.value)}
-                                        className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
-                                        placeholder="https://..."
+                                        id="business-gallery-upload"
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        disabled={saving || uploading}
+                                        onChange={handleUploadSelected}
                                     />
+
+                                    <label
+                                        htmlFor="business-gallery-upload"
+                                        className={`flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-3xl border border-purple-100 bg-white px-5 py-8 text-center transition-all ${saving || uploading
+                                                ? "opacity-60 pointer-events-none"
+                                                : "hover:border-purple-300 hover:bg-purple-50/40"
+                                            }`}
+                                    >
+                                        <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mb-4">
+                                            {uploading ? (
+                                                <Loader2 className="animate-spin" size={24} />
+                                            ) : (
+                                                <UploadCloud size={25} />
+                                            )}
+                                        </div>
+
+                                        <p className="text-sm font-black text-gray-900">
+                                            {uploading
+                                                ? "Subiendo imagen..."
+                                                : imageUrl
+                                                    ? "Cambiar imagen"
+                                                    : "Subir imagen"}
+                                        </p>
+
+                                        <p className="text-xs text-gray-400 font-bold mt-1">
+                                            PNG, JPG o WEBP. Máximo 8MB.
+                                        </p>
+                                    </label>
                                 </div>
+
+                                {imageUrl.trim() && (
+                                    <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3">
+                                        <p className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2">
+                                            Vista previa
+                                        </p>
+
+                                        <img
+                                            src={imageUrl}
+                                            alt="Vista previa"
+                                            className="w-full max-h-64 object-cover rounded-xl border border-gray-100"
+                                        />
+                                    </div>
+                                )}
 
                                 <div>
                                     <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
@@ -329,25 +424,11 @@ export default function BusinessGalleryManager() {
                                     />
                                 </div>
 
-                                {imageUrl.trim() && (
-                                    <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3">
-                                        <p className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2">
-                                            Vista previa
-                                        </p>
-
-                                        <img
-                                            src={imageUrl}
-                                            alt="Vista previa"
-                                            className="w-full max-h-56 object-cover rounded-xl border border-gray-100"
-                                        />
-                                    </div>
-                                )}
-
                                 <div className="flex flex-col sm:flex-row gap-2 pt-2">
                                     <button
                                         type="button"
                                         onClick={handleCloseModal}
-                                        disabled={saving}
+                                        disabled={saving || uploading}
                                         className="w-full py-3 rounded-2xl bg-gray-100 text-gray-600 text-sm font-black hover:bg-gray-200 disabled:opacity-50 transition-all"
                                     >
                                         Cancelar
@@ -355,7 +436,7 @@ export default function BusinessGalleryManager() {
 
                                     <button
                                         type="submit"
-                                        disabled={saving}
+                                        disabled={saving || uploading || !imageUrl.trim()}
                                         className="w-full py-3 rounded-2xl bg-purple-600 text-white text-sm font-black hover:bg-purple-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
                                     >
                                         {saving ? (

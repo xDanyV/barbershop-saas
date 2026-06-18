@@ -140,6 +140,29 @@ export const ourFileRouter = {
                 url: file.ufsUrl,
             };
         }),
+    businessGalleryImage: f({
+        image: {
+            maxFileSize: "8MB",
+            maxFileCount: 1,
+        },
+    })
+        .middleware(async ({ req }) => {
+            const auth = await getAuthFromRequest(req);
+
+            assertOwner(auth.role);
+
+            return {
+                userId: auth.userId,
+                role: auth.role,
+                businessId: auth.businessId,
+            };
+        })
+        .onUploadComplete(async ({ metadata, file }) => {
+            return {
+                uploadedBy: metadata.userId,
+                url: file.ufsUrl,
+            };
+        }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;
