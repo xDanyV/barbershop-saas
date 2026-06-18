@@ -1,5 +1,6 @@
 "use client";
 
+import type { ChangeEvent, FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import toast from "react-hot-toast";
@@ -11,8 +12,10 @@ import {
     Newspaper,
     Plus,
     Trash2,
+    UploadCloud,
     X,
 } from "lucide-react";
+import { useUploadThing } from "@/lib/uploadthing";
 
 type BusinessPost = {
     id: string;
@@ -27,8 +30,30 @@ export default function BusinessPostsManager() {
     const [imageUrl, setImageUrl] = useState("");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const { startUpload } = useUploadThing("businessPostImage", {
+        onClientUploadComplete: (res) => {
+            const uploadedUrl = res?.[0]?.serverData?.url ?? res?.[0]?.url;
+
+            if (!uploadedUrl) {
+                toast.error("No se pudo obtener la URL de la imagen");
+                setUploading(false);
+                return;
+            }
+
+            setImageUrl(uploadedUrl);
+            toast.success("Imagen subida. Ahora puedes crear la publicación.");
+            setUploading(false);
+        },
+        onUploadError: (error) => {
+            console.error("Post image upload error:", error);
+            toast.error(error.message || "No se pudo subir la imagen");
+            setUploading(false);
+        },
+    });
 
     const loadPosts = async () => {
         try {
@@ -56,29 +81,60 @@ export default function BusinessPostsManager() {
 
     useEffect(() => {
         const handleEscape = (event: KeyboardEvent) => {
-            if (event.key === "Escape") {
+            if (event.key === "Escape" && !saving && !uploading) {
                 setIsModalOpen(false);
+                resetForm();
             }
         };
 
         window.addEventListener("keydown", handleEscape);
 
         return () => window.removeEventListener("keydown", handleEscape);
-    }, []);
+    }, [saving, uploading]);
 
     const resetForm = () => {
         setContent("");
         setImageUrl("");
+        setUploading(false);
+    };
+
+    const handleOpenModal = () => {
+        resetForm();
+        setIsModalOpen(true);
     };
 
     const handleCloseModal = () => {
-        if (saving) return;
+        if (saving || uploading) return;
 
         setIsModalOpen(false);
         resetForm();
     };
 
-    const handleCreatePost = async (e: React.FormEvent) => {
+    const handleUploadSelected = async (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+
+        event.target.value = "";
+
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            toast.error("Selecciona una imagen válida");
+            return;
+        }
+
+        const maxSizeInMb = 8;
+        const maxSizeInBytes = maxSizeInMb * 1024 * 1024;
+
+        if (file.size > maxSizeInBytes) {
+            toast.error(`La imagen no debe pesar más de ${maxSizeInMb}MB`);
+            return;
+        }
+
+        setUploading(true);
+        await startUpload([file]);
+    };
+
+    const handleCreatePost = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if (content.trim().length < 3) {
@@ -176,7 +232,7 @@ export default function BusinessPostsManager() {
 
                         <button
                             type="button"
-                            onClick={() => setIsModalOpen(true)}
+                            onClick={handleOpenModal}
                             className="px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-black hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
                         >
                             <Plus size={15} />
@@ -206,7 +262,7 @@ export default function BusinessPostsManager() {
 
                         <button
                             type="button"
-                            onClick={() => setIsModalOpen(true)}
+                            onClick={handleOpenModal}
                             className="mt-5 px-5 py-3 rounded-2xl bg-indigo-600 text-white text-sm font-black hover:bg-indigo-700 transition-all flex items-center gap-2"
                         >
                             <Plus size={16} />
@@ -234,15 +290,15 @@ export default function BusinessPostsManager() {
                                                     src={post.imageUrl}
                                                     alt="Publicación"
                                                     className={`w-full object-cover ${isFeatured
-                                                        ? "h-56 md:h-64"
-                                                        : "h-44"
+                                                            ? "h-56 md:h-64"
+                                                            : "h-44"
                                                         }`}
                                                 />
                                             ) : (
                                                 <div
                                                     className={`w-full bg-indigo-50 text-indigo-300 flex items-center justify-center ${isFeatured
-                                                        ? "h-44 md:h-64"
-                                                        : "h-32"
+                                                            ? "h-44 md:h-64"
+                                                            : "h-32"
                                                         }`}
                                                 >
                                                     <Newspaper size={34} />
@@ -323,7 +379,7 @@ export default function BusinessPostsManager() {
                                 <button
                                     type="button"
                                     onClick={handleCloseModal}
-                                    disabled={saving}
+                                    disabled={saving || uploading}
                                     className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-500 flex items-center justify-center disabled:opacity-50"
                                 >
                                     <X size={17} />
@@ -344,31 +400,75 @@ export default function BusinessPostsManager() {
                                     />
                                 </div>
 
-                                <div>
-                                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
-                                        Imagen URL opcional
+                                <div className="rounded-3xl border border-dashed border-indigo-200 bg-indigo-50/40 p-5">
+                                    <input
+                                        id="business-post-upload"
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        disabled={saving || uploading}
+                                        onChange={handleUploadSelected}
+                                    />
+
+                                    <label
+                                        htmlFor="business-post-upload"
+                                        className={`flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-3xl border border-indigo-100 bg-white px-5 py-7 text-center transition-all ${saving || uploading
+                                                ? "opacity-60 pointer-events-none"
+                                                : "hover:border-indigo-300 hover:bg-indigo-50/40"
+                                            }`}
+                                    >
+                                        <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
+                                            {uploading ? (
+                                                <Loader2 className="animate-spin" size={24} />
+                                            ) : (
+                                                <UploadCloud size={25} />
+                                            )}
+                                        </div>
+
+                                        <p className="text-sm font-black text-gray-900">
+                                            {uploading
+                                                ? "Subiendo imagen..."
+                                                : imageUrl
+                                                    ? "Cambiar imagen"
+                                                    : "Subir imagen opcional"}
+                                        </p>
+
+                                        <p className="text-xs text-gray-400 font-bold mt-1">
+                                            PNG, JPG o WEBP. Máximo 8MB.
+                                        </p>
                                     </label>
+                                </div>
 
-                                    <div className="relative mt-2">
-                                        <ImageIcon
-                                            size={16}
-                                            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                                        />
+                                {imageUrl.trim() && (
+                                    <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3">
+                                        <div className="flex items-center justify-between gap-3 mb-2">
+                                            <p className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                                                Vista previa
+                                            </p>
 
-                                        <input
-                                            value={imageUrl}
-                                            onChange={(e) => setImageUrl(e.target.value)}
-                                            className="w-full rounded-2xl border border-gray-200 pl-11 pr-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                                            placeholder="https://..."
+                                            <button
+                                                type="button"
+                                                onClick={() => setImageUrl("")}
+                                                disabled={saving || uploading}
+                                                className="text-xs font-black text-red-400 hover:text-red-600 disabled:opacity-50"
+                                            >
+                                                Quitar imagen
+                                            </button>
+                                        </div>
+
+                                        <img
+                                            src={imageUrl}
+                                            alt="Vista previa"
+                                            className="w-full max-h-64 object-cover rounded-xl border border-gray-100"
                                         />
                                     </div>
-                                </div>
+                                )}
 
                                 <div className="flex flex-col sm:flex-row gap-2 pt-2">
                                     <button
                                         type="button"
                                         onClick={handleCloseModal}
-                                        disabled={saving}
+                                        disabled={saving || uploading}
                                         className="w-full py-3 rounded-2xl bg-gray-100 text-gray-600 text-sm font-black hover:bg-gray-200 disabled:opacity-50 transition-all"
                                     >
                                         Cancelar
@@ -376,7 +476,7 @@ export default function BusinessPostsManager() {
 
                                     <button
                                         type="submit"
-                                        disabled={saving}
+                                        disabled={saving || uploading || content.trim().length < 3}
                                         className="w-full py-3 rounded-2xl bg-indigo-600 text-white text-sm font-black hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
                                     >
                                         {saving ? (
