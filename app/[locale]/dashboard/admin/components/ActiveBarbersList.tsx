@@ -1,18 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
     Ban,
     ImageIcon,
     Mail,
     Phone,
-    Save,
     ShieldCheck,
+    Trash2,
+    UploadCloud,
     UserRound,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { useTranslations } from "next-intl";
+import { useUploadThing } from "@/lib/uploadthing";
 
 type BarberStatus = "PENDING" | "APPROVED" | "REJECTED";
 
@@ -47,8 +49,85 @@ export default function ActiveBarbersList() {
 
     const [barbers, setBarbers] = useState<Barber[]>([]);
     const [loading, setLoading] = useState(true);
-    const [imageDrafts, setImageDrafts] = useState<Record<string, string>>({});
     const [savingImageId, setSavingImageId] = useState<string | null>(null);
+    const [uploadingImageId, setUploadingImageId] = useState<string | null>(null);
+
+    const uploadTargetBarberIdRef = useRef<string | null>(null);
+
+    async function updateProfileImage(barberId: string, imageUrl: string) {
+        setSavingImageId(barberId);
+
+        try {
+            const res = await fetch("/api/admin/barbers", {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    barberId,
+                    profileImageUrl: imageUrl,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                toast.error(data.error ?? "No se pudo guardar la foto");
+                return false;
+            }
+
+            setBarbers((prev) =>
+                prev.map((barber) =>
+                    barber.id === barberId
+                        ? {
+                            ...barber,
+                            profileImageUrl: data.barber.profileImageUrl ?? null,
+                        }
+                        : barber
+                )
+            );
+
+            toast.success(
+                data.barber.profileImageUrl
+                    ? "Foto del barbero actualizada"
+                    : "Foto del barbero eliminada"
+            );
+
+            return true;
+        } catch (error) {
+            console.error("Profile image update error:", error);
+            toast.error("Error de conexión al guardar la foto");
+            return false;
+        } finally {
+            setSavingImageId(null);
+        }
+    }
+
+    const { startUpload, isUploading } = useUploadThing("barberProfileImage", {
+        onClientUploadComplete: async (res) => {
+            const barberId = uploadTargetBarberIdRef.current;
+            const uploadedUrl = res?.[0]?.serverData?.url ?? res?.[0]?.url;
+
+            if (!barberId || !uploadedUrl) {
+                toast.error("No se pudo obtener la URL de la imagen");
+                setUploadingImageId(null);
+                uploadTargetBarberIdRef.current = null;
+                return;
+            }
+
+            await updateProfileImage(barberId, uploadedUrl);
+
+            setUploadingImageId(null);
+            uploadTargetBarberIdRef.current = null;
+        },
+        onUploadError: (error) => {
+            console.error("UploadThing error:", error);
+            toast.error(error.message || "No se pudo subir la imagen");
+
+            setUploadingImageId(null);
+            uploadTargetBarberIdRef.current = null;
+        },
+    });
 
     const fetchManaged = async () => {
         try {
@@ -71,13 +150,6 @@ export default function ActiveBarbersList() {
             }
 
             setBarbers(data);
-
-            const drafts = data.reduce<Record<string, string>>((acc, barber: Barber) => {
-                acc[barber.id] = barber.profileImageUrl ?? "";
-                return acc;
-            }, {});
-
-            setImageDrafts(drafts);
         } catch (err) {
             console.error("Fetch error:", err);
             toast.error(t("errors.connection"));
@@ -172,60 +244,37 @@ export default function ActiveBarbersList() {
         );
     };
 
-    const handleImageDraftChange = (barberId: string, value: string) => {
-        setImageDrafts((prev) => ({
-            ...prev,
-            [barberId]: value,
-        }));
+    const handleUploadSelected = async (
+        barberId: string,
+        event: ChangeEvent<HTMLInputElement>
+    ) => {
+        const file = event.target.files?.[0];
+
+        event.target.value = "";
+
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            toast.error("Selecciona una imagen válida");
+            return;
+        }
+
+        const maxSizeInMb = 4;
+        const maxSizeInBytes = maxSizeInMb * 1024 * 1024;
+
+        if (file.size > maxSizeInBytes) {
+            toast.error(`La imagen no debe pesar más de ${maxSizeInMb}MB`);
+            return;
+        }
+
+        uploadTargetBarberIdRef.current = barberId;
+        setUploadingImageId(barberId);
+
+        await startUpload([file]);
     };
 
-    const handleSaveProfileImage = async (barberId: string) => {
-        const imageUrl = imageDrafts[barberId]?.trim() ?? "";
-
-        setSavingImageId(barberId);
-
-        try {
-            const res = await fetch("/api/admin/barbers", {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    barberId,
-                    profileImageUrl: imageUrl,
-                }),
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                toast.error(data.error ?? "No se pudo guardar la foto");
-                return;
-            }
-
-            setBarbers((prev) =>
-                prev.map((barber) =>
-                    barber.id === barberId
-                        ? {
-                            ...barber,
-                            profileImageUrl: data.barber.profileImageUrl,
-                        }
-                        : barber
-                )
-            );
-
-            setImageDrafts((prev) => ({
-                ...prev,
-                [barberId]: data.barber.profileImageUrl ?? "",
-            }));
-
-            toast.success("Foto del barbero actualizada");
-        } catch (error) {
-            console.error("Profile image update error:", error);
-            toast.error("Error de conexión al guardar la foto");
-        } finally {
-            setSavingImageId(null);
-        }
+    const handleRemoveProfileImage = async (barberId: string) => {
+        await updateProfileImage(barberId, "");
     };
 
     if (loading) {
@@ -250,10 +299,10 @@ export default function ActiveBarbersList() {
                                 const isApproved = barber.status === "APPROVED";
                                 const barberName = barber.user?.name || t("barber.noName");
                                 const initials = getInitials(barberName);
-                                const imageDraft = imageDrafts[barber.id] ?? "";
-                                const hasImageChanged =
-                                    imageDraft.trim() !== (barber.profileImageUrl ?? "");
                                 const isSavingImage = savingImageId === barber.id;
+                                const isUploadingThisImage = uploadingImageId === barber.id;
+                                const isImageActionDisabled =
+                                    isSavingImage || isUploading || isUploadingThisImage;
 
                                 return (
                                     <motion.div
@@ -373,38 +422,60 @@ export default function ActiveBarbersList() {
                                                             Foto pública del barbero
                                                         </p>
                                                         <p className="text-[11px] text-gray-400 font-bold">
-                                                            Pega una URL de imagen. Déjalo vacío para quitarla.
+                                                            Sube una imagen desde tu computadora. Máximo 4MB.
                                                         </p>
                                                     </div>
                                                 </div>
 
                                                 <div className="flex flex-col md:flex-row gap-2">
                                                     <input
-                                                        type="url"
-                                                        value={imageDraft}
-                                                        onChange={(e) =>
-                                                            handleImageDraftChange(
-                                                                barber.id,
-                                                                e.target.value
-                                                            )
+                                                        id={`barber-profile-upload-${barber.id}`}
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        disabled={isImageActionDisabled}
+                                                        onChange={(event) =>
+                                                            handleUploadSelected(barber.id, event)
                                                         }
-                                                        placeholder="https://ejemplo.com/foto.jpg"
-                                                        className="flex-1 w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
                                                     />
 
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleSaveProfileImage(barber.id)}
-                                                        disabled={!hasImageChanged || isSavingImage}
-                                                        className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm shadow-indigo-100 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                                                    <label
+                                                        htmlFor={`barber-profile-upload-${barber.id}`}
+                                                        className={`inline-flex w-full md:w-auto items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm shadow-indigo-100 transition-all ${isImageActionDisabled
+                                                                ? "opacity-50 pointer-events-none cursor-not-allowed"
+                                                                : "hover:bg-indigo-500 cursor-pointer"
+                                                            }`}
                                                     >
-                                                        {isSavingImage ? (
+                                                        {isUploadingThisImage || isSavingImage ? (
                                                             <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
                                                         ) : (
-                                                            <Save size={15} />
+                                                            <UploadCloud size={16} />
                                                         )}
-                                                        Guardar
-                                                    </button>
+
+                                                        {isUploadingThisImage
+                                                            ? "Subiendo..."
+                                                            : barber.profileImageUrl
+                                                                ? "Cambiar foto"
+                                                                : "Subir foto"}
+                                                    </label>
+
+                                                    {barber.profileImageUrl && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                handleRemoveProfileImage(barber.id)
+                                                            }
+                                                            disabled={isImageActionDisabled}
+                                                            className="inline-flex w-full md:w-auto items-center justify-center gap-2 rounded-2xl bg-white border border-red-100 px-5 py-3 text-sm font-black text-red-500 hover:bg-red-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                                                        >
+                                                            {isSavingImage ? (
+                                                                <span className="w-4 h-4 border-2 border-red-200 border-t-red-500 rounded-full animate-spin" />
+                                                            ) : (
+                                                                <Trash2 size={15} />
+                                                            )}
+                                                            Quitar
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
