@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { validateAppointmentDate } from "@/lib/validations/appointment.validation";
 import { AppointmentStatus } from "@prisma/client/edge";
+import { canBusinessAcceptBookings } from "@/lib/billing/status";
 
 export async function createAppointment(data: {
     userId: string;
@@ -20,11 +21,25 @@ export async function createAppointment(data: {
             id: true,
             active: true,
             businessId: true,
+            business: {
+                select: {
+                    active: true,
+                    billingStatus: true,
+                },
+            },
         },
     });
 
     if (!barber || !barber.active) {
         throw new Error("Barber not available");
+    }
+
+    if (!barber.business.active) {
+        throw new Error("Business is not active");
+    }
+
+    if (!canBusinessAcceptBookings(barber.business.billingStatus)) {
+        throw new Error("Business is not accepting bookings at this time");
     }
 
     const service = await prisma.service.findFirst({

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { canBusinessAcceptBookings } from "@/lib/billing/status";
 import { notFound } from "next/navigation";
 import BusinessBookingClient from "./BusinessBookingClient";
 
@@ -20,6 +21,7 @@ export default async function BusinessBookPage({ params }: BookPageProps) {
             slug: true,
             description: true,
             active: true,
+            billingStatus: true,
             settings: {
                 select: {
                     isServiceActive: true,
@@ -51,6 +53,30 @@ export default async function BusinessBookPage({ params }: BookPageProps) {
 
     if (!business || !business.active) {
         notFound();
+    }
+
+    const canAcceptBookings = canBusinessAcceptBookings(business.billingStatus);
+
+    if (!canAcceptBookings) {
+        return (
+            <main className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center px-4">
+                <div className="max-w-md bg-white/5 border border-white/10 rounded-3xl p-8 text-center">
+                    <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-300 flex items-center justify-center mx-auto mb-5">
+                        <span className="text-2xl">!</span>
+                    </div>
+
+                    <h1 className="text-2xl font-black">{business.name}</h1>
+
+                    <p className="text-gray-400 mt-4">
+                        Las reservas de este negocio están pausadas temporalmente.
+                    </p>
+
+                    <p className="text-gray-500 text-sm mt-3">
+                        Por favor, intenta más tarde o contacta directamente a la barbería.
+                    </p>
+                </div>
+            </main>
+        );
     }
 
     if (business.settings && !business.settings.isServiceActive) {
