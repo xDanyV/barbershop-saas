@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { UserPlus, Users, Settings, ShieldAlert } from "lucide-react";
+import { UserPlus, Users, Settings, ShieldAlert, CreditCard } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
 
@@ -10,12 +10,16 @@ import ActiveBarbersList from "./components/ActiveBarbersList";
 import CustomersList from "./components/CustomersList";
 import SystemSettings from "./components/SystemSettings";
 
+import BusinessBillingManager from "./components/BusinessBillingManager";
+
+
 // Definimos las pestañas solo con sus identificadores e iconos
 const TABS = [
     { id: "pending", icon: UserPlus },
     { id: "barbers", icon: Users },
     { id: "customers", icon: ShieldAlert },
     { id: "settings", icon: Settings },
+    { id: "billing", icon: CreditCard },
 ];
 
 export default function AdminDashboard() {
@@ -84,6 +88,7 @@ export default function AdminDashboard() {
                         {activeTab === "barbers" && <ActiveBarbersList />}
                         {activeTab === "customers" && <CustomersList />}
                         {activeTab === "settings" && <SystemSettings />}
+                        {activeTab === "billing" && <BusinessBillingManager />}
                     </motion.div>
                 </AnimatePresence>
             </div>

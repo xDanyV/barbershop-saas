@@ -539,7 +539,8 @@
             "pending": "Aceptar Barberos",
             "barbers": "Administrar Barberos",
             "customers": "Gestionar Clientes",
-            "settings": "Configuración Global"
+            "settings": "Configuración Global",
+            "billing": "Suscripciones"
         }
     },
     "BannedCustomerScreen": {

@@ -539,7 +539,8 @@
             "pending": "Pending Barbers",
             "barbers": "Manage Barbers",
             "customers": "Manage Customers",
-            "settings": "Global Settings"
+            "settings": "Global Settings",
+            "billing": "Subscriptions"
         }
     },
     "BannedCustomerScreen": {
