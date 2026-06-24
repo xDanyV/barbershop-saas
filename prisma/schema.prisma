@@ -48,11 +48,48 @@ model Business {
   gallery      BusinessGallery[]
   posts        BusinessPost[]
 
+  billingStatus      BusinessBillingStatus @default(ACTIVE)
+  billingPlan        BusinessPlanType      @default(BASIC)
+  subscriptionEndsAt DateTime?
+
+  subscription BusinessSubscription?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([ownerId])
   @@index([slug])
+  @@index([billingStatus])
+  @@index([billingPlan])
+}
+
+model BusinessSubscription {
+  id         String   @id @default(uuid())
+  businessId String   @unique
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  plan          BusinessPlanType      @default(BASIC)
+  billingStatus BusinessBillingStatus @default(ACTIVE)
+  provider      SubscriptionProvider  @default(MANUAL)
+
+  setupFeeCents     Int    @default(0)
+  monthlyPriceCents Int    @default(15000)
+  currency          String @default("MXN")
+
+  providerCustomerId     String?
+  providerSubscriptionId String?
+  providerPriceId        String?
+
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  canceledAt         DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([billingStatus])
+  @@index([plan])
+  @@index([provider])
 }
 
 model BusinessSettings {
@@ -110,10 +147,10 @@ model Barber {
   active    Boolean      @default(true)
   createdAt DateTime     @default(now())
 
-  appointments Appointment[]
-  availability Availability[]
-  exceptions   BarberException[]
-  services     Service[]
+  appointments    Appointment[]
+  availability    Availability[]
+  exceptions      BarberException[]
+  services        Service[]
   profileImageUrl String?
 
   @@index([businessId])
@@ -208,4 +245,23 @@ model BusinessPost {
   updatedAt DateTime @updatedAt
 
   @@index([businessId])
+}
+
+enum BusinessBillingStatus {
+  PENDING_PAYMENT
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  CANCELED
+}
+
+enum BusinessPlanType {
+  FOUNDER
+  BASIC
+}
+
+enum SubscriptionProvider {
+  MANUAL
+  STRIPE
+  MERCADO_PAGO
 }
