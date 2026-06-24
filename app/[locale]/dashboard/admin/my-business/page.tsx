@@ -6,6 +6,8 @@ import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { ExternalLink, Loader2, Store } from "lucide-react";
 import { usePathname } from "next/navigation";
+import type { BusinessBillingStatus, BusinessPlanType } from "@prisma/client";
+
 import BusinessProfileForm, {
     type BusinessForm,
 } from "./_components/BusinessProfileForm";
@@ -14,6 +16,7 @@ import BusinessGalleryManager from "./_components/BusinessGalleryManager";
 import MyBusinessTabs, {
     type BusinessTab,
 } from "./_components/MyBusinessTabs";
+import BusinessBillingCard from "./_components/BusinessBillingCard";
 
 type BusinessSettings = {
     isServiceActive: boolean;
@@ -29,6 +32,9 @@ type Business = {
     address: string | null;
     logoUrl: string | null;
     coverUrl: string | null;
+    billingStatus: BusinessBillingStatus;
+    billingPlan: BusinessPlanType;
+    subscriptionEndsAt: string | null;
     settings: BusinessSettings | null;
 };
 
@@ -78,6 +84,7 @@ export default function MyBusinessPage() {
                 }
 
                 setBusiness(data);
+
                 setForm({
                     name: data.name ?? "",
                     description: data.description ?? "",
@@ -223,6 +230,12 @@ export default function MyBusinessPage() {
                         </a>
                     </div>
                 </motion.div>
+
+                <BusinessBillingCard
+                    billingStatus={business.billingStatus}
+                    billingPlan={business.billingPlan}
+                    subscriptionEndsAt={business.subscriptionEndsAt}
+                />
 
                 <MyBusinessTabs
                     activeTab={activeTab}
