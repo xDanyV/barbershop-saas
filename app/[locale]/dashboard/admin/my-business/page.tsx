@@ -2,11 +2,12 @@
 
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { ExternalLink, Loader2, Store } from "lucide-react";
+import { ExternalLink, Loader2, Store, QrCode, X, Download } from "lucide-react";
 import { usePathname } from "next/navigation";
 import type { BusinessBillingStatus, BusinessPlanType } from "@prisma/client";
+import { QRCodeCanvas } from "qrcode.react";
 
 import BusinessProfileForm, {
     type BusinessForm,
@@ -56,6 +57,8 @@ export default function MyBusinessPage() {
     const [activeTab, setActiveTab] = useState<BusinessTab>("profile");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+
+    const [showQrModal, setShowQrModal] = useState(false);
 
     const locale = useMemo(() => {
         const match = pathname.match(/^\/(en|es)/);
@@ -124,6 +127,24 @@ export default function MyBusinessPage() {
         } catch {
             toast.error("No se pudo copiar el link");
         }
+    };
+
+    const handleDownloadQr = () => {
+        const canvas = document.getElementById("business-qr-code") as HTMLCanvasElement;
+        if (!canvas) return;
+
+        const pngUrl = canvas
+            .toDataURL("image/png")
+            .replace("image/png", "image/octet-stream");
+
+        const downloadLink = document.createElement("a");
+        downloadLink.href = pngUrl;
+        downloadLink.download = `QR-${business?.slug || "barberia"}.png`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+
+        toast.success("Código QR descargado exitosamente");
     };
 
     const handleSave = async (e: FormEvent<HTMLFormElement>) => {
@@ -219,6 +240,14 @@ export default function MyBusinessPage() {
                             Copiar link público
                         </button>
 
+                        <button
+                            type="button"
+                            onClick={() => setShowQrModal(true)}
+                            className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 text-xs font-black hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                        >
+                            Código QR
+                        </button>
+
                         <a
                             href={publicUrl}
                             target="_blank"
@@ -263,6 +292,59 @@ export default function MyBusinessPage() {
                     </div>
                 )}
             </div>
+
+            <AnimatePresence>
+                {showQrModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl text-center relative border border-gray-100"
+                        >
+                            <button
+                                onClick={() => setShowQrModal(false)}
+                                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-all"
+                            >
+                                <X size={18} />
+                            </button>
+
+                            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-4">
+                                <QrCode size={24} />
+                            </div>
+
+                            <h3 className="text-xl font-black text-gray-900">
+                                Código QR de tu negocio
+                            </h3>
+                            <p className="text-xs text-gray-500 mt-1 mb-6">
+                                Escanea este código para ir directo a la página de reservas de <strong className="text-gray-800">{business.name}</strong>.
+                            </p>
+
+                            {/* Contenedor del Canvas QR */}
+                            <div className="bg-white p-4 rounded-2xl border-2 border-dashed border-gray-200 inline-block mb-6 shadow-sm">
+                                <QRCodeCanvas
+                                    id="business-qr-code"
+                                    value={publicUrl}
+                                    size={220} // Tamaño ideal en pantalla
+                                    bgColor={"#ffffff"}
+                                    fgColor={"#000000"}
+                                    level={"Q"} // Nivel de corrección de errores (Q es alto, ideal si luego quieres ponerle un logo al centro)
+                                    marginSize={2} // Margen blanco alrededor para que los celulares lo lean bien
+                                />
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={handleDownloadQr}
+                                className="w-full py-3 px-4 rounded-xl bg-indigo-600 text-white text-sm font-black hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20"
+                            >
+                                <Download size={16} />
+                                Descargar imagen (PNG)
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </main>
     );
 }
