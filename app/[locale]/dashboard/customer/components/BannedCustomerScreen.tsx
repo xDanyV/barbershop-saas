@@ -1,6 +1,6 @@
 "use client";
 
-import { Ban, Mail, LogOut, Home } from "lucide-react";
+import { Ban, LogOut, Home } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useRouter } from "../../../../../i18n/routing";

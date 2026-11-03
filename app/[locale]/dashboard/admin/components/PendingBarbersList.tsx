@@ -1,17 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Check, X, User, Mail, Phone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
 
+type PendingBarber = {
+    id: string;
+    createdAt: string;
+    profileImageUrl: string | null;
+    user: { name: string | null; email: string; phone: string };
+};
+
 export default function PendingBarbersList() {
     const t = useTranslations("PendingBarbersList");
-    const [barbers, setBarbers] = useState<any[]>([]);
+    const [barbers, setBarbers] = useState<PendingBarber[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchPending = async () => {
+    const fetchPending = useCallback(async () => {
         try {
             setLoading(true);
             const res = await fetch("/api/admin/barbers");
@@ -36,11 +43,11 @@ export default function PendingBarbersList() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [t]);
 
     useEffect(() => {
         fetchPending();
-    }, []);
+    }, [fetchPending]);
 
     const handleAction = async (barberId: string, status: string) => {
         try {
@@ -71,7 +78,7 @@ export default function PendingBarbersList() {
                         {Array.isArray(barbers) && barbers.length === 0 ? (
                             <p className="text-center py-10 text-gray-400 font-bold italic">{t("empty")}</p>
                         ) : (
-                            Array.isArray(barbers) && barbers.map((barber: any) => (
+                            Array.isArray(barbers) && barbers.map((barber) => (
                                 <motion.div
                                     key={barber.id}
                                     layout

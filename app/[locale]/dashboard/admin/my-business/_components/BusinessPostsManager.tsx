@@ -6,7 +6,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import toast from "react-hot-toast";
 import {
     CalendarDays,
-    ImageIcon,
     Loader2,
     Megaphone,
     Newspaper,
