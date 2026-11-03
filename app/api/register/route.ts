@@ -3,6 +3,14 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { BarberStatus, Role } from "@prisma/client";
 
+const MIN_PASSWORD_LENGTH = 8;
+// bcrypt solo usa los primeros 72 bytes
+const MAX_PASSWORD_LENGTH = 72;
+
+function getBootstrapAdminEmail() {
+    return process.env.ADMIN_BOOTSTRAP_EMAIL?.trim().toLowerCase() || null;
+}
+
 function createSlug(value: string) {
     return value
         .toLowerCase()
@@ -45,9 +53,16 @@ export async function POST(req: Request) {
         const normalizedPhone =
             typeof phone === "string" ? phone.trim() : "";
 
-        if (!normalizedEmail || !password) {
+        if (!normalizedEmail || !password || typeof password !== "string") {
             return NextResponse.json(
                 { error: "Email and password are required" },
+                { status: 400 }
+            );
+        }
+
+        if (password.length < MIN_PASSWORD_LENGTH || password.length > MAX_PASSWORD_LENGTH) {
+            return NextResponse.json(
+                { error: `Password must be between ${MIN_PASSWORD_LENGTH} and ${MAX_PASSWORD_LENGTH} characters` },
                 { status: 400 }
             );
         }
@@ -93,14 +108,17 @@ export async function POST(req: Request) {
             }
         }
 
-        const userCount = await prisma.user.count();
-        const isFirstUser = userCount === 0;
+        // El administrador de la plataforma solo se crea a partir de ADMIN_BOOTSTRAP_EMAIL,
+        // y únicamente mientras no exista ningún ADMIN
+        const isBootstrapAdmin =
+            normalizedEmail === getBootstrapAdminEmail() &&
+            (await prisma.user.count({ where: { role: Role.ADMIN } })) === 0;
 
         const requestedRole = role === Role.BARBER ? Role.BARBER : Role.CUSTOMER;
 
         let barberBusiness: { id: string; name: string } | null = null;
 
-        if (!isFirstUser && requestedRole === Role.BARBER) {
+        if (!isBootstrapAdmin && requestedRole === Role.BARBER) {
             if (!businessSlug || typeof businessSlug !== "string") {
                 return NextResponse.json(
                     { error: "Business slug is required for barber accounts." },
@@ -141,7 +159,7 @@ export async function POST(req: Request) {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const finalRole = isFirstUser ? Role.ADMIN : requestedRole;
+        const finalRole = isBootstrapAdmin ? Role.ADMIN : requestedRole;
 
         await prisma.$transaction(async (tx) => {
             const newUser = await tx.user.create({

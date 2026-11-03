@@ -1,13 +1,19 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { jwtVerify } from "jose";
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
+import { prisma } from "@/lib/prisma";
+import {
+  ACTIVE_BUSINESS_COOKIE,
+  SESSION_COOKIE,
+  getHomePathForRole,
+  getSessionFromToken,
+} from "@/lib/auth/session";
 
 // Inicializamos el middleware de idiomas
 const intlMiddleware = createMiddleware(routing);
 
-// Cabeceras de identidad que solo el proxy puede definir a partir del JWT
+// Cabeceras de identidad que solo el proxy puede definir a partir de la sesión
 const IDENTITY_HEADERS = [
   "x-user-id",
   "x-user-role",
@@ -15,6 +21,8 @@ const IDENTITY_HEADERS = [
   "x-barber-status",
   "x-business-id",
 ];
+
+const MAX_ACTIVE_APPOINTMENTS = 2;
 
 export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
@@ -43,105 +51,95 @@ export async function proxy(request: NextRequest) {
       : intlMiddleware(request);
   }
 
-  // --- INICIO DE LÓGICA DE PROTECCIÓN (AUTH & JWT) ---
-  const token = request.cookies.get("token")?.value;
+  // --- INICIO DE LÓGICA DE PROTECCIÓN (SESIÓN) ---
+  const unauthorized = () => {
+    const response = isProtectedApi
+      ? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      : NextResponse.redirect(new URL(`${localePrefix}/login`, request.url));
 
-  if (!token) {
-    if (isProtectedApi) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Token inválido, expirado o de un usuario eliminado
+    if (request.cookies.has(SESSION_COOKIE)) {
+      response.cookies.delete(SESSION_COOKIE);
     }
-    return NextResponse.redirect(new URL(`${localePrefix}/login`, request.url));
-  }
 
-  const jwtSecret = process.env.JWT_SECRET;
-  if (!jwtSecret) {
-    console.error("JWT_SECRET not defined");
+    return response;
+  };
+
+  let session;
+
+  try {
+    // Rol, estado de barbero y negocio se leen de la base en cada petición,
+    // así un ban, una aprobación o un cambio de rol aplican sin volver a iniciar sesión
+    session = await getSessionFromToken(
+      request.cookies.get(SESSION_COOKIE)?.value,
+      request.cookies.get(ACTIVE_BUSINESS_COOKIE)?.value
+    );
+  } catch (error) {
+    console.error("Proxy session error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 
-  try {
-    const secret = new TextEncoder().encode(jwtSecret);
-    const { payload } = await jwtVerify(token, secret);
+  if (!session) {
+    return unauthorized();
+  }
 
-    if (!payload.userId || !payload.role) {
-      return NextResponse.json({ error: "Invalid token payload" }, { status: 401 });
+  const redirectTo = (path: string) =>
+    NextResponse.redirect(new URL(`${localePrefix}${path}`, request.url));
+
+  const isBookingRoute =
+    pathnameWithoutLocale === "/dashboard/customer/barbers" ||
+    (pathnameWithoutLocale === "/dashboard/customer" && searchParams.has("barberId"));
+
+  if (isBookingRoute && session.role === "CUSTOMER") {
+    const activeAppointments = await prisma.appointment.count({
+      where: {
+        userId: session.userId,
+        status: { in: ["PENDING", "CONFIRMED"] },
+        date: { gt: new Date() },
+      },
+    });
+
+    if (activeAppointments >= MAX_ACTIVE_APPOINTMENTS) {
+      const responseRedirect = redirectTo("/dashboard/customer/home");
+      responseRedirect.headers.set('Cache-Control', 'no-store, max-age=0');
+      return responseRedirect;
     }
+  }
 
-    const isBookingRoute =
-      pathnameWithoutLocale === "/dashboard/customer/barbers" ||
-      (pathnameWithoutLocale === "/dashboard/customer" && searchParams.has("barberId"));
+  if (pathnameWithoutLocale.startsWith("/dashboard/barber")) {
+    const canAccess =
+      session.role === "BARBER" ||
+      session.role === "ADMIN" ||
+      session.role === "OWNER";
 
-    if (isBookingRoute && payload.role === "CUSTOMER") {
-      try {
-        const fetchResponse = await fetch(`${request.nextUrl.origin}/api/protected/appointments/user`, {
-          headers: { Cookie: `token=${token}` },
-        });
-        const data = await fetchResponse.json();
-        if (Array.isArray(data)) {
-          const activeAppointments = data.filter(
-            (a) => a.status === "PENDING" || a.status === "CONFIRMED"
-          );
-          if (activeAppointments.length >= 2) {
-            const responseRedirect = NextResponse.redirect(new URL(`${localePrefix}/dashboard/customer/home`, request.url));
-            responseRedirect.headers.set('Cache-Control', 'no-store, max-age=0');
-            return responseRedirect;
-          }
-        }
-      } catch (err) {
-        console.error("Error checking active appointments:", err);
-      }
+    if (!canAccess) {
+      return redirectTo(getHomePathForRole(session.role));
     }
+  }
 
-    if (pathnameWithoutLocale.startsWith("/dashboard/barber")) {
-      const canAccess =
-        payload.role === "BARBER" ||
-        payload.role === "ADMIN" ||
-        payload.role === "OWNER";
+  if (pathnameWithoutLocale.startsWith("/dashboard/customer") && session.role !== "CUSTOMER") {
+    return redirectTo(getHomePathForRole(session.role));
+  }
 
-      if (!canAccess) {
-        return NextResponse.redirect(new URL(`${localePrefix}/dashboard/customer/home`, request.url));
-      }
+  if (pathnameWithoutLocale.startsWith("/dashboard/admin")) {
+    const canAccess = session.role === "ADMIN" || session.role === "OWNER";
+
+    if (!canAccess) {
+      return redirectTo(getHomePathForRole(session.role));
     }
+  }
 
-    if (pathnameWithoutLocale.startsWith("/dashboard/customer") && payload.role !== "CUSTOMER") {
-      if (payload.role === "OWNER" || payload.role === "ADMIN") {
-        return NextResponse.redirect(new URL(`${localePrefix}/dashboard/admin`, request.url));
-      }
+  request.headers.set("x-user-id", session.userId);
+  request.headers.set("x-user-role", session.role);
 
-      return NextResponse.redirect(new URL(`${localePrefix}/dashboard/barber`, request.url));
-    }
+  if (session.barberId) request.headers.set("x-barber-id", session.barberId);
+  if (session.barberStatus) request.headers.set("x-barber-status", session.barberStatus);
+  if (session.businessId) request.headers.set("x-business-id", session.businessId);
 
-    if (pathnameWithoutLocale.startsWith("/dashboard/admin")) {
-      const canAccess = payload.role === "ADMIN" || payload.role === "OWNER";
-
-      if (!canAccess) {
-        if (payload.role === "CUSTOMER") {
-          return NextResponse.redirect(new URL(`${localePrefix}/dashboard/customer/home`, request.url));
-        }
-
-        return NextResponse.redirect(new URL(`${localePrefix}/dashboard/barber`, request.url));
-      }
-    }
-
-    request.headers.set("x-user-id", String(payload.userId));
-    request.headers.set("x-user-role", String(payload.role));
-
-    if (payload.barberId) request.headers.set("x-barber-id", String(payload.barberId));
-    if (payload.barberStatus) request.headers.set("x-barber-status", String(payload.barberStatus));
-    if (payload.businessId) request.headers.set("x-business-id", String(payload.businessId));
-
-    if (isProtectedApi) {
-      return NextResponse.next({ request: { headers: request.headers } });
-    } else {
-      return intlMiddleware(request);
-    }
-
-  } catch (error) {
-    console.error("Middleware JWT Error:", error);
-    if (isProtectedApi) {
-      return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 });
-    }
-    return NextResponse.redirect(new URL(`${localePrefix}/login`, request.url));
+  if (isProtectedApi) {
+    return NextResponse.next({ request: { headers: request.headers } });
+  } else {
+    return intlMiddleware(request);
   }
 }
 
