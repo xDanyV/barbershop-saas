@@ -56,11 +56,14 @@ describe("registerSchema", () => {
             email: "  JUAN@Correo.com ",
             phone: "6641234567",
             password: "12345678",
+            acceptTerms: true,
         });
 
         expect(parsed.email).toBe("juan@correo.com");
         expect(parsed.role).toBe("CUSTOMER");
         expect(registerSchema.safeParse({ ...parsed, password: "123" }).success).toBe(false);
+        expect(registerSchema.safeParse({ ...parsed, acceptTerms: false }).success).toBe(false);
+        expect(registerSchema.safeParse({ ...parsed, acceptTerms: undefined }).success).toBe(false);
     });
 });
 

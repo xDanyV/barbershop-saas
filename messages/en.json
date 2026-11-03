@@ -16,7 +16,8 @@
             "confirmPassword": "Confirm Password",
             "businessSlug": "Business slug or public link",
             "businessSlugHintBefore": "You can enter only the slug, like",
-            "businessSlugHintAfter": ", or paste the full public business link."
+            "businessSlugHintAfter": ", or paste the full public business link.",
+            "acceptTerms": "I accept the <terms>Terms and Conditions</terms> and the <privacy>Privacy Notice</privacy>."
         },
         "buttons": {
             "creating": "Setting up your workspace...",
@@ -33,7 +34,8 @@
             "passwordMismatch": "Passwords do not match",
             "passwordLength": "Password must be at least 8 characters long",
             "generic": "Something went wrong",
-            "connection": "Connection error. Please check your internet and try again."
+            "connection": "Connection error. Please check your internet and try again.",
+            "acceptTerms": "To create your account you must accept the Terms and the Privacy Notice."
         },
         "toasts": {
             "creating": "Creating your account...",
@@ -74,7 +76,8 @@
             "catalog": "Catalog",
             "book": "Book",
             "myBusiness": "My business",
-            "createBusiness": "Create business"
+            "createBusiness": "Create business",
+            "account": "My account"
         },
         "logout": "Log out",
         "errors": {
@@ -775,10 +778,74 @@
                 "how": "How it works",
                 "pricing": "Pricing",
                 "faq": "Questions",
-                "login": "Sign in"
+                "login": "Sign in",
+                "privacy": "Privacy",
+                "terms": "Terms"
             },
             "rights": "© {year}",
             "credits": "Photos"
         }
+    },
+    "Legal": {
+        "back": "Home",
+        "updated": "Last updated: {date}",
+        "contents": "Contents",
+        "draft": "Draft: the responsible party details (name, address and contact email) are missing. Fill them in before publishing the site.",
+        "other": {
+            "privacy": "Read the Terms and Conditions",
+            "terms": "Read the Privacy Notice"
+        },
+        "placeholders": {
+            "name": "[responsible party name]",
+            "address": "[address]",
+            "email": "[contact email]"
+        }
+    },
+    "TermsPrompt": {
+        "title": "We updated our terms",
+        "text": "To keep using your account, please review and accept the <terms>Terms and Conditions</terms> and the <privacy>Privacy Notice</privacy>.",
+        "accept": "I accept",
+        "logout": "Sign out",
+        "error": "We could not save your acceptance. Please try again."
+    },
+    "Account": {
+        "title": "My account",
+        "subtitle": "Your details, your password and deleting your account.",
+        "profile": {
+            "title": "Personal details",
+            "name": "Name",
+            "email": "Email",
+            "emailHint": "Your email cannot be changed here.",
+            "phone": "Phone",
+            "save": "Save changes",
+            "saving": "Saving...",
+            "saved": "Details saved",
+            "phoneTaken": "That phone number is already used by another account."
+        },
+        "password": {
+            "title": "Password",
+            "current": "Current password",
+            "next": "New password",
+            "hint": "At least 8 characters.",
+            "save": "Change password",
+            "saving": "Changing...",
+            "saved": "Password updated",
+            "wrong": "Your current password is not correct."
+        },
+        "danger": {
+            "title": "Delete account",
+            "text": "We erase your name, email and phone and cancel your upcoming appointments. Barbershops keep their history without data that identifies you. This cannot be undone.",
+            "confirmLabel": "Type your password to confirm",
+            "button": "Delete my account",
+            "deleting": "Deleting...",
+            "businessAccounts": "Barber and business owner accounts are deleted with our help so your clients' appointments are not affected. Write to us and we will do it with you."
+        },
+        "legal": {
+            "title": "Documents",
+            "privacy": "Privacy Notice",
+            "terms": "Terms and Conditions",
+            "accepted": "You accepted them on {date}."
+        },
+        "error": "Something went wrong. Please try again."
     }
 }

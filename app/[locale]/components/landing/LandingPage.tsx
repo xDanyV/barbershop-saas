@@ -258,6 +258,8 @@ export default async function LandingPage({ locale }: { locale: string }) {
                                     <a href="#precio" className="hover:underline">{t("footer.links.pricing")}</a>
                                     <a href="#preguntas" className="hover:underline">{t("footer.links.faq")}</a>
                                     <Link href="/login" className="hover:underline">{t("footer.links.login")}</Link>
+                                    <Link href="/privacy" className="hover:underline">{t("footer.links.privacy")}</Link>
+                                    <Link href="/terms" className="hover:underline">{t("footer.links.terms")}</Link>
                                 </nav>
                                 <p className="sm:text-right">{t("footer.rights", { year })}</p>
                             </div>

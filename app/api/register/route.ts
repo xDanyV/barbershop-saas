@@ -6,6 +6,7 @@ import { AppError, errorResponse } from "@/lib/errors";
 import { parseJsonBody } from "@/lib/api/validation";
 import { registerSchema } from "@/lib/validations/schemas";
 import { extractBusinessSlug } from "@/lib/slug";
+import { TERMS_VERSION } from "@/lib/legal";
 
 function getBootstrapAdminEmail() {
     return process.env.ADMIN_BOOTSTRAP_EMAIL?.trim().toLowerCase() || null;
@@ -67,6 +68,8 @@ export async function POST(req: Request) {
                 phone,
                 password: hashedPassword,
                 role: finalRole,
+                termsVersion: TERMS_VERSION,
+                termsAcceptedAt: new Date(),
                 ...(finalRole === Role.BARBER && barberBusinessId
                     ? {
                         barberProfile: {

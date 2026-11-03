@@ -10,6 +10,7 @@ import {
     BookOpen,
     ShieldCheck,
     Store,
+    UserRound,
 } from "lucide-react";
 import BrandMark from "@/[locale]/components/BrandMark";
 import { useTranslations } from "next-intl";
@@ -44,6 +45,9 @@ export default function DashboardNavbar({ role }: { role: string }) {
             { name: t("menu.createBusiness"), path: "/dashboard/business/new", icon: Store },
         ];
     }
+
+    // Todos los roles pueden editar sus datos, cambiar la contraseña o eliminar su cuenta
+    menuItems.push({ name: t("menu.account"), path: "/dashboard/account", icon: UserRound });
 
     const getHomePath = () => {
         if (role === "ADMIN" || role === "OWNER") {

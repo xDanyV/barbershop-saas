@@ -16,7 +16,8 @@
             "confirmPassword": "Confirmar Contraseña",
             "businessSlug": "Slug o enlace público de la barbería",
             "businessSlugHintBefore": "Puedes escribir solo el slug, por ejemplo",
-            "businessSlugHintAfter": ", o pegar el enlace público completo de la barbería."
+            "businessSlugHintAfter": ", o pegar el enlace público completo de la barbería.",
+            "acceptTerms": "Acepto los <terms>Términos y Condiciones</terms> y el <privacy>Aviso de Privacidad</privacy>."
         },
         "buttons": {
             "creating": "Configurando tu espacio...",
@@ -33,7 +34,8 @@
             "passwordMismatch": "Las contraseñas no coinciden",
             "passwordLength": "La contraseña debe tener al menos 8 caracteres",
             "generic": "Algo salió mal",
-            "connection": "Error de conexión. Revisa tu internet e inténtalo de nuevo."
+            "connection": "Error de conexión. Revisa tu internet e inténtalo de nuevo.",
+            "acceptTerms": "Para crear tu cuenta debes aceptar los Términos y el Aviso de Privacidad."
         },
         "toasts": {
             "creating": "Creando tu cuenta...",
@@ -74,7 +76,8 @@
             "catalog": "Catálogo",
             "book": "Reservar",
             "myBusiness": "Mi negocio",
-            "createBusiness": "Crear negocio"
+            "createBusiness": "Crear negocio",
+            "account": "Mi cuenta"
         },
         "logout": "Cerrar Sesión",
         "errors": {
@@ -775,10 +778,74 @@
                 "how": "Cómo funciona",
                 "pricing": "Precio",
                 "faq": "Preguntas",
-                "login": "Entrar"
+                "login": "Entrar",
+                "privacy": "Privacidad",
+                "terms": "Términos"
             },
             "rights": "© {year}",
             "credits": "Fotos"
         }
+    },
+    "Legal": {
+        "back": "Inicio",
+        "updated": "Última actualización: {date}",
+        "contents": "Contenido",
+        "draft": "Borrador: faltan los datos del responsable (nombre, domicilio y correo de contacto). Complétalos antes de publicar el sitio.",
+        "other": {
+            "privacy": "Ver los Términos y Condiciones",
+            "terms": "Ver el Aviso de Privacidad"
+        },
+        "placeholders": {
+            "name": "[nombre del responsable]",
+            "address": "[domicilio]",
+            "email": "[correo de contacto]"
+        }
+    },
+    "TermsPrompt": {
+        "title": "Actualizamos nuestros términos",
+        "text": "Para seguir usando tu cuenta, revisa y acepta los <terms>Términos y Condiciones</terms> y el <privacy>Aviso de Privacidad</privacy>.",
+        "accept": "Acepto",
+        "logout": "Cerrar sesión",
+        "error": "No se pudo guardar tu aceptación. Inténtalo de nuevo."
+    },
+    "Account": {
+        "title": "Mi cuenta",
+        "subtitle": "Tus datos, tu contraseña y la eliminación de tu cuenta.",
+        "profile": {
+            "title": "Datos personales",
+            "name": "Nombre",
+            "email": "Correo electrónico",
+            "emailHint": "El correo no se puede cambiar desde aquí.",
+            "phone": "Teléfono",
+            "save": "Guardar cambios",
+            "saving": "Guardando...",
+            "saved": "Datos guardados",
+            "phoneTaken": "Ese teléfono ya está registrado en otra cuenta."
+        },
+        "password": {
+            "title": "Contraseña",
+            "current": "Contraseña actual",
+            "next": "Nueva contraseña",
+            "hint": "Mínimo 8 caracteres.",
+            "save": "Cambiar contraseña",
+            "saving": "Cambiando...",
+            "saved": "Contraseña actualizada",
+            "wrong": "La contraseña actual no es correcta."
+        },
+        "danger": {
+            "title": "Eliminar cuenta",
+            "text": "Borramos tu nombre, correo y teléfono y cancelamos tus citas próximas. El historial de las barberías se conserva sin datos que te identifiquen. Esta acción no se puede deshacer.",
+            "confirmLabel": "Escribe tu contraseña para confirmar",
+            "button": "Eliminar mi cuenta",
+            "deleting": "Eliminando...",
+            "businessAccounts": "Las cuentas de barberos y dueños de negocio se eliminan con nuestro apoyo para no afectar las citas de tus clientes. Escríbenos y lo hacemos contigo."
+        },
+        "legal": {
+            "title": "Documentos",
+            "privacy": "Aviso de Privacidad",
+            "terms": "Términos y Condiciones",
+            "accepted": "Los aceptaste el {date}."
+        },
+        "error": "Algo salió mal. Inténtalo de nuevo."
     }
 }
