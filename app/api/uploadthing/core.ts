@@ -1,15 +1,12 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
-import { jwtVerify } from "jose";
+import {
+    ACTIVE_BUSINESS_COOKIE,
+    SESSION_COOKIE,
+    getSessionFromToken,
+} from "@/lib/auth/session";
 
 const f = createUploadthing();
-
-type JwtPayload = {
-    userId?: string;
-    role?: string;
-    barberId?: string;
-    businessId?: string;
-};
 
 function getCookieValue(cookieHeader: string | null, name: string) {
     if (!cookieHeader) return null;
@@ -26,42 +23,26 @@ function getCookieValue(cookieHeader: string | null, name: string) {
 }
 
 async function getAuthFromRequest(req: Request) {
-    const token = getCookieValue(req.headers.get("cookie"), "token");
+    const cookieHeader = req.headers.get("cookie");
 
-    if (!token) {
+    const session = await getSessionFromToken(
+        getCookieValue(cookieHeader, SESSION_COOKIE) ?? undefined,
+        getCookieValue(cookieHeader, ACTIVE_BUSINESS_COOKIE)
+    ).catch(() => null);
+
+    if (!session) {
+        throw new UploadThingError("Invalid or expired session");
+    }
+
+    if (session.role !== "ADMIN" && session.role !== "OWNER") {
         throw new UploadThingError("Unauthorized");
     }
 
-    const jwtSecret = process.env.JWT_SECRET;
-
-    if (!jwtSecret) {
-        throw new UploadThingError("Server configuration error");
-    }
-
-    try {
-        const secret = new TextEncoder().encode(jwtSecret);
-        const { payload } = await jwtVerify(token, secret);
-
-        const userId = payload.userId as JwtPayload["userId"];
-        const role = payload.role as JwtPayload["role"];
-        const businessId = payload.businessId as JwtPayload["businessId"];
-
-        if (!userId || !role) {
-            throw new UploadThingError("Invalid session");
-        }
-
-        if (role !== "ADMIN" && role !== "OWNER") {
-            throw new UploadThingError("Unauthorized");
-        }
-
-        return {
-            userId,
-            role,
-            businessId,
-        };
-    } catch {
-        throw new UploadThingError("Invalid or expired session");
-    }
+    return {
+        userId: session.userId,
+        role: session.role,
+        businessId: session.businessId ?? undefined,
+    };
 }
 
 function assertOwner(role: string) {

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { Role, BarberStatus } from "@prisma/client";
+import { ACTIVE_BUSINESS_COOKIE, sessionCookieOptions } from "@/lib/auth/session";
 
 function createSlug(name: string) {
     return name
@@ -90,6 +91,14 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
+        // Un barbero vinculado a otro negocio no podría gestionar el suyo (su perfil de barbero es único)
+        if (user.role === Role.BARBER) {
+            return NextResponse.json(
+                { error: "Barbers linked to another business cannot create a business" },
+                { status: 409 }
+            );
+        }
+
         const slug = await generateUniqueSlug(name);
 
         const business = await prisma.$transaction(async (tx) => {
@@ -132,13 +141,21 @@ export async function POST(req: NextRequest) {
             return newBusiness;
         });
 
-        return NextResponse.json(
+        const response = NextResponse.json(
             {
                 message: "Business created successfully",
                 business,
             },
             { status: 201 }
         );
+
+        // La sesión se recarga en cada petición: el nuevo negocio queda activo sin volver a iniciar sesión
+        response.cookies.set(ACTIVE_BUSINESS_COOKIE, business.id, {
+            ...sessionCookieOptions,
+            maxAge: 60 * 60 * 24 * 365,
+        });
+
+        return response;
     } catch (error) {
         console.error("Create business error:", error);
         return NextResponse.json(

@@ -1,12 +1,23 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
-import { SignJWT } from "jose";
+import {
+  ACTIVE_BUSINESS_COOKIE,
+  SESSION_COOKIE,
+  SESSION_MAX_AGE_SECONDS,
+  loadSessionIdentity,
+  sessionCookieOptions,
+  signSessionToken,
+} from "@/lib/auth/session";
+
+// Hash de referencia para que un email inexistente tarde lo mismo que una contraseña incorrecta
+const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 10);
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, password } = body;
+    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    const password = typeof body.password === "string" ? body.password : "";
 
     if (!email || !password) {
       return NextResponse.json(
@@ -17,74 +28,57 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.findUnique({
       where: { email },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 }
-      );
-    }
-
-    const passwordMatch = await bcrypt.compare(password, user.password);
-
-    if (!passwordMatch) {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 }
-      );
-    }
-
-    if (!process.env.JWT_SECRET) {
-      throw new Error("JWT_SECRET not defined");
-    }
-
-    const barberProfile = await prisma.barber.findUnique({
-      where: { userId: user.id },
       select: {
         id: true,
-        status: true,
-        businessId: true,
+        name: true,
+        email: true,
+        phone: true,
+        password: true,
       },
     });
 
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const passwordMatch = await bcrypt.compare(password, user?.password ?? DUMMY_HASH);
 
-    const token = await new SignJWT({
-      userId: user.id,
-      role: user.role,
-      ...(barberProfile && {
-        barberId: barberProfile.id,
-        barberStatus: barberProfile.status,
-        businessId: barberProfile.businessId,
-      }),
-    })
-      .setProtectedHeader({ alg: "HS256" })
-      .setIssuedAt()
-      .setExpirationTime("1d")
-      .sign(secret);
+    if (!user || !passwordMatch) {
+      return NextResponse.json(
+        { error: "Invalid credentials" },
+        { status: 401 }
+      );
+    }
 
-    const { password: _, ...safeUser } = user;
+    const session = await loadSessionIdentity(user.id);
+
+    if (!session) {
+      return NextResponse.json(
+        { error: "Invalid credentials" },
+        { status: 401 }
+      );
+    }
+
+    const token = await signSessionToken(user.id);
 
     const response = NextResponse.json({
       message: "Login successful",
       user: {
-        ...safeUser,
-        ...(barberProfile && {
-          barberId: barberProfile.id,
-          barberStatus: barberProfile.status,
-          businessId: barberProfile.businessId,
-        }),
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: session.role,
+        isBanned: session.isBanned,
+        barberId: session.barberId,
+        barberStatus: session.barberStatus,
+        businessId: session.businessId,
       },
     });
 
-    response.cookies.set("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 60 * 60 * 24,
-      path: "/",
+    response.cookies.set(SESSION_COOKIE, token, {
+      ...sessionCookieOptions,
+      maxAge: SESSION_MAX_AGE_SECONDS,
     });
+
+    // Un inicio de sesión nuevo vuelve al negocio por defecto
+    response.cookies.delete(ACTIVE_BUSINESS_COOKIE);
 
     return response;
 

@@ -1,39 +1,18 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { jwtVerify } from "jose";
-
-type JWTPayload = {
-  userId: string;
-  role: "CUSTOMER" | "BARBER" | "OWNER" | "ADMIN";
-};
+import { headers } from "next/headers";
+import { getLocale } from "next-intl/server";
+import type { Role } from "@prisma/client";
+import { redirect } from "../../../i18n/routing";
+import { getHomePathForRole } from "@/lib/auth/session";
 
 export default async function DashboardPage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("token")?.value;
+  // El proxy valida la sesión y define el rol actual en cada petición
+  const headerList = await headers();
+  const role = headerList.get("x-user-role") as Role | null;
+  const locale = await getLocale();
 
-  if (!token) redirect("/login");
-
-  const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-  let user: JWTPayload;
-
-  try {
-    const result = await jwtVerify(token, secret);
-    user = result.payload as JWTPayload;
-  } catch {
-    redirect("/login");
-  }
-
-  if (user.role === "CUSTOMER") {
-    redirect("/dashboard/customer");
-  }
-
-  if (user.role === "BARBER") {
-    redirect("/dashboard/barber");
-  }
-
-  if (user.role === "OWNER" || user.role === "ADMIN") {
-    redirect("/dashboard/admin");
-  }
-
-  redirect("/login");
+  // redirect de next-intl conserva el idioma actual
+  return redirect({
+    href: role ? getHomePathForRole(role) : "/login",
+    locale,
+  });
 }
