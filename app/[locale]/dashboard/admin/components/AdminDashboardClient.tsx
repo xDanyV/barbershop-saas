@@ -18,7 +18,7 @@ const TABS: { id: string; icon: typeof UserPlus; adminOnly?: boolean }[] = [
     { id: "pending", icon: UserPlus },
     { id: "barbers", icon: Users },
     { id: "customers", icon: ShieldAlert },
-    { id: "settings", icon: Settings },
+    { id: "settings", icon: Settings, adminOnly: true },
     { id: "billing", icon: CreditCard, adminOnly: true },
 ];
 
@@ -30,7 +30,7 @@ export default function AdminDashboardClient({ role }: Props) {
     const t = useTranslations("AdminDashboard");
     const [activeTab, setActiveTab] = useState("pending");
 
-    // La facturación de la plataforma solo la gestiona el ADMIN (la API responde 403 a los owners)
+    // Facturación y mantenimiento global son de la plataforma: solo los ve el ADMIN
     const tabs = TABS.filter((tab) => !tab.adminOnly || role === "ADMIN");
 
     return (
@@ -94,7 +94,7 @@ export default function AdminDashboardClient({ role }: Props) {
                         {activeTab === "pending" && <PendingBarbersList />}
                         {activeTab === "barbers" && <ActiveBarbersList />}
                         {activeTab === "customers" && <CustomersList />}
-                        {activeTab === "settings" && <SystemSettings />}
+                        {activeTab === "settings" && role === "ADMIN" && <SystemSettings />}
                         {activeTab === "billing" && role === "ADMIN" && <BusinessBillingManager />}
                     </motion.div>
                 </AnimatePresence>

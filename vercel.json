@@ -1,11 +1,7 @@
 {
     "crons": [
         {
-            "path": "/api/cron/completed-appointments",
-            "schedule": "0 0 * * *"
-        },
-        {
-            "path": "/api/cron/billing-status",
+            "path": "/api/cron/daily",
             "schedule": "0 6 * * *"
         }
     ]

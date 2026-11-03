@@ -2,46 +2,24 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 
+// Mantenimiento global de la plataforma (solo ADMIN).
+// Los ajustes de cada negocio se editan en "Mi negocio" (/api/protected/businesses/me).
+async function isAdmin() {
+    const headersList = await headers();
+    return headersList.get("x-user-role") === "ADMIN";
+}
+
 export async function GET() {
     try {
-        const headersList = await headers();
-        const role = headersList.get("x-user-role");
-        const businessId = headersList.get("x-business-id");
-
-        if (role !== "ADMIN" && role !== "OWNER") {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+        if (!(await isAdmin())) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
-        if (role === "OWNER") {
-            if (!businessId) {
-                return NextResponse.json({ error: "Business context is required" }, { status: 403 });
-            }
-
-            let settings = await prisma.businessSettings.findUnique({
-                where: { businessId },
-            });
-
-            if (!settings) {
-                settings = await prisma.businessSettings.create({
-                    data: {
-                        businessId,
-                        isServiceActive: true,
-                    },
-                });
-            }
-
-            return NextResponse.json(settings);
-        }
-
-        let settings = await prisma.systemSettings.findUnique({
+        const settings = await prisma.systemSettings.upsert({
             where: { id: "global" },
+            update: {},
+            create: { id: "global", isServiceActive: true },
         });
-
-        if (!settings) {
-            settings = await prisma.systemSettings.create({
-                data: { id: "global", isServiceActive: true },
-            });
-        }
 
         return NextResponse.json(settings);
     } catch (error) {
@@ -52,34 +30,16 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
     try {
-        const headersList = await headers();
-        const role = headersList.get("x-user-role");
-        const businessId = headersList.get("x-business-id");
-
-        if (role !== "ADMIN" && role !== "OWNER") {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+        if (!(await isAdmin())) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
         const body = await req.json();
-        const { isServiceActive, maintenanceMessage } = body;
 
-        if (role === "OWNER") {
-            if (!businessId) {
-                return NextResponse.json({ error: "Business context is required" }, { status: 403 });
-            }
-
-            const updatedSettings = await prisma.businessSettings.upsert({
-                where: { businessId },
-                update: { isServiceActive, maintenanceMessage },
-                create: {
-                    businessId,
-                    isServiceActive,
-                    maintenanceMessage,
-                },
-            });
-
-            return NextResponse.json({ success: true, settings: updatedSettings });
-        }
+        const isServiceActive =
+            typeof body.isServiceActive === "boolean" ? body.isServiceActive : undefined;
+        const maintenanceMessage =
+            typeof body.maintenanceMessage === "string" ? body.maintenanceMessage.trim() : undefined;
 
         const updatedSettings = await prisma.systemSettings.upsert({
             where: { id: "global" },

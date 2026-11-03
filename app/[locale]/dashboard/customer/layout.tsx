@@ -1,31 +1,26 @@
 import { headers } from "next/headers";
+import { getLocale } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
+import { redirect } from "../../../../i18n/routing";
 
 import BannedCustomerScreen from "@/[locale]/dashboard/customer/components/BannedCustomerScreen";
 
 export default async function CustomerLayout({ children }: { children: React.ReactNode }) {
+    // Mantenimiento global de la plataforma (lo controla el ADMIN)
     const settings = await prisma.systemSettings.findUnique({
-        where: { id: "global" }
+        where: { id: "global" },
+        select: { isServiceActive: true },
     });
 
     if (settings && settings.isServiceActive === false) {
-        redirect("/components/maintenance");
+        const locale = await getLocale();
+        redirect({ href: "/maintenance", locale });
     }
 
+    // El proxy ya cargó la sesión desde la base, incluido el ban
     const headerList = await headers();
-    const userId = headerList.get("x-user-id");
+    const isBanned = headerList.get("x-user-banned") === "true";
 
-    let isBanned = false;
-
-    if (userId) {
-
-        const user = await prisma.user.findUnique({
-            where: { id: userId }, // Buscamos por la llave primaria 'id'
-            select: { isBanned: true }
-        });
-        isBanned = user?.isBanned || false;
-    }
     return (
         <>
             {isBanned && (

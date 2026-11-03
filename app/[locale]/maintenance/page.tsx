@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { AlertTriangle, Clock, ArrowLeft } from "lucide-react";
-import { Link, redirect } from "../../../../i18n/routing";
+import { Link, redirect } from "../../../i18n/routing";
 import { getTranslations, getLocale } from "next-intl/server";
 
 export default async function MaintenancePage() {
@@ -14,7 +14,7 @@ export default async function MaintenancePage() {
 
     if (!settings || settings.isServiceActive) {
         // Envolvemos la ruta y el idioma en un objeto {}
-        redirect({ href: "/dashboard/customer", locale });
+        redirect({ href: "/dashboard/customer/home", locale });
     }
 
     return (
