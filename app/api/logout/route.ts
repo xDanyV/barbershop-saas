@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   ACTIVE_BUSINESS_COOKIE,
+  MANAGED_BARBER_COOKIE,
   SESSION_COOKIE,
   sessionCookieOptions,
 } from "@/lib/auth/session";
@@ -14,6 +15,7 @@ export async function POST() {
   });
 
   response.cookies.delete(ACTIVE_BUSINESS_COOKIE);
+  response.cookies.delete(MANAGED_BARBER_COOKIE);
 
   return response;
 }

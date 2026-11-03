@@ -41,9 +41,35 @@ export async function createCatalogService(
     throw new AppError("Barber not available");
   }
 
+  const trimmedName = name.trim();
+
+  // El borrado es lógico (active=false) y el nombre es único por barbero:
+  // volver a crear un servicio eliminado lo reactiva con los datos nuevos
+  const sameName = await prisma.service.findUnique({
+    where: {
+      businessId_barberId_name: {
+        businessId: barber.businessId,
+        barberId,
+        name: trimmedName,
+      },
+    },
+    select: { id: true, active: true },
+  });
+
+  if (sameName?.active) {
+    throw new AppError("A service with this name already exists", 409);
+  }
+
+  if (sameName) {
+    return prisma.service.update({
+      where: { id: sameName.id },
+      data: { price, duration, active: true },
+    });
+  }
+
   return prisma.service.create({
     data: {
-      name,
+      name: trimmedName,
       price,
       duration,
       barberId,

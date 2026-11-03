@@ -4,6 +4,7 @@ import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
 import {
   ACTIVE_BUSINESS_COOKIE,
+  MANAGED_BARBER_COOKIE,
   SESSION_COOKIE,
   getHomePathForRole,
   getSessionFromToken,
@@ -20,6 +21,7 @@ const IDENTITY_HEADERS = [
   "x-barber-status",
   "x-business-id",
   "x-user-banned",
+  "x-managing-team-barber",
 ];
 
 export async function proxy(request: NextRequest) {
@@ -70,7 +72,8 @@ export async function proxy(request: NextRequest) {
     // así un ban, una aprobación o un cambio de rol aplican sin volver a iniciar sesión
     session = await getSessionFromToken(
       request.cookies.get(SESSION_COOKIE)?.value,
-      request.cookies.get(ACTIVE_BUSINESS_COOKIE)?.value
+      request.cookies.get(ACTIVE_BUSINESS_COOKIE)?.value,
+      request.cookies.get(MANAGED_BARBER_COOKIE)?.value
     );
   } catch (error) {
     console.error("Proxy session error:", error);
@@ -114,6 +117,7 @@ export async function proxy(request: NextRequest) {
   if (session.barberStatus) request.headers.set("x-barber-status", session.barberStatus);
   if (session.businessId) request.headers.set("x-business-id", session.businessId);
   if (session.isBanned) request.headers.set("x-user-banned", "true");
+  if (session.isManagingTeamBarber) request.headers.set("x-managing-team-barber", "true");
 
   if (isProtectedApi) {
     return NextResponse.next({ request: { headers: request.headers } });

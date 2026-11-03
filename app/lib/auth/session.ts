@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 export const SESSION_COOKIE = "token";
 // Negocio activo de un OWNER con varios negocios
 export const ACTIVE_BUSINESS_COOKIE = "activeBusinessId";
+// Barbero del equipo que el OWNER está gestionando (agenda, servicios, excepciones)
+export const MANAGED_BARBER_COOKIE = "managedBarberId";
 
 const SESSION_MAX_AGE = 60 * 60 * 24; // 1 día
 
@@ -23,6 +25,8 @@ export type SessionIdentity = {
     barberId: string | null;
     barberStatus: BarberStatus | null;
     businessId: string | null;
+    // true cuando barberId es otro barbero del equipo y no el perfil propio del OWNER
+    isManagingTeamBarber: boolean;
 };
 
 function getSecret() {
@@ -55,7 +59,8 @@ export async function verifySessionToken(token: string) {
 
 export async function loadSessionIdentity(
     userId: string,
-    activeBusinessId?: string | null
+    activeBusinessId?: string | null,
+    managedBarberId?: string | null
 ): Promise<SessionIdentity | null> {
     const user = await prisma.user.findUnique({
         where: { id: userId },
@@ -91,26 +96,52 @@ export async function loadSessionIdentity(
         }
     }
 
+    let barberId = user.barberProfile?.id ?? null;
+    let barberStatus = user.barberProfile?.status ?? null;
+    let isManagingTeamBarber = false;
+
+    // Un OWNER puede actuar como cualquier barbero aprobado y activo de su negocio activo.
+    // Así las APIs de agenda, catálogo y excepciones (que usan x-barber-id) sirven para todo el equipo.
+    if (user.role === "OWNER" && businessId && managedBarberId && managedBarberId !== barberId) {
+        const teamBarber = await prisma.barber.findFirst({
+            where: {
+                id: managedBarberId,
+                businessId,
+                status: "APPROVED",
+                active: true,
+            },
+            select: { id: true, status: true },
+        });
+
+        if (teamBarber) {
+            barberId = teamBarber.id;
+            barberStatus = teamBarber.status;
+            isManagingTeamBarber = true;
+        }
+    }
+
     return {
         userId: user.id,
         role: user.role,
         isBanned: user.isBanned,
-        barberId: user.barberProfile?.id ?? null,
-        barberStatus: user.barberProfile?.status ?? null,
+        barberId,
+        barberStatus,
         businessId,
+        isManagingTeamBarber,
     };
 }
 
 export async function getSessionFromToken(
     token: string | undefined,
-    activeBusinessId?: string | null
+    activeBusinessId?: string | null,
+    managedBarberId?: string | null
 ) {
     if (!token) return null;
 
     const userId = await verifySessionToken(token);
     if (!userId) return null;
 
-    return loadSessionIdentity(userId, activeBusinessId);
+    return loadSessionIdentity(userId, activeBusinessId, managedBarberId);
 }
 
 export function getHomePathForRole(role: Role) {
