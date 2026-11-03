@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { publicBusinessWhere } from "@/lib/billing/status";
 
 type RouteContext = {
     params: Promise<{
@@ -18,9 +19,11 @@ export async function GET(request: NextRequest, context: RouteContext) {
             );
         }
 
-        const business = await prisma.business.findUnique({
+        // Los negocios suspendidos o cancelados no se muestran públicamente
+        const business = await prisma.business.findFirst({
             where: {
                 slug,
+                ...publicBusinessWhere,
             },
             select: {
                 id: true,

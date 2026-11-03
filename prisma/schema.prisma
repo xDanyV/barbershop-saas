@@ -49,19 +49,13 @@ model Business {
   gallery      BusinessGallery[]
   posts        BusinessPost[]
 
-  billingStatus      BusinessBillingStatus @default(ACTIVE)
-  billingPlan        BusinessPlanType      @default(BASIC)
-  subscriptionEndsAt DateTime?
-
+  // Única fuente de verdad de plan, estado y vigencia de la suscripción
   subscription BusinessSubscription?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([ownerId])
-  @@index([slug])
-  @@index([billingStatus])
-  @@index([billingPlan])
 }
 
 model BusinessSubscription {

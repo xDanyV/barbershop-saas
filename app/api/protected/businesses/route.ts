@@ -112,6 +112,12 @@ export async function POST(req: NextRequest) {
                     logoUrl: logoUrl || null,
                     coverUrl: coverUrl || null,
                     ownerId: user.id,
+                    // Toda suscripción nace con los valores por defecto (plan BASIC, estado ACTIVE)
+                    subscription: {
+                        create: {
+                            currentPeriodStart: new Date(),
+                        },
+                    },
                     settings: {
                         create: {},
                     },
