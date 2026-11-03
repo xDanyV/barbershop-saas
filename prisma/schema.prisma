@@ -7,17 +7,18 @@ datasource db {
 }
 
 model User {
-  id              String        @id @default(uuid())
+  id              String                @id @default(uuid())
   name            String?
-  email           String        @unique
-  phone           String        @unique
+  email           String                @unique
+  phone           String                @unique
   password        String
-  role            Role          @default(CUSTOMER)
-  isBanned        Boolean       @default(false)
+  role            Role                  @default(CUSTOMER)
+  isBanned        Boolean               @default(false)
   barberProfile   Barber?
   appointments    Appointment[]
-  ownedBusinesses Business[]    @relation("BusinessOwner")
-  createdAt       DateTime      @default(now())
+  ownedBusinesses Business[]            @relation("BusinessOwner")
+  businessBans    BusinessCustomerBan[]
+  createdAt       DateTime              @default(now())
 }
 
 enum Role {
@@ -48,6 +49,7 @@ model Business {
   appointments Appointment[]
   gallery      BusinessGallery[]
   posts        BusinessPost[]
+  customerBans BusinessCustomerBan[]
 
   // Única fuente de verdad de plan, estado y vigencia de la suscripción
   subscription BusinessSubscription?
@@ -128,6 +130,7 @@ enum AppointmentStatus {
   CONFIRMED
   COMPLETED
   CANCELLED
+  NO_SHOW
 }
 
 model Barber {
@@ -177,12 +180,12 @@ model Availability {
 }
 
 model Service {
-  id        String   @id @default(uuid())
-  name      String
+  id         String   @id @default(uuid())
+  name       String
   priceCents Int // Precio en centavos (MXN), igual que la facturación
-  duration  Int
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
+  duration   Int
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
 
   businessId String
   business   Business @relation(fields: [businessId], references: [id])
@@ -262,4 +265,18 @@ enum SubscriptionProvider {
   MANUAL
   STRIPE
   MERCADO_PAGO
+}
+
+// Bloqueo de un cliente en un negocio concreto (lo gestiona el OWNER).
+// User.isBanned es el bloqueo global de la plataforma (solo ADMIN).
+model BusinessCustomerBan {
+  id         String   @id @default(uuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([businessId, userId])
+  @@index([userId])
 }

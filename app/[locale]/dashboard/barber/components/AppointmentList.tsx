@@ -10,7 +10,7 @@ type Appointment = {
     customerPhone: string;
     service: string;
     time: string;
-    status: "PENDING" | "CONFIRMED" | "COMPLETED";
+    status: "PENDING" | "CONFIRMED" | "COMPLETED" | "NO_SHOW";
 };
 
 type Exception = {

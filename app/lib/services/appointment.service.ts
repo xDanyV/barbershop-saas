@@ -84,6 +84,16 @@ export async function createAppointment(data: {
         throw new AppError("Service not available for this barber");
     }
 
+    // Bloqueo del cliente en este negocio (el bloqueo global ya lo revisa la ruta)
+    const businessBan = await prisma.businessCustomerBan.findUnique({
+        where: { businessId_userId: { businessId: barber.businessId, userId } },
+        select: { id: true },
+    });
+
+    if (businessBan) {
+        throw new AppError("You cannot book appointments at this business", 403);
+    }
+
     const timezone = resolveTimezone(barber.business.timezone);
     const dateKey = toDateKey(startDate, timezone);
 
@@ -185,9 +195,11 @@ export async function getBarberAppointments(barberId: string) {
 
 const allowedTransitions: Record<AppointmentStatus, AppointmentStatus[]> = {
     PENDING: ["CONFIRMED", "CANCELLED"],
-    CONFIRMED: ["CANCELLED"],
+    CONFIRMED: ["CANCELLED", "NO_SHOW"],
     CANCELLED: [],
-    COMPLETED: [],
+    // El cron marca COMPLETED una hora después; el barbero aún puede registrar la inasistencia
+    COMPLETED: ["NO_SHOW"],
+    NO_SHOW: [],
 };
 
 export async function updateAppointmentStatus(
@@ -228,6 +240,10 @@ export async function updateAppointmentStatus(
         throw new AppError(
             `Cannot change status from ${currentStatus} to ${newStatus}`
         );
+    }
+
+    if (newStatus === "NO_SHOW" && appointment.date.getTime() > Date.now()) {
+        throw new AppError("A no-show can only be recorded after the appointment time");
     }
 
     if (role === "CUSTOMER") {

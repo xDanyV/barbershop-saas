@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 type RawAppointment = {
   id: string;
   date: string;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED";
+  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
   user: { name: string; email?: string; phone?: string };
   service: { name: string };
 };
@@ -21,7 +21,7 @@ type Appointment = {
   customerPhone: string;
   service: string;
   time: string;
-  status: "PENDING" | "CONFIRMED" | "COMPLETED";
+  status: "PENDING" | "CONFIRMED" | "COMPLETED" | "NO_SHOW";
 };
 
 type Exception = {
@@ -132,10 +132,12 @@ export default function BarberDashboard() {
     .map((a) => {
       const isPast = new Date(a.date) < new Date();
 
-      const status: "PENDING" | "CONFIRMED" | "COMPLETED" =
+      // Una cita confirmada que ya pasó se muestra como completada aunque el cron aún no la haya cerrado.
+      // (La API no devuelve citas canceladas.)
+      const status: Appointment["status"] =
         a.status === "CANCELLED" ? "PENDING" :
           a.status === "CONFIRMED" && isPast ? "COMPLETED" :
-            a.status as any;
+            a.status;
 
       return {
         id: a.id,

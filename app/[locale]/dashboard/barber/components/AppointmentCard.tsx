@@ -23,7 +23,7 @@ import {
 } from "@headlessui/react";
 import { useTranslations } from "next-intl";
 
-type AppointmentStatus = "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
+type AppointmentStatus = "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
 
 type Appointment = {
   id: string;
@@ -50,6 +50,7 @@ export default function AppointmentCard({
   const [status, setStatus] = useState<AppointmentStatus>(appointment.status);
   const [loadingConfirm, setLoadingConfirm] = useState(false);
   const [loadingCancel, setLoadingCancel] = useState(false);
+  const [loadingNoShow, setLoadingNoShow] = useState(false);
 
   const handleConfirm = async () => {
     setLoadingConfirm(true);
@@ -76,6 +77,31 @@ export default function AppointmentCard({
       toast.error(t("errors.network"));
     } finally {
       setLoadingConfirm(false);
+    }
+  };
+
+  // Solo para citas ya pasadas (se muestran como COMPLETED): el cliente no se presentó
+  const handleNoShow = async () => {
+    setLoadingNoShow(true);
+
+    try {
+      const res = await fetch(`/api/protected/appointments/${appointment.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "NO_SHOW" }),
+      });
+
+      if (!res.ok) {
+        toast.error(t("errors.noShowFailed"));
+        return;
+      }
+
+      setStatus("NO_SHOW");
+      toast.success(t("success.noShow", { name: appointment.customerName }));
+    } catch {
+      toast.error(t("errors.network"));
+    } finally {
+      setLoadingNoShow(false);
     }
   };
 
@@ -178,6 +204,7 @@ export default function AppointmentCard({
     COMPLETED: "bg-gray-50 text-gray-500 border-gray-100",
     PENDING: "bg-amber-50 text-amber-700 border-amber-100",
     CANCELLED: "bg-red-50 text-red-700 border-red-100",
+    NO_SHOW: "bg-gray-100 text-gray-600 border-gray-200",
   };
 
   const canCancel = status === "PENDING" || status === "CONFIRMED";
@@ -321,6 +348,16 @@ export default function AppointmentCard({
                   className="text-[11px] md:text-xs px-3 md:px-4 py-1.5 rounded-full bg-red-50 text-red-600 border border-red-100 font-bold hover:bg-red-600 hover:text-white transition-all cursor-pointer whitespace-nowrap disabled:opacity-50"
                 >
                   {loadingCancel ? "..." : "Cancelar"}
+                </button>
+              )}
+
+              {status === "COMPLETED" && (
+                <button
+                  onClick={handleNoShow}
+                  disabled={loadingNoShow}
+                  className="text-[11px] md:text-xs px-3 md:px-4 py-1.5 rounded-full bg-gray-50 text-gray-600 border border-gray-200 font-bold hover:bg-gray-700 hover:text-white transition-all cursor-pointer whitespace-nowrap disabled:opacity-50"
+                >
+                  {loadingNoShow ? "..." : t("markNoShow")}
                 </button>
               )}
             </div>
