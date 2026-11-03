@@ -13,7 +13,7 @@ export type PublicBusinessBarber = {
 export type PublicBusinessService = {
     id: string;
     name: string;
-    price: number;
+    priceCents: number;
     duration: number;
     barber: {
         user: {
@@ -39,8 +39,8 @@ export type PublicBusinessPost = {
 export type GroupedService = {
     key: string;
     name: string;
-    minPrice: number;
-    maxPrice: number;
+    minPriceCents: number;
+    maxPriceCents: number;
     minDuration: number;
     maxDuration: number;
     barberNames: string[];

@@ -15,12 +15,13 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { formatPriceFromCents } from "@/lib/billing/pricing";
 
 type Service = {
   id: string;
   name: string;
   duration: number;
-  price: number;
+  priceCents: number;
 };
 
 type Props = {
@@ -183,7 +184,7 @@ export default function SlotCard({
     {
       icon: DollarSign,
       label: t("modal.fields.total"),
-      value: `$${service?.price.toFixed(2)}`,
+      value: service ? formatPriceFromCents(service.priceCents) : "",
       highlight: true,
     },
   ];
@@ -303,7 +304,7 @@ export default function SlotCard({
                                   </span>
 
                                   <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-600">
-                                    ${s.price}
+                                    {formatPriceFromCents(s.priceCents)}
                                   </span>
                                 </div>
                               </div>

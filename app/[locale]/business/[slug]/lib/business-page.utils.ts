@@ -1,12 +1,5 @@
 import { GroupedService, PublicBusinessService } from "./business-page.types";
 
-export function formatPrice(price: number) {
-    return new Intl.NumberFormat("es-MX", {
-        style: "currency",
-        currency: "MXN",
-    }).format(price);
-}
-
 export function formatDate(date: Date) {
     return new Intl.DateTimeFormat("es-MX", {
         day: "2-digit",
@@ -46,8 +39,8 @@ export function groupServicesByName(
             grouped.set(key, {
                 key,
                 name: service.name,
-                minPrice: service.price,
-                maxPrice: service.price,
+                minPriceCents: service.priceCents,
+                maxPriceCents: service.priceCents,
                 minDuration: service.duration,
                 maxDuration: service.duration,
                 barberNames: [barberName],
@@ -56,8 +49,8 @@ export function groupServicesByName(
             continue;
         }
 
-        existing.minPrice = Math.min(existing.minPrice, service.price);
-        existing.maxPrice = Math.max(existing.maxPrice, service.price);
+        existing.minPriceCents = Math.min(existing.minPriceCents, service.priceCents);
+        existing.maxPriceCents = Math.max(existing.maxPriceCents, service.priceCents);
         existing.minDuration = Math.min(existing.minDuration, service.duration);
         existing.maxDuration = Math.max(existing.maxDuration, service.duration);
 

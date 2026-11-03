@@ -1,29 +1,29 @@
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
-import { headers } from "next/headers";
-import { BarberStatus } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
+import { AppError, errorResponse } from "@/lib/errors";
+import { requireAuth } from "@/lib/api/auth";
+import { parseJsonBody } from "@/lib/api/validation";
+import { updateBarberAdminSchema } from "@/lib/validations/schemas";
 
-export async function GET() {
-    const headerList = await headers();
-    const role = headerList.get("x-user-role");
-    const businessId = headerList.get("x-business-id");
+// ADMIN ve todos los negocios; OWNER solo el suyo
+function requireBarberManager(request: NextRequest) {
+    const auth = requireAuth(request, ["ADMIN", "OWNER"]);
 
-    if (role !== "ADMIN" && role !== "OWNER") {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    if (auth.role === "OWNER" && !auth.businessId) {
+        throw new AppError("Business context is required", 403);
     }
 
-    if (role === "OWNER" && !businessId) {
-        return NextResponse.json(
-            { error: "Business context is required" },
-            { status: 403 }
-        );
-    }
+    return auth;
+}
 
+export async function GET(request: NextRequest) {
     try {
+        const auth = requireBarberManager(request);
+
         const pendingBarbers = await prisma.barber.findMany({
             where: {
                 status: "PENDING",
-                ...(role === "OWNER" ? { businessId: businessId! } : {}),
+                ...(auth.role === "OWNER" ? { businessId: auth.businessId! } : {}),
             },
             select: {
                 id: true,
@@ -48,102 +48,35 @@ export async function GET() {
 
         return NextResponse.json(pendingBarbers);
     } catch (error) {
-        console.error("Error fetching pending barbers:", error);
-        return NextResponse.json(
-            { error: "Internal Server Error" },
-            { status: 500 }
-        );
+        return errorResponse(error, "Error fetching pending barbers");
     }
 }
 
-export async function PATCH(req: Request) {
-    const headerList = await headers();
-    const role = headerList.get("x-user-role");
-    const businessId = headerList.get("x-business-id");
-
-    if (role !== "ADMIN" && role !== "OWNER") {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
-
-    if (role === "OWNER" && !businessId) {
-        return NextResponse.json(
-            { error: "Business context is required" },
-            { status: 403 }
-        );
-    }
-
+export async function PATCH(request: NextRequest) {
     try {
-        const body = await req.json();
-        const { barberId, status, profileImageUrl } = body as {
-            barberId?: string;
-            status?: BarberStatus;
-            profileImageUrl?: string | null;
-        };
-
-        if (!barberId) {
-            return NextResponse.json(
-                { error: "Barber ID is required" },
-                { status: 400 }
-            );
-        }
-
-        if (status === undefined && profileImageUrl === undefined) {
-            return NextResponse.json(
-                { error: "No data to update" },
-                { status: 400 }
-            );
-        }
-
-        if (
-            status !== undefined &&
-            !["PENDING", "APPROVED", "REJECTED"].includes(status)
-        ) {
-            return NextResponse.json(
-                { error: "Invalid status" },
-                { status: 400 }
-            );
-        }
+        const auth = requireBarberManager(request);
+        const { barberId, status, profileImageUrl } = await parseJsonBody(request, updateBarberAdminSchema);
 
         const existingBarber = await prisma.barber.findUnique({
             where: { id: barberId },
-            select: {
-                id: true,
-                businessId: true,
-            },
+            select: { businessId: true },
         });
 
         if (!existingBarber) {
-            return NextResponse.json(
-                { error: "Barber not found" },
-                { status: 404 }
-            );
+            throw new AppError("Barber not found", 404);
         }
 
-        if (role === "OWNER" && existingBarber.businessId !== businessId) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-        }
-
-        const updateData: {
-            status?: BarberStatus;
-            profileImageUrl?: string | null;
-        } = {};
-
-        if (status !== undefined) {
-            updateData.status = status;
-        }
-
-        if (profileImageUrl !== undefined) {
-            const normalizedImageUrl =
-                typeof profileImageUrl === "string" && profileImageUrl.trim().length > 0
-                    ? profileImageUrl.trim()
-                    : null;
-
-            updateData.profileImageUrl = normalizedImageUrl;
+        if (auth.role === "OWNER" && existingBarber.businessId !== auth.businessId) {
+            throw new AppError("Forbidden", 403);
         }
 
         const updatedBarber = await prisma.barber.update({
             where: { id: barberId },
-            data: updateData,
+            data: {
+                status,
+                // undefined = no tocar; "" o null = quitar la foto
+                ...(profileImageUrl !== undefined ? { profileImageUrl: profileImageUrl || null } : {}),
+            },
             select: {
                 id: true,
                 status: true,
@@ -156,10 +89,6 @@ export async function PATCH(req: Request) {
             barber: updatedBarber,
         });
     } catch (error) {
-        console.error("Error updating barber:", error);
-        return NextResponse.json(
-            { error: "Error updating barber" },
-            { status: 500 }
-        );
+        return errorResponse(error, "Error updating barber");
     }
 }

@@ -2,47 +2,20 @@ import { prisma } from "@/lib/prisma";
 import { getBillingPlan } from "@/lib/billing/pricing";
 import { toBillingSummary } from "@/lib/billing/status";
 import { AppError, errorResponse } from "@/lib/errors";
-import { addDaysToKey, isValidDateKey, resolveTimezone, zonedToUtc } from "@/lib/time/zoned";
+import { addDaysToKey, resolveTimezone, zonedToUtc } from "@/lib/time/zoned";
+import { requireAuth } from "@/lib/api/auth";
+import { parseJsonBody } from "@/lib/api/validation";
+import { updateBillingSchema } from "@/lib/validations/schemas";
 import {
-    BusinessBillingStatus,
-    BusinessPlanType,
     Prisma,
     SubscriptionProvider,
 } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
-const allowedBillingStatuses = [
-    "PENDING_PAYMENT",
-    "ACTIVE",
-    "PAST_DUE",
-    "SUSPENDED",
-    "CANCELED",
-] as const;
-
-const allowedBillingPlans = ["FOUNDER", "BASIC"] as const;
-
-function isBillingStatus(value: unknown): value is BusinessBillingStatus {
-    return (
-        typeof value === "string" &&
-        allowedBillingStatuses.includes(value as BusinessBillingStatus)
-    );
-}
-
-function isBillingPlan(value: unknown): value is BusinessPlanType {
-    return (
-        typeof value === "string" &&
-        allowedBillingPlans.includes(value as BusinessPlanType)
-    );
-}
-
 // "YYYY-MM-DD" -> final de ese día en la zona horaria del negocio
-function parseNullableEndDate(value: unknown, timezone: string) {
-    if (value === null || value === undefined || value === "") {
+function parseNullableEndDate(value: string | null | undefined, timezone: string) {
+    if (!value) {
         return null;
-    }
-
-    if (!isValidDateKey(value)) {
-        throw new AppError("Invalid subscription end date");
     }
 
     return new Date(zonedToUtc(addDaysToKey(value, 1), "00:00", timezone).getTime() - 1);
@@ -85,11 +58,7 @@ function withBillingSummary(business: BillingBusiness) {
 
 export async function GET(req: NextRequest) {
     try {
-        const role = req.headers.get("x-user-role");
-
-        if (role !== "ADMIN") {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
+        requireAuth(req, ["ADMIN"]);
 
         const businesses = await prisma.business.findMany({
             select: businessSelect,
@@ -106,37 +75,11 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
     try {
-        const role = req.headers.get("x-user-role");
-
-        if (role !== "ADMIN") {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
-
-        const body = await req.json();
-
-        const businessId =
-            typeof body.businessId === "string" ? body.businessId : "";
-
-        if (!businessId) {
-            return NextResponse.json(
-                { error: "Business ID is required" },
-                { status: 400 }
-            );
-        }
-
-        if (!isBillingStatus(body.billingStatus)) {
-            return NextResponse.json(
-                { error: "Invalid billing status" },
-                { status: 400 }
-            );
-        }
-
-        if (!isBillingPlan(body.billingPlan)) {
-            return NextResponse.json(
-                { error: "Invalid billing plan" },
-                { status: 400 }
-            );
-        }
+        requireAuth(req, ["ADMIN"]);
+        const { businessId, billingStatus, billingPlan, subscriptionEndsAt } = await parseJsonBody(
+            req,
+            updateBillingSchema
+        );
 
         const existingBusiness = await prisma.business.findUnique({
             where: {
@@ -149,17 +92,12 @@ export async function PATCH(req: NextRequest) {
         });
 
         if (!existingBusiness) {
-            return NextResponse.json(
-                { error: "Business not found" },
-                { status: 404 }
-            );
+            throw new AppError("Business not found", 404);
         }
 
-        const billingStatus: BusinessBillingStatus = body.billingStatus;
-        const billingPlan: BusinessPlanType = body.billingPlan;
         const plan = getBillingPlan(billingPlan);
         const currentPeriodEnd = parseNullableEndDate(
-            body.subscriptionEndsAt,
+            subscriptionEndsAt,
             resolveTimezone(existingBusiness.timezone)
         );
         const canceledAt = billingStatus === "CANCELED" ? new Date() : null;

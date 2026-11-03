@@ -2,39 +2,15 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { Role, BarberStatus } from "@prisma/client";
 import { ACTIVE_BUSINESS_COOKIE, sessionCookieOptions } from "@/lib/auth/session";
-
-function createSlug(name: string) {
-    return name
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/ñ/g, "n")
-        .replace(/[^a-z0-9\s-]/g, "")
-        .trim()
-        .replace(/\s+/g, "-")
-        .replace(/-+/g, "-");
-}
-
-async function generateUniqueSlug(name: string) {
-    const baseSlug = createSlug(name);
-    let slug = baseSlug;
-    let counter = 1;
-
-    while (await prisma.business.findUnique({ where: { slug } })) {
-        slug = `${baseSlug}-${counter}`;
-        counter++;
-    }
-
-    return slug;
-}
+import { AppError, errorResponse } from "@/lib/errors";
+import { requireAuth } from "@/lib/api/auth";
+import { parseJsonBody } from "@/lib/api/validation";
+import { createBusinessSchema } from "@/lib/validations/schemas";
+import { generateUniqueBusinessSlug } from "@/lib/slug";
 
 export async function GET(req: NextRequest) {
     try {
-        const userId = req.headers.get("x-user-id");
-
-        if (!userId) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        const { userId } = requireAuth(req);
 
         const businesses = await prisma.business.findMany({
             where: { ownerId: userId },
@@ -48,69 +24,36 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json(businesses);
     } catch (error) {
-        console.error("Get businesses error:", error);
-        return NextResponse.json(
-            { error: "Something went wrong" },
-            { status: 500 }
-        );
+        return errorResponse(error, "Get businesses error");
     }
 }
 
 export async function POST(req: NextRequest) {
     try {
-        const userId = req.headers.get("x-user-id");
+        const auth = requireAuth(req);
+        const data = await parseJsonBody(req, createBusinessSchema);
 
-        if (!userId) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        // Un barbero vinculado a otro negocio no podría gestionar el suyo (su perfil de barbero es único)
+        if (auth.role === Role.BARBER) {
+            throw new AppError("Barbers linked to another business cannot create a business", 409);
         }
 
-        const body = await req.json();
-        const { name, description, phone, address, logoUrl, coverUrl } = body;
-
-        if (!name || name.trim().length < 3) {
-            return NextResponse.json(
-                { error: "Business name must be at least 3 characters long" },
-                { status: 400 }
-            );
-        }
-
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
+        const user = await prisma.user.findUniqueOrThrow({
+            where: { id: auth.userId },
             select: {
                 id: true,
                 role: true,
-                barberProfile: {
-                    select: {
-                        id: true,
-                    },
-                },
+                barberProfile: { select: { id: true } },
             },
         });
 
-        if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
-
-        // Un barbero vinculado a otro negocio no podría gestionar el suyo (su perfil de barbero es único)
-        if (user.role === Role.BARBER) {
-            return NextResponse.json(
-                { error: "Barbers linked to another business cannot create a business" },
-                { status: 409 }
-            );
-        }
-
-        const slug = await generateUniqueSlug(name);
+        const slug = await generateUniqueBusinessSlug(data.name);
 
         const business = await prisma.$transaction(async (tx) => {
             const newBusiness = await tx.business.create({
                 data: {
-                    name: name.trim(),
+                    ...data,
                     slug,
-                    description: description?.trim() || null,
-                    phone: phone?.trim() || null,
-                    address: address?.trim() || null,
-                    logoUrl: logoUrl || null,
-                    coverUrl: coverUrl || null,
                     ownerId: user.id,
                     // Toda suscripción nace con los valores por defecto (plan BASIC, estado ACTIVE)
                     subscription: {
@@ -163,10 +106,6 @@ export async function POST(req: NextRequest) {
 
         return response;
     } catch (error) {
-        console.error("Create business error:", error);
-        return NextResponse.json(
-            { error: "Something went wrong" },
-            { status: 500 }
-        );
+        return errorResponse(error, "Create business error");
     }
 }

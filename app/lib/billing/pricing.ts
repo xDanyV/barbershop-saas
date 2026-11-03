@@ -42,11 +42,12 @@ export function getBillingPlan(plan: BusinessPlanType) {
     return BILLING_PLANS[plan];
 }
 
+// Importes guardados en centavos (servicios y suscripciones); muestra decimales solo si los hay
 export function formatPriceFromCents(cents: number, currency = "MXN") {
     return new Intl.NumberFormat("es-MX", {
         style: "currency",
         currency,
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
+        minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
+        maximumFractionDigits: 2,
     }).format(cents / 100);
 }

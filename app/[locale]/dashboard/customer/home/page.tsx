@@ -6,12 +6,13 @@ import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Clock, User, Calendar as CalendarIcon, History, AlertTriangle } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { formatPriceFromCents } from "@/lib/billing/pricing";
 
 type Appointment = {
   id: string;
   date: string;
   status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
-  service: { name: string; duration: number; price: number };
+  service: { name: string; duration: number; priceCents: number };
   barber: { user: { name: string | null } };
 };
 
@@ -338,7 +339,7 @@ export default function CustomerHome() {
                               {formattedTime} · {a.service.duration}m
                             </div>
                             <div className="flex items-center gap-1 text-emerald-600 font-black tracking-normal">
-                              $ {a.service.price.toFixed(2)}
+                              {formatPriceFromCents(a.service.priceCents)}
                             </div>
                             <div className="flex items-center gap-1.5">
                               <User size={12} className="text-indigo-400" />
