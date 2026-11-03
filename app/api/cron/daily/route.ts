@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
-import { completePastAppointments, updateExpiredSubscriptions } from "@/lib/cron/tasks";
+import {
+    completePastAppointments,
+    expireUnconfirmedAppointments,
+    updateExpiredSubscriptions,
+} from "@/lib/cron/tasks";
 
 const TASKS = {
     appointments: completePastAppointments,
+    unconfirmed: expireUnconfirmedAppointments,
     billing: updateExpiredSubscriptions,
 };
 

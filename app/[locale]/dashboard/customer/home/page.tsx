@@ -11,7 +11,7 @@ import { formatPriceFromCents } from "@/lib/billing/pricing";
 type Appointment = {
   id: string;
   date: string;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
   service: { name: string; duration: number; priceCents: number };
   barber: { user: { name: string | null } };
 };

@@ -192,16 +192,20 @@
         "status": {
             "PENDING": "Pending",
             "CONFIRMED": "Confirmed",
-            "COMPLETED": "Completed"
+            "COMPLETED": "Completed",
+            "NO_SHOW": "No-show"
         },
         "confirm": "Confirm",
         "errors": {
             "confirmFailed": "Could not confirm appointment",
-            "network": "Network error"
+            "network": "Network error",
+            "noShowFailed": "Could not record the no-show"
         },
         "success": {
-            "confirmed": "{name} appointment confirmed"
-        }
+            "confirmed": "{name} appointment confirmed",
+            "noShow": "No-show recorded for {name}"
+        },
+        "markNoShow": "No-show"
     },
     "AvailabilityModal": {
         "triggerButton": "Availability",
@@ -346,7 +350,8 @@
             "PENDING": "Pending",
             "CONFIRMED": "Confirmed",
             "CANCELLED": "Cancelled",
-            "COMPLETED": "Completed"
+            "COMPLETED": "Completed",
+            "NO_SHOW": "No-show"
         },
         "errors": {
             "tooLate": "Appointments cannot be cancelled less than 2 hours before the scheduled time",

@@ -192,16 +192,20 @@
         "status": {
             "PENDING": "Pendiente",
             "CONFIRMED": "Confirmada",
-            "COMPLETED": "Completada"
+            "COMPLETED": "Completada",
+            "NO_SHOW": "No asistió"
         },
         "confirm": "Confirmar",
         "errors": {
             "confirmFailed": "No se pudo confirmar la cita",
-            "network": "Error de red"
+            "network": "Error de red",
+            "noShowFailed": "No se pudo registrar la inasistencia"
         },
         "success": {
-            "confirmed": "Cita de {name} confirmada"
-        }
+            "confirmed": "Cita de {name} confirmada",
+            "noShow": "Inasistencia de {name} registrada"
+        },
+        "markNoShow": "No asistió"
     },
     "AvailabilityModal": {
         "triggerButton": "Disponibilidad",
@@ -346,7 +350,8 @@
             "PENDING": "Pendiente",
             "CONFIRMED": "Confirmada",
             "CANCELLED": "Cancelada",
-            "COMPLETED": "Completada"
+            "COMPLETED": "Completada",
+            "NO_SHOW": "No asistió"
         },
         "errors": {
             "tooLate": "No se pueden cancelar citas con menos de 2 horas de anticipación",

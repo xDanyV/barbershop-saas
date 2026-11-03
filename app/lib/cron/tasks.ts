@@ -21,6 +21,23 @@ export async function completePastAppointments(now = new Date()) {
     return { completed: updated.count };
 }
 
+// Citas que nadie confirmó y cuya hora ya pasó se cancelan para que no queden pendientes para siempre
+export async function expireUnconfirmedAppointments(now = new Date()) {
+    const updated = await prisma.appointment.updateMany({
+        where: {
+            status: "PENDING",
+            date: {
+                lt: now,
+            },
+        },
+        data: {
+            status: "CANCELLED",
+        },
+    });
+
+    return { expired: updated.count };
+}
+
 // Vencimiento de suscripciones manuales (las de Stripe / Mercado Pago las actualizará su webhook):
 // ACTIVE con periodo vencido -> PAST_DUE; PAST_DUE vencido hace más de la gracia -> SUSPENDED
 export async function updateExpiredSubscriptions(now = new Date()) {

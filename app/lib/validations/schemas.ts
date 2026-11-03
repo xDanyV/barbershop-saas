@@ -48,7 +48,7 @@ export const createAppointmentSchema = z.object({
 });
 
 export const updateAppointmentStatusSchema = z.object({
-    status: z.enum(["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"]),
+    status: z.enum(["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED", "NO_SHOW"]),
 });
 
 // ---------- Barbero: agenda, catálogo, excepciones ----------
