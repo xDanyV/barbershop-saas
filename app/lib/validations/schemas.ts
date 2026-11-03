@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isValidDateKey, isValidTime } from "@/lib/time/zoned";
+import { normalizeMxPhone } from "@/lib/phone";
 
 // Texto opcional: "" o solo espacios -> null
 const optionalText = (max: number) =>
@@ -18,6 +19,21 @@ const optionalUrl = z
     .optional()
     .transform((value) => (value ? value : null));
 
+// Teléfono de México: se guarda con 10 dígitos aunque llegue con espacios, guiones o +52
+const mxPhone = z.string().trim().transform((value, ctx) => {
+    const phone = normalizeMxPhone(value);
+    if (!phone) {
+        ctx.addIssue({ code: "custom", message: "Enter a 10-digit Mexican phone number" });
+        return z.NEVER;
+    }
+    return phone;
+});
+
+const optionalMxPhone = z
+    .union([mxPhone, z.literal(""), z.null()])
+    .optional()
+    .transform((value) => (value ? value : null));
+
 // Los precios llegan en pesos desde los formularios y se guardan en centavos
 const priceInPesos = z.coerce.number().positive().max(1_000_000);
 export const toCents = (pesos: number) => Math.round(pesos * 100);
@@ -32,7 +48,7 @@ export const loginSchema = z.object({
 export const registerSchema = z.object({
     name: z.string().trim().min(1, "Name is required").max(100),
     email: z.string().trim().toLowerCase().email(),
-    phone: z.string().trim().min(1, "Phone number is required").max(20),
+    phone: mxPhone,
     password: z.string().min(8).max(72),
     role: z.enum(["CUSTOMER", "BARBER"]).optional().default("CUSTOMER"),
     businessSlug: z.string().trim().max(300).optional(),
@@ -43,7 +59,7 @@ export const registerSchema = z.object({
 
 export const updateProfileSchema = z.object({
     name: z.string().trim().min(1, "Name is required").max(100),
-    phone: z.string().trim().min(1, "Phone number is required").max(20),
+    phone: mxPhone,
 });
 
 export const changePasswordSchema = z.object({
@@ -116,7 +132,7 @@ export const createExceptionSchema = z
 export const createBusinessSchema = z.object({
     name: z.string().trim().min(3, "Business name must be at least 3 characters long").max(100),
     description: optionalText(1000),
-    phone: optionalText(20),
+    phone: optionalMxPhone,
     address: optionalText(200),
     logoUrl: optionalUrl,
     coverUrl: optionalUrl,

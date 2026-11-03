@@ -6,6 +6,7 @@ import { AppError, errorResponse } from "@/lib/errors";
 import { requireAuth } from "@/lib/api/auth";
 import { parseJsonBody } from "@/lib/api/validation";
 import { deleteAccountSchema, updateProfileSchema } from "@/lib/validations/schemas";
+import { RATE_LIMITS, consumeRateLimit } from "@/lib/rate-limit";
 import {
     ACTIVE_BUSINESS_COOKIE,
     MANAGED_BARBER_COOKIE,
@@ -50,6 +51,7 @@ export async function DELETE(request: NextRequest) {
             throw new AppError("Business accounts are deleted with support", 403);
         }
 
+        await consumeRateLimit(`password:user:${userId}`, RATE_LIMITS.passwordUser);
         const { password } = await parseJsonBody(request, deleteAccountSchema);
 
         const user = await prisma.user.findUniqueOrThrow({

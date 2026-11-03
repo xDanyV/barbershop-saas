@@ -7,6 +7,7 @@ import { parseJsonBody } from "@/lib/api/validation";
 import { registerSchema } from "@/lib/validations/schemas";
 import { extractBusinessSlug } from "@/lib/slug";
 import { TERMS_VERSION } from "@/lib/legal";
+import { RATE_LIMITS, consumeRateLimit, getClientIp } from "@/lib/rate-limit";
 
 function getBootstrapAdminEmail() {
     return process.env.ADMIN_BOOTSTRAP_EMAIL?.trim().toLowerCase() || null;
@@ -14,6 +15,8 @@ function getBootstrapAdminEmail() {
 
 export async function POST(req: Request) {
     try {
+        await consumeRateLimit(`register:ip:${getClientIp(req)}`, RATE_LIMITS.registerIp);
+
         const { name, email, phone, password, role, businessSlug } = await parseJsonBody(req, registerSchema);
 
         const existingUser = await prisma.user.findFirst({

@@ -35,7 +35,9 @@
             "passwordLength": "La contraseña debe tener al menos 8 caracteres",
             "generic": "Algo salió mal",
             "connection": "Error de conexión. Revisa tu internet e inténtalo de nuevo.",
-            "acceptTerms": "Para crear tu cuenta debes aceptar los Términos y el Aviso de Privacidad."
+            "acceptTerms": "Para crear tu cuenta debes aceptar los Términos y el Aviso de Privacidad.",
+            "tooManyAttempts": "Demasiados registros desde esta conexión. Inténtalo más tarde.",
+            "phone": "Escribe un teléfono de México de 10 dígitos."
         },
         "toasts": {
             "creating": "Creando tu cuenta...",
@@ -58,7 +60,8 @@
         },
         "errors": {
             "invalidCredentials": "Credenciales incorrectas",
-            "generic": "Algo salió mal. Por favor intenta de nuevo."
+            "generic": "Algo salió mal. Por favor intenta de nuevo.",
+            "tooManyAttempts": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo."
         },
         "buttons": {
             "signingIn": "Iniciando sesión...",
@@ -820,7 +823,8 @@
             "save": "Guardar cambios",
             "saving": "Guardando...",
             "saved": "Datos guardados",
-            "phoneTaken": "Ese teléfono ya está registrado en otra cuenta."
+            "phoneTaken": "Ese teléfono ya está registrado en otra cuenta.",
+            "phoneInvalid": "Escribe un teléfono de México de 10 dígitos."
         },
         "password": {
             "title": "Contraseña",
@@ -829,7 +833,7 @@
             "hint": "Mínimo 8 caracteres.",
             "save": "Cambiar contraseña",
             "saving": "Cambiando...",
-            "saved": "Contraseña actualizada",
+            "saved": "Contraseña actualizada. Cerramos tu sesión en los demás dispositivos.",
             "wrong": "La contraseña actual no es correcta."
         },
         "danger": {
@@ -846,6 +850,13 @@
             "terms": "Términos y Condiciones",
             "accepted": "Los aceptaste el {date}."
         },
-        "error": "Algo salió mal. Inténtalo de nuevo."
+        "error": "Algo salió mal. Inténtalo de nuevo.",
+        "sessions": {
+            "title": "Sesiones",
+            "text": "Si iniciaste sesión en un teléfono o computadora que ya no usas, ciérrala desde aquí. Este dispositivo seguirá con tu sesión.",
+            "button": "Cerrar sesión en los demás dispositivos",
+            "working": "Cerrando...",
+            "done": "Cerramos tu sesión en los demás dispositivos."
+        }
     }
 }

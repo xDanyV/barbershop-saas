@@ -12,7 +12,11 @@ export class AppError extends Error {
 // Devuelve el mensaje solo si es un AppError; cualquier otro error se registra y se oculta
 export function errorResponse(error: unknown, context: string) {
     if (error instanceof AppError) {
-        return NextResponse.json({ error: error.message }, { status: error.status });
+        const retryAfter = "retryAfter" in error && typeof error.retryAfter === "number" ? error.retryAfter : null;
+        return NextResponse.json(
+            { error: error.message },
+            { status: error.status, headers: retryAfter ? { "Retry-After": String(retryAfter) } : undefined }
+        );
     }
 
     // Violación de restricción única (p. ej. servicio con el mismo nombre)

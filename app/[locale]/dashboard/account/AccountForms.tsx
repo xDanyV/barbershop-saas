@@ -3,6 +3,7 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import toast from "react-hot-toast";
+import { normalizeMxPhone } from "@/lib/phone";
 
 type Props = {
     initial: { name: string; email: string; phone: string };
@@ -37,9 +38,16 @@ export default function AccountForms({ initial, canDelete, acceptedOn, contactEm
     const [savingPassword, setSavingPassword] = useState(false);
     const [deletePassword, setDeletePassword] = useState("");
     const [deleting, setDeleting] = useState(false);
+    const [revoking, setRevoking] = useState(false);
 
     const saveProfile = async (e: FormEvent) => {
         e.preventDefault();
+
+        if (!normalizeMxPhone(profile.phone)) {
+            toast.error(t("profile.phoneInvalid"));
+            return;
+        }
+
         setSavingProfile(true);
         const { ok, status } = await send("/api/protected/account", "PATCH", profile).catch(() => ({ ok: false, status: 0 }));
         setSavingProfile(false);
@@ -60,6 +68,15 @@ export default function AccountForms({ initial, canDelete, acceptedOn, contactEm
         } else {
             toast.error(status === 403 ? t("password.wrong") : t("error"));
         }
+    };
+
+    const revokeSessions = async () => {
+        setRevoking(true);
+        const { ok } = await send("/api/protected/account/sessions", "DELETE", {}).catch(() => ({ ok: false }));
+        setRevoking(false);
+
+        if (ok) toast.success(t("sessions.done"));
+        else toast.error(t("error"));
     };
 
     const deleteAccount = async (e: FormEvent) => {
@@ -149,6 +166,13 @@ export default function AccountForms({ initial, canDelete, acceptedOn, contactEm
                         </button>
                     </div>
                 </form>
+            </Panel>
+
+            <Panel title={t("sessions.title")}>
+                <p className="max-w-[60ch]">{t("sessions.text")}</p>
+                <button type="button" onClick={revokeSessions} disabled={revoking} className={`mt-6 ${primaryButton}`}>
+                    {revoking ? t("sessions.working") : t("sessions.button")}
+                </button>
             </Panel>
 
             <Panel title={t("legal.title")}>

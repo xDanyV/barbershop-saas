@@ -43,8 +43,9 @@ function getSecret() {
 }
 
 // El token solo identifica al usuario; rol, estado y negocio se leen de la base en cada petición
-export async function signSessionToken(userId: string) {
-    return new SignJWT({ userId })
+// sv = sessionVersion del usuario: si cambia (nueva contraseña, cerrar sesiones) el token deja de valer
+export async function signSessionToken(userId: string, sessionVersion: number) {
+    return new SignJWT({ userId, sv: sessionVersion })
         .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
         .setExpirationTime(`${SESSION_MAX_AGE}s`)
@@ -54,7 +55,10 @@ export async function signSessionToken(userId: string) {
 export async function verifySessionToken(token: string) {
     try {
         const { payload } = await jwtVerify(token, getSecret());
-        return typeof payload.userId === "string" ? payload.userId : null;
+        if (typeof payload.userId !== "string") return null;
+
+        // Los tokens emitidos antes de existir la versión cuentan como versión 0
+        return { userId: payload.userId, sessionVersion: typeof payload.sv === "number" ? payload.sv : 0 };
     } catch {
         return null;
     }
@@ -63,7 +67,8 @@ export async function verifySessionToken(token: string) {
 export async function loadSessionIdentity(
     userId: string,
     activeBusinessId?: string | null,
-    managedBarberId?: string | null
+    managedBarberId?: string | null,
+    tokenSessionVersion?: number
 ): Promise<SessionIdentity | null> {
     const user = await prisma.user.findUnique({
         where: { id: userId },
@@ -73,6 +78,7 @@ export async function loadSessionIdentity(
             isBanned: true,
             termsVersion: true,
             deletedAt: true,
+            sessionVersion: true,
             barberProfile: {
                 select: {
                     id: true,
@@ -89,6 +95,9 @@ export async function loadSessionIdentity(
 
     // Una cuenta eliminada no tiene sesión aunque el token siga vigente
     if (!user || user.deletedAt) return null;
+
+    // Token de una sesión cerrada (cambio de contraseña o "cerrar las demás sesiones")
+    if (tokenSessionVersion !== undefined && tokenSessionVersion !== user.sessionVersion) return null;
 
     let businessId = user.barberProfile?.businessId ?? null;
 
@@ -145,10 +154,10 @@ export async function getSessionFromToken(
 ) {
     if (!token) return null;
 
-    const userId = await verifySessionToken(token);
-    if (!userId) return null;
+    const verified = await verifySessionToken(token);
+    if (!verified) return null;
 
-    return loadSessionIdentity(userId, activeBusinessId, managedBarberId);
+    return loadSessionIdentity(verified.userId, activeBusinessId, managedBarberId, verified.sessionVersion);
 }
 
 export function getHomePathForRole(role: Role) {
