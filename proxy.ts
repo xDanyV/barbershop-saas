@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
-import { prisma } from "@/lib/prisma";
 import {
   ACTIVE_BUSINESS_COOKIE,
   SESSION_COOKIE,
@@ -20,12 +19,11 @@ const IDENTITY_HEADERS = [
   "x-barber-id",
   "x-barber-status",
   "x-business-id",
+  "x-user-banned",
 ];
 
-const MAX_ACTIVE_APPOINTMENTS = 2;
-
 export async function proxy(request: NextRequest) {
-  const { pathname, searchParams } = request.nextUrl;
+  const { pathname } = request.nextUrl;
 
   // Eliminamos cualquier cabecera de identidad enviada por el cliente
   for (const header of IDENTITY_HEADERS) {
@@ -86,26 +84,6 @@ export async function proxy(request: NextRequest) {
   const redirectTo = (path: string) =>
     NextResponse.redirect(new URL(`${localePrefix}${path}`, request.url));
 
-  const isBookingRoute =
-    pathnameWithoutLocale === "/dashboard/customer/barbers" ||
-    (pathnameWithoutLocale === "/dashboard/customer" && searchParams.has("barberId"));
-
-  if (isBookingRoute && session.role === "CUSTOMER") {
-    const activeAppointments = await prisma.appointment.count({
-      where: {
-        userId: session.userId,
-        status: { in: ["PENDING", "CONFIRMED"] },
-        date: { gt: new Date() },
-      },
-    });
-
-    if (activeAppointments >= MAX_ACTIVE_APPOINTMENTS) {
-      const responseRedirect = redirectTo("/dashboard/customer/home");
-      responseRedirect.headers.set('Cache-Control', 'no-store, max-age=0');
-      return responseRedirect;
-    }
-  }
-
   if (pathnameWithoutLocale.startsWith("/dashboard/barber")) {
     const canAccess =
       session.role === "BARBER" ||
@@ -135,6 +113,7 @@ export async function proxy(request: NextRequest) {
   if (session.barberId) request.headers.set("x-barber-id", session.barberId);
   if (session.barberStatus) request.headers.set("x-barber-status", session.barberStatus);
   if (session.businessId) request.headers.set("x-business-id", session.businessId);
+  if (session.isBanned) request.headers.set("x-user-banned", "true");
 
   if (isProtectedApi) {
     return NextResponse.next({ request: { headers: request.headers } });

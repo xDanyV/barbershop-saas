@@ -1,17 +1,30 @@
 import { prisma } from "@/lib/prisma";
 import { PAST_DUE_GRACE_DAYS } from "@/lib/billing/status";
-import { NextResponse } from "next/server";
+
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+
+// Citas confirmadas que empezaron hace más de una hora pasan a COMPLETED
+export async function completePastAppointments(now = new Date()) {
+    const updated = await prisma.appointment.updateMany({
+        where: {
+            status: "CONFIRMED",
+            date: {
+                lt: new Date(now.getTime() - HOUR_MS),
+            },
+        },
+        data: {
+            status: "COMPLETED",
+        },
+    });
+
+    return { completed: updated.count };
+}
 
 // Vencimiento de suscripciones manuales (las de Stripe / Mercado Pago las actualizará su webhook):
 // ACTIVE con periodo vencido -> PAST_DUE; PAST_DUE vencido hace más de la gracia -> SUSPENDED
-export async function GET(request: Request) {
-    const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const now = new Date();
-    const graceLimit = new Date(now.getTime() - PAST_DUE_GRACE_DAYS * 24 * 60 * 60 * 1000);
+export async function updateExpiredSubscriptions(now = new Date()) {
+    const graceLimit = new Date(now.getTime() - PAST_DUE_GRACE_DAYS * DAY_MS);
 
     // Primero suspender, para que un ACTIVE recién vencido pase por PAST_DUE antes de suspenderse
     const suspended = await prisma.businessSubscription.updateMany({
@@ -36,8 +49,5 @@ export async function GET(request: Request) {
         },
     });
 
-    return NextResponse.json({
-        pastDue: pastDue.count,
-        suspended: suspended.count,
-    });
+    return { pastDue: pastDue.count, suspended: suspended.count };
 }

@@ -155,27 +155,6 @@ export async function getUserAppointments(userId: string) {
     });
 }
 
-export async function getAllAppointments() {
-    return await prisma.appointment.findMany({
-        include: {
-            user: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    phone: true,
-                },
-            },
-            barber: true,
-            service: true,
-            business: true,
-        },
-        orderBy: {
-            date: "asc",
-        },
-    });
-}
-
 export async function getBarberAppointments(barberId: string) {
     if (!barberId) {
         throw new AppError("Barber ID is required");

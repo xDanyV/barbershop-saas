@@ -56,7 +56,7 @@ export default function AppointmentCard({
 
     try {
       const res = await fetch(
-        `/api/protected/appointments/${appointment.id}/confirm`,
+        `/api/protected/appointments/${appointment.id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
