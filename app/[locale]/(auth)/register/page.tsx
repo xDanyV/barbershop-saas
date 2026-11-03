@@ -59,8 +59,14 @@ export default function RegisterPage() {
         const loadingToast = toast.loading(t("toasts.creating"));
 
         try {
-            // Excluimos confirmPassword para no enviarlo a la API
-            const { confirmPassword, ...apiData } = form;
+            // confirmPassword solo se valida en el cliente; no se envía a la API
+            const apiData = {
+                name: form.name,
+                email: form.email,
+                phone: form.phone,
+                password: form.password,
+                businessSlug: form.businessSlug,
+            };
 
             const response = await fetch("/api/register", {
                 method: "POST",

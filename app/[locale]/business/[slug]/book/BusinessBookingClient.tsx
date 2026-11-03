@@ -7,7 +7,6 @@ import {
     Calendar as CalendarIcon,
     CheckCircle2,
     ChevronLeft,
-    Clock,
     Scissors,
     UserRound,
 } from "lucide-react";

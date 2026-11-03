@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Toaster, toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -70,7 +69,7 @@ export default function DashboardNavbar({ role }: { role: string }) {
 
                 if (Array.isArray(data)) {
                     const activeCount = data.filter(
-                        (a: any) => a.status === "PENDING" || a.status === "CONFIRMED"
+                        (a: { status: string }) => a.status === "PENDING" || a.status === "CONFIRMED"
                     ).length;
 
                     if (activeCount >= 2) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import DashboardHeader from "./components/DashboardHeader";
 import CalendarPicker from "./components/CalendarPicker";
 import AppointmentList from "./components/AppointmentList";
@@ -86,7 +86,7 @@ export default function BarberDashboard() {
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
-          setWorkingDays(data.map((d: any) => d.dayOfWeek));
+          setWorkingDays(data.map((d: { dayOfWeek: number }) => d.dayOfWeek));
         }
       })
       .catch(() => console.error("Could not load availability"));

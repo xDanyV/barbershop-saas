@@ -8,7 +8,6 @@ import {
     ArrowRight,
     Building2,
     CalendarDays,
-    Loader2,
     MapPin,
     Phone,
     Scissors,

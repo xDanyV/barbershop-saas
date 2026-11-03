@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
     Ban,
     ImageIcon,
@@ -129,7 +129,7 @@ export default function ActiveBarbersList() {
         },
     });
 
-    const fetchManaged = async () => {
+    const fetchManaged = useCallback(async () => {
         try {
             setLoading(true);
 
@@ -156,11 +156,11 @@ export default function ActiveBarbersList() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [t]);
 
     useEffect(() => {
         fetchManaged();
-    }, []);
+    }, [fetchManaged]);
 
     const executeStatusChange = async (
         barberId: string,
