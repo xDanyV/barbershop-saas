@@ -1,9 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { getBillingPlan } from "@/lib/billing/pricing";
+import { toBillingSummary } from "@/lib/billing/status";
 import { AppError, errorResponse } from "@/lib/errors";
+import { addDaysToKey, isValidDateKey, resolveTimezone, zonedToUtc } from "@/lib/time/zoned";
 import {
     BusinessBillingStatus,
     BusinessPlanType,
+    Prisma,
     SubscriptionProvider,
 } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
@@ -32,22 +35,17 @@ function isBillingPlan(value: unknown): value is BusinessPlanType {
     );
 }
 
-function parseNullableDate(value: unknown) {
+// "YYYY-MM-DD" -> final de ese día en la zona horaria del negocio
+function parseNullableEndDate(value: unknown, timezone: string) {
     if (value === null || value === undefined || value === "") {
         return null;
     }
 
-    if (typeof value !== "string") {
+    if (!isValidDateKey(value)) {
         throw new AppError("Invalid subscription end date");
     }
 
-    const date = new Date(`${value}T23:59:59.999`);
-
-    if (Number.isNaN(date.getTime())) {
-        throw new AppError("Invalid subscription end date");
-    }
-
-    return date;
+    return new Date(zonedToUtc(addDaysToKey(value, 1), "00:00", timezone).getTime() - 1);
 }
 
 const businessSelect = {
@@ -55,9 +53,6 @@ const businessSelect = {
     name: true,
     slug: true,
     active: true,
-    billingStatus: true,
-    billingPlan: true,
-    subscriptionEndsAt: true,
     owner: {
         select: {
             id: true,
@@ -68,6 +63,7 @@ const businessSelect = {
     subscription: {
         select: {
             id: true,
+            plan: true,
             provider: true,
             billingStatus: true,
             currentPeriodEnd: true,
@@ -75,7 +71,17 @@ const businessSelect = {
             currency: true,
         },
     },
-};
+} satisfies Prisma.BusinessSelect;
+
+type BillingBusiness = Prisma.BusinessGetPayload<{ select: typeof businessSelect }>;
+
+// Mantiene la forma que consume el panel (billingStatus, billingPlan, subscriptionEndsAt)
+function withBillingSummary(business: BillingBusiness) {
+    return {
+        ...business,
+        ...toBillingSummary(business.subscription),
+    };
+}
 
 export async function GET(req: NextRequest) {
     try {
@@ -92,14 +98,9 @@ export async function GET(req: NextRequest) {
             },
         });
 
-        return NextResponse.json(businesses);
+        return NextResponse.json(businesses.map(withBillingSummary));
     } catch (error) {
-        console.error("Get businesses billing error:", error);
-
-        return NextResponse.json(
-            { error: "Internal server error" },
-            { status: 500 }
-        );
+        return errorResponse(error, "Get businesses billing error");
     }
 }
 
@@ -137,15 +138,13 @@ export async function PATCH(req: NextRequest) {
             );
         }
 
-        const subscriptionEndsAt = parseNullableDate(body.subscriptionEndsAt);
-        const plan = getBillingPlan(body.billingPlan);
-
         const existingBusiness = await prisma.business.findUnique({
             where: {
                 id: businessId,
             },
             select: {
                 id: true,
+                timezone: true,
             },
         });
 
@@ -156,53 +155,51 @@ export async function PATCH(req: NextRequest) {
             );
         }
 
-        const updatedBusiness = await prisma.$transaction(async (tx) => {
-            await tx.business.update({
-                where: {
-                    id: businessId,
-                },
-                data: {
-                    billingStatus: body.billingStatus,
-                    billingPlan: body.billingPlan,
-                    subscriptionEndsAt,
-                },
-            });
+        const billingStatus: BusinessBillingStatus = body.billingStatus;
+        const billingPlan: BusinessPlanType = body.billingPlan;
+        const plan = getBillingPlan(billingPlan);
+        const currentPeriodEnd = parseNullableEndDate(
+            body.subscriptionEndsAt,
+            resolveTimezone(existingBusiness.timezone)
+        );
+        const canceledAt = billingStatus === "CANCELED" ? new Date() : null;
 
-            await tx.businessSubscription.upsert({
-                where: {
-                    businessId,
-                },
-                update: {
-                    plan: body.billingPlan,
-                    billingStatus: body.billingStatus,
-                    provider: SubscriptionProvider.MANUAL,
-                    setupFeeCents: plan.setupFeeCents,
-                    monthlyPriceCents: plan.monthlyPriceCents,
-                    currency: plan.currency,
-                    currentPeriodEnd: subscriptionEndsAt,
-                },
-                create: {
-                    businessId,
-                    plan: body.billingPlan,
-                    billingStatus: body.billingStatus,
-                    provider: SubscriptionProvider.MANUAL,
-                    setupFeeCents: plan.setupFeeCents,
-                    monthlyPriceCents: plan.monthlyPriceCents,
-                    currency: plan.currency,
-                    currentPeriodStart: new Date(),
-                    currentPeriodEnd: subscriptionEndsAt,
-                },
-            });
-
-            return tx.business.findUnique({
-                where: {
-                    id: businessId,
-                },
-                select: businessSelect,
-            });
+        await prisma.businessSubscription.upsert({
+            where: {
+                businessId,
+            },
+            update: {
+                plan: billingPlan,
+                billingStatus,
+                provider: SubscriptionProvider.MANUAL,
+                setupFeeCents: plan.setupFeeCents,
+                monthlyPriceCents: plan.monthlyPriceCents,
+                currency: plan.currency,
+                currentPeriodEnd,
+                canceledAt,
+            },
+            create: {
+                businessId,
+                plan: billingPlan,
+                billingStatus,
+                provider: SubscriptionProvider.MANUAL,
+                setupFeeCents: plan.setupFeeCents,
+                monthlyPriceCents: plan.monthlyPriceCents,
+                currency: plan.currency,
+                currentPeriodStart: new Date(),
+                currentPeriodEnd,
+                canceledAt,
+            },
         });
 
-        return NextResponse.json(updatedBusiness);
+        const updatedBusiness = await prisma.business.findUniqueOrThrow({
+            where: {
+                id: businessId,
+            },
+            select: businessSelect,
+        });
+
+        return NextResponse.json(withBillingSummary(updatedBusiness));
     } catch (error) {
         return errorResponse(error, "Update business billing error");
     }

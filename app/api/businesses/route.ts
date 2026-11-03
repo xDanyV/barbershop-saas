@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { publicBusinessWhere } from "@/lib/billing/status";
 
 export async function GET() {
     try {
         const businesses = await prisma.business.findMany({
-            where: {
-                active: true,
-            },
+            where: publicBusinessWhere,
             select: {
                 id: true,
                 name: true,

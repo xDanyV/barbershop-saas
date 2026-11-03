@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import { publicBusinessWhere } from "@/lib/billing/status";
 import BusinessHero from "./components/BusinessHero";
 import BarberCarousel from "./components/BarberCarousel";
 import BusinessGallery from "./components/BusinessGallery";
@@ -19,8 +20,9 @@ type BusinessPageProps = {
 export default async function BusinessPage({ params }: BusinessPageProps) {
     const { locale, slug } = await params;
 
-    const business = await prisma.business.findUnique({
-        where: { slug },
+    // Los negocios suspendidos o cancelados no se muestran públicamente
+    const business = await prisma.business.findFirst({
+        where: { slug, ...publicBusinessWhere },
         select: {
             id: true,
             name: true,

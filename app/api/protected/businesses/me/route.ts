@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { billingSummarySelect, toBillingSummary } from "@/lib/billing/status";
 
 function cleanString(value: unknown) {
     if (typeof value !== "string") return null;
@@ -18,6 +19,7 @@ async function getOwnerBusiness(userId: string, businessId?: string | null) {
             },
             include: {
                 settings: true,
+                subscription: { select: billingSummarySelect },
             },
         });
     }
@@ -28,6 +30,7 @@ async function getOwnerBusiness(userId: string, businessId?: string | null) {
         },
         include: {
             settings: true,
+            subscription: { select: billingSummarySelect },
         },
         orderBy: {
             createdAt: "desc",
@@ -58,7 +61,7 @@ export async function GET(req: NextRequest) {
             );
         }
 
-        return NextResponse.json(business);
+        return NextResponse.json({ ...business, ...toBillingSummary(business.subscription) });
     } catch (error) {
         console.error("Get owner business error:", error);
 
@@ -153,11 +156,14 @@ export async function PATCH(req: NextRequest) {
                 },
                 include: {
                     settings: true,
+                    subscription: { select: billingSummarySelect },
                 },
             });
         });
 
-        return NextResponse.json(updatedBusiness);
+        return NextResponse.json(
+            updatedBusiness && { ...updatedBusiness, ...toBillingSummary(updatedBusiness.subscription) }
+        );
     } catch (error) {
         console.error("Update owner business error:", error);
 

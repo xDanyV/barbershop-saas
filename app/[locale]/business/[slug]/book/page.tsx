@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { canBusinessAcceptBookings } from "@/lib/billing/status";
+import { canBusinessAcceptBookings, getBillingStatus } from "@/lib/billing/status";
 import { notFound } from "next/navigation";
 import BusinessBookingClient from "./BusinessBookingClient";
 
@@ -21,7 +21,7 @@ export default async function BusinessBookPage({ params }: BookPageProps) {
             slug: true,
             description: true,
             active: true,
-            billingStatus: true,
+            subscription: { select: { billingStatus: true } },
             settings: {
                 select: {
                     isServiceActive: true,
@@ -53,7 +53,7 @@ export default async function BusinessBookPage({ params }: BookPageProps) {
         notFound();
     }
 
-    const canAcceptBookings = canBusinessAcceptBookings(business.billingStatus);
+    const canAcceptBookings = canBusinessAcceptBookings(getBillingStatus(business.subscription));
 
     if (!canAcceptBookings) {
         return (

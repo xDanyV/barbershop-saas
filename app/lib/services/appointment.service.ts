@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { AppointmentStatus } from "@prisma/client";
-import { canBusinessAcceptBookings } from "@/lib/billing/status";
+import { canBusinessAcceptBookings, getBillingStatus } from "@/lib/billing/status";
 import { AppError } from "@/lib/errors";
 import { getBarberDay, lockKeys } from "@/lib/services/booking.service";
 import { resolveTimezone, toDateKey } from "@/lib/time/zoned";
@@ -39,7 +39,7 @@ export async function createAppointment(data: {
             business: {
                 select: {
                     active: true,
-                    billingStatus: true,
+                    subscription: { select: { billingStatus: true } },
                     timezone: true,
                     settings: {
                         select: {
@@ -63,7 +63,7 @@ export async function createAppointment(data: {
         throw new AppError("Business is temporarily closed");
     }
 
-    if (!canBusinessAcceptBookings(barber.business.billingStatus)) {
+    if (!canBusinessAcceptBookings(getBillingStatus(barber.business.subscription))) {
         throw new AppError("Business is not accepting bookings at this time");
     }
 
