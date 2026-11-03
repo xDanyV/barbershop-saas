@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { getBookingBusiness } from "@/lib/cache/business-pages";
 import { canBusinessAcceptBookings, getBillingStatus } from "@/lib/billing/status";
 import { notFound } from "next/navigation";
 import BusinessBookingClient from "./BusinessBookingClient";
@@ -13,41 +13,7 @@ type BookPageProps = {
 export default async function BusinessBookPage({ params }: BookPageProps) {
     const { locale, slug } = await params;
 
-    const business = await prisma.business.findUnique({
-        where: { slug },
-        select: {
-            id: true,
-            name: true,
-            slug: true,
-            description: true,
-            active: true,
-            subscription: { select: { billingStatus: true } },
-            settings: {
-                select: {
-                    isServiceActive: true,
-                    maintenanceMessage: true,
-                },
-            },
-            barbers: {
-                where: {
-                    active: true,
-                    status: "APPROVED",
-                },
-                select: {
-                    id: true,
-                    profileImageUrl: true,
-                    user: {
-                        select: {
-                            name: true,
-                        },
-                    },
-                },
-                orderBy: {
-                    createdAt: "asc",
-                },
-            },
-        },
-    });
+    const business = await getBookingBusiness(slug);
 
     if (!business || !business.active) {
         notFound();

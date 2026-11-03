@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { AppError, errorResponse } from "@/lib/errors";
+import { revalidateBusinessPages } from "@/lib/cache/business-pages";
 import { requireAuth } from "@/lib/api/auth";
 import { parseJsonBody } from "@/lib/api/validation";
 import { updateBarberAdminSchema } from "@/lib/validations/schemas";
@@ -83,6 +84,8 @@ export async function PATCH(request: NextRequest) {
                 profileImageUrl: true,
             },
         });
+
+        await revalidateBusinessPages(existingBarber.businessId);
 
         return NextResponse.json({
             message: "Barber updated successfully",

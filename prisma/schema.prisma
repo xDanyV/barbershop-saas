@@ -38,7 +38,7 @@ model Business {
   logoUrl     String?
   coverUrl    String?
   active      Boolean @default(true)
-  timezone    String  @default("America/Mexico_City")
+  timezone    String  @default("America/Tijuana")
 
   ownerId String
   owner   User   @relation("BusinessOwner", fields: [ownerId], references: [id])
