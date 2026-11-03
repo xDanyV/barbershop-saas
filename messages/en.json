@@ -549,5 +549,11 @@
         "message": "Your account has been temporarily suspended due to a violation of our policies or multiple missed appointments. You cannot book new appointments at this time.",
         "home": "Go to Home",
         "logout": "Log Out"
+    },
+    "TeamBarberSelector": {
+        "label": "Managing",
+        "self": "My schedule",
+        "hint": "Schedule, services and time off apply to the selected barber.",
+        "error": "Could not switch barber"
     }
 }

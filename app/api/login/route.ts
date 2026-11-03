@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import {
   ACTIVE_BUSINESS_COOKIE,
+  MANAGED_BARBER_COOKIE,
   SESSION_COOKIE,
   SESSION_MAX_AGE_SECONDS,
   loadSessionIdentity,
@@ -79,6 +80,7 @@ export async function POST(req: Request) {
 
     // Un inicio de sesión nuevo vuelve al negocio por defecto
     response.cookies.delete(ACTIVE_BUSINESS_COOKIE);
+    response.cookies.delete(MANAGED_BARBER_COOKIE);
 
     return response;
 
