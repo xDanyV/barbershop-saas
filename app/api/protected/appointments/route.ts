@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAppointment, getAllAppointments } from "@/lib/services/appointment.service";
 import { prisma } from "@/lib/prisma";
+import { errorResponse } from "@/lib/errors";
 
 //Create appointment endpoint
 export async function POST(request: NextRequest) {
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
     if (user.isBanned) {
       return NextResponse.json(
         { error: "Account suspended. You cannot book appointments." },
-        { status: 403 } 
+        { status: 403 }
       );
     }
 
@@ -43,28 +44,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(appointment, { status: 201 });
 
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Internal server error";
-
-    return NextResponse.json(
-      { error: message },
-      { status: 400 }
-    );
+    return errorResponse(error, "Create appointment error");
   }
 }
 
-//Get all appointments (for admin)
+//Get all appointments (platform admin only)
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get("x-user-id");
+    const role = request.headers.get("x-user-role");
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+    if (role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const appointments = await getAllAppointments();
@@ -72,9 +62,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(appointments);
 
   } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return errorResponse(error, "Get all appointments error");
   }
 }

@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { validateAppointmentDate } from "@/lib/validations/appointment.validation";
-import { AppointmentStatus } from "@prisma/client/edge";
+import { AppointmentStatus } from "@prisma/client";
 import { canBusinessAcceptBookings } from "@/lib/billing/status";
+import { AppError } from "@/lib/errors";
 
 export async function createAppointment(data: {
     userId: string;
@@ -12,7 +13,7 @@ export async function createAppointment(data: {
     const { userId, barberId, serviceId, date } = data;
 
     if (!date || !serviceId || !barberId) {
-        throw new Error("Date, service, and barber are required");
+        throw new AppError("Date, service, and barber are required");
     }
 
     const barber = await prisma.barber.findUnique({
@@ -37,19 +38,19 @@ export async function createAppointment(data: {
     });
 
     if (!barber || !barber.active || barber.status !== "APPROVED") {
-        throw new Error("Barber not available");
+        throw new AppError("Barber not available");
     }
 
     if (!barber.business.active) {
-        throw new Error("Business is not active");
+        throw new AppError("Business is not active");
     }
 
     if (barber.business.settings && !barber.business.settings.isServiceActive) {
-        throw new Error("Business is temporarily closed");
+        throw new AppError("Business is temporarily closed");
     }
 
     if (!canBusinessAcceptBookings(barber.business.billingStatus)) {
-        throw new Error("Business is not accepting bookings at this time");
+        throw new AppError("Business is not accepting bookings at this time");
     }
 
     const service = await prisma.service.findFirst({
@@ -66,14 +67,14 @@ export async function createAppointment(data: {
     });
 
     if (!service) {
-        throw new Error("Service not available for this barber");
+        throw new AppError("Service not available for this barber");
     }
 
     const startDate = new Date(date);
 
     const validationError = validateAppointmentDate(startDate);
     if (validationError) {
-        throw new Error(validationError);
+        throw new AppError(validationError);
     }
 
     const now = new Date();
@@ -90,7 +91,7 @@ export async function createAppointment(data: {
     });
 
     if (activeUpcomingAppointments >= 2) {
-        throw new Error("No puedes tener más de 2 citas activas programadas al mismo tiempo");
+        throw new AppError("No puedes tener más de 2 citas activas programadas al mismo tiempo");
     }
 
     const existing = await prisma.appointment.findFirst({
@@ -105,7 +106,7 @@ export async function createAppointment(data: {
     });
 
     if (existing) {
-        throw new Error("Time slot not available");
+        throw new AppError("Time slot not available");
     }
 
     const exception = await prisma.barberException.findFirst({
@@ -117,7 +118,7 @@ export async function createAppointment(data: {
     });
 
     if (exception) {
-        throw new Error("Barber is not available on this date");
+        throw new AppError("Barber is not available on this date");
     }
 
     return prisma.appointment.create({
@@ -179,7 +180,7 @@ export async function getAllAppointments() {
 
 export async function getBarberAppointments(barberId: string) {
     if (!barberId) {
-        throw new Error("Barber ID is required");
+        throw new AppError("Barber ID is required");
     }
 
     return await prisma.appointment.findMany({
@@ -223,7 +224,7 @@ export async function updateAppointmentStatus(
     }
 ) {
     if (!appointmentId) {
-        throw new Error("Appointment ID is required");
+        throw new AppError("Appointment ID is required");
     }
 
     const appointment = await prisma.appointment.findUnique({
@@ -240,25 +241,25 @@ export async function updateAppointmentStatus(
     });
 
     if (!appointment) {
-        throw new Error("Appointment not found");
+        throw new AppError("Appointment not found", 404);
     }
 
     const currentStatus = appointment.status;
     const isAllowed = allowedTransitions[currentStatus].includes(newStatus);
 
     if (!isAllowed) {
-        throw new Error(
+        throw new AppError(
             `Cannot change status from ${currentStatus} to ${newStatus}`
         );
     }
 
     if (role === "CUSTOMER") {
         if (newStatus !== "CANCELLED") {
-            throw new Error("Customers can only cancel appointments");
+            throw new AppError("Customers can only cancel appointments");
         }
 
         if (appointment.userId !== userId) {
-            throw new Error("Not authorized");
+            throw new AppError("Not authorized", 403);
         }
 
         const now = new Date();
@@ -267,20 +268,20 @@ export async function updateAppointmentStatus(
             (appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
         if (hoursUntilAppointment < 2) {
-            throw new Error(
+            throw new AppError(
                 "Appointments cannot be cancelled less than 2 hours before the scheduled time"
             );
         }
     } else if (role === "BARBER") {
         if (!context?.barberId || appointment.barberId !== context.barberId) {
-            throw new Error("Not authorized");
+            throw new AppError("Not authorized", 403);
         }
     } else if (role === "OWNER") {
         if (!context?.businessId || appointment.businessId !== context.businessId) {
-            throw new Error("Not authorized");
+            throw new AppError("Not authorized", 403);
         }
     } else if (role !== "ADMIN") {
-        throw new Error("Not authorized");
+        throw new AppError("Not authorized", 403);
     }
 
     return prisma.appointment.update({

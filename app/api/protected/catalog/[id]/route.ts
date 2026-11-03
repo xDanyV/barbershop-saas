@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateCatalogService, deleteCatalogService } from "@/lib/services/catalog.service";
+import { errorResponse } from "@/lib/errors";
 
 export async function PATCH(
   request: NextRequest,
@@ -31,8 +32,7 @@ export async function PATCH(
     return NextResponse.json(updated);
 
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 400 });
+    return errorResponse(error, "Catalog PATCH error");
   }
 }
 
@@ -54,7 +54,6 @@ export async function DELETE(
     return NextResponse.json(deleted);
 
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 400 });
+    return errorResponse(error, "Catalog DELETE error");
   }
 }

@@ -1,21 +1,24 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// Get all active barbers with their user profile
-export async function GET() {
+// Public list of active barbers. Only exposes public profile data (no email/phone).
+export async function GET(request: NextRequest) {
   try {
+    const businessId = request.nextUrl.searchParams.get("businessId");
+
     const barbers = await prisma.barber.findMany({
       where: {
         active: true,
-        status: "APPROVED"
+        status: "APPROVED",
+        ...(businessId ? { businessId } : {}),
       },
-      include: {
+      select: {
+        id: true,
+        businessId: true,
+        profileImageUrl: true,
         user: {
           select: {
-            id: true,
             name: true,
-            email: true,
-            phone: true,
           },
         },
       },

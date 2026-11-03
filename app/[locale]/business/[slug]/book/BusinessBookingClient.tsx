@@ -22,8 +22,6 @@ type Barber = {
     profileImageUrl: string | null;
     user: {
         name: string | null;
-        email: string;
-        phone: string;
     };
 };
 

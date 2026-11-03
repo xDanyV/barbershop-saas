@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getBillingPlan } from "@/lib/billing/pricing";
+import { AppError, errorResponse } from "@/lib/errors";
 import {
     BusinessBillingStatus,
     BusinessPlanType,
@@ -37,13 +38,13 @@ function parseNullableDate(value: unknown) {
     }
 
     if (typeof value !== "string") {
-        throw new Error("Invalid subscription end date");
+        throw new AppError("Invalid subscription end date");
     }
 
     const date = new Date(`${value}T23:59:59.999`);
 
     if (Number.isNaN(date.getTime())) {
-        throw new Error("Invalid subscription end date");
+        throw new AppError("Invalid subscription end date");
     }
 
     return date;
@@ -203,11 +204,6 @@ export async function PATCH(req: NextRequest) {
 
         return NextResponse.json(updatedBusiness);
     } catch (error) {
-        console.error("Update business billing error:", error);
-
-        const message =
-            error instanceof Error ? error.message : "Internal server error";
-
-        return NextResponse.json({ error: message }, { status: 500 });
+        return errorResponse(error, "Update business billing error");
     }
 }
