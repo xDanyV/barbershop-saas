@@ -11,6 +11,7 @@ import {
     ShieldCheck,
     Store,
 } from "lucide-react";
+import BrandMark from "@/[locale]/components/BrandMark";
 import { useTranslations } from "next-intl";
 
 export default function DashboardNavbar({ role }: { role: string }) {
@@ -108,12 +109,7 @@ export default function DashboardNavbar({ role }: { role: string }) {
                         className="flex items-center gap-2 cursor-pointer"
                         onClick={() => router.push(getHomePath())}
                     >
-                        <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center font-bold shadow-inner shrink-0">
-                            B
-                        </div>
-                        <h1 className="text-base font-bold tracking-tighter uppercase">
-                            Barber<span className="text-indigo-400">SaaS</span>
-                        </h1>
+                        <BrandMark />
                     </div>
 
                     <nav className="flex gap-1">
@@ -161,12 +157,7 @@ export default function DashboardNavbar({ role }: { role: string }) {
                     className="flex items-center gap-2 cursor-pointer"
                     onClick={() => router.push(getHomePath())}
                 >
-                    <div className="w-7 h-7 bg-indigo-500 rounded-md flex items-center justify-center font-bold text-sm shrink-0">
-                        B
-                    </div>
-                    <h1 className="text-sm font-bold tracking-tighter uppercase">
-                        Barber<span className="text-indigo-400">SaaS</span>
-                    </h1>
+                    <BrandMark iconClassName="h-7 w-7 rounded-md bg-indigo-500 text-white" iconSize={14} />
                 </div>
 
                 <motion.button

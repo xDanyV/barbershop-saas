@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import BrandMark from "@/[locale]/components/BrandMark";
 import { useTranslations } from "next-intl";
 
 type Props = {
@@ -17,13 +18,7 @@ export default function BusinessPublicNavbar({ locale }: Props) {
                     href={`/${locale}/dashboard/customer/home`}
                     className="flex items-center gap-2 min-w-0"
                 >
-                    <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center font-bold shadow-inner shrink-0">
-                        B
-                    </div>
-
-                    <h1 className="text-sm md:text-base font-bold tracking-tighter uppercase truncate">
-                        Barber<span className="text-indigo-400">SaaS</span>
-                    </h1>
+                    <BrandMark />
                 </Link>
 
                 <nav className="flex items-center gap-2">

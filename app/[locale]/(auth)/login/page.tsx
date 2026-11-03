@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Eye, EyeOff } from "lucide-react";
+import BrandMark from "@/[locale]/components/BrandMark";
 
 export default function LoginPage() {
   const t = useTranslations("Login");
@@ -99,7 +100,7 @@ export default function LoginPage() {
           className="text-center mb-6 sm:mb-8"
         >
           <Link href="/" className="inline-block text-white font-black text-2xl tracking-tight">
-            BARBER<span className="text-indigo-400">SAAS</span>
+            <BrandMark iconClassName="h-12 w-12 rounded-2xl bg-indigo-500/15 text-indigo-300" iconSize={22} />
           </Link>
         </motion.div>
 

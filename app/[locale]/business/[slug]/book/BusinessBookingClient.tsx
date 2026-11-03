@@ -320,9 +320,6 @@ function BookingNavbar({
                     </div>
                     <div className="leading-tight">
                         <p className="text-sm font-black text-gray-900">
-                            BarberSaaS
-                        </p>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                             {t("bookings")}
                         </p>
                     </div>

@@ -1,4 +1,4 @@
-# BarberSaaS
+# Citas para barberías (Tijuana)
 
 Sistema de citas para barberías pequeñas de Tijuana y Baja California. Cada barbería tiene su página pública (con QR), sus barberos, servicios y horarios, y sus clientes reservan en línea.
 
@@ -59,6 +59,10 @@ La app queda en http://localhost:3000 (redirige a `/es`).
 - Suscripciones manuales vencidas → `PAST_DUE`, y a los 7 días → `SUSPENDED`
 
 Requiere `CRON_SECRET`.
+
+## Modo "próximamente"
+
+Con `MAINTENANCE_MODE=true` todo el tráfico ve `/[locale]/coming-soon` y las APIs responden 503 (el cron diario sigue funcionando). Para usar el sitio mientras tanto, abre cualquier URL con `?preview=<MAINTENANCE_BYPASS_SECRET>`: guarda una cookie por 30 días. Para lanzar, cambia la variable a `false` en Vercel y vuelve a desplegar.
 
 ## Despliegue (Vercel)
 

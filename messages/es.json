@@ -92,11 +92,11 @@
         },
         "footerCta": {
             "title": "¿Listo para tomar el control de tu agenda?",
-            "description": "Únete a los barberos que ya gestionan sus reservas con BarberSaaS.",
+            "description": "Únete a los barberos que ya gestionan sus reservas en línea.",
             "button": "Crea tu cuenta"
         },
         "footer": {
-            "rights": "© {year} BarberSaaS. Todos los derechos reservados."
+            "rights": "© {year} Todos los derechos reservados."
         }
     },
     "Login": {
@@ -660,7 +660,14 @@
         "book": "Reservar cita"
     },
     "Metadata": {
-        "title": "BarberSaaS | Citas para tu barbería",
+        "title": "Citas para tu barbería en Tijuana",
         "description": "Reserva y administra las citas de tu barbería en Tijuana."
+    },
+    "ComingSoon": {
+        "headline": "Abrimos\npronto",
+        "lead": "Estamos preparando las citas en línea para las barberías de Tijuana. Vuelve en unos días.",
+        "home": "Volver a intentar",
+        "cardLabel": "Cita confirmada",
+        "cardDetail": "Martes · Corte · $150"
     }
 }

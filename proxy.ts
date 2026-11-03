@@ -9,6 +9,7 @@ import {
   getHomePathForRole,
   getSessionFromToken,
 } from "@/lib/auth/session";
+import { maintenanceResponse } from "@/lib/maintenance";
 
 // Inicializamos el middleware de idiomas
 const intlMiddleware = createMiddleware(routing);
@@ -38,6 +39,10 @@ export async function proxy(request: NextRequest) {
 
   // Extraer el pathname sin el idioma (ej: /es/dashboard -> /dashboard)
   const pathnameWithoutLocale = pathname.replace(/^\/(en|es)/, '');
+
+  // Modo "próximamente" (MAINTENANCE_MODE=true): todo el sitio queda tras la página de espera
+  const maintenance = maintenanceResponse(request, localeMatch ? localeMatch[1] : routing.defaultLocale);
+  if (maintenance) return maintenance;
 
   // Determinar qué tipo de ruta es
   const isApiRoute = pathname.startsWith("/api");

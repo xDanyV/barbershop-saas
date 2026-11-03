@@ -92,11 +92,11 @@
         },
         "footerCta": {
             "title": "Ready to take control of your schedule?",
-            "description": "Join barbers already managing their bookings with BarberSaaS.",
+            "description": "Join the barbers already managing their bookings online.",
             "button": "Create your account"
         },
         "footer": {
-            "rights": "© {year} BarberSaaS. All rights reserved."
+            "rights": "© {year} All rights reserved."
         }
     },
     "Login": {
@@ -660,7 +660,14 @@
         "book": "Book appointment"
     },
     "Metadata": {
-        "title": "BarberSaaS | Barbershop appointments",
+        "title": "Barbershop appointments in Tijuana",
         "description": "Book and manage your barbershop appointments in Tijuana."
+    },
+    "ComingSoon": {
+        "headline": "Opening\nsoon",
+        "lead": "We are getting online booking ready for Tijuana barbershops. Check back in a few days.",
+        "home": "Try again",
+        "cardLabel": "Booking confirmed",
+        "cardDetail": "Tuesday · Haircut · $150"
     }
 }

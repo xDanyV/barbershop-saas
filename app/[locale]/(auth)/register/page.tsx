@@ -7,6 +7,7 @@ import Link from "next/link";
 import { toast } from "react-hot-toast";
 import { useTranslations } from "next-intl";
 import { Eye, EyeOff } from "lucide-react";
+import BrandMark from "@/[locale]/components/BrandMark";
 
 export default function RegisterPage() {
     const t = useTranslations("Register");
@@ -121,7 +122,7 @@ export default function RegisterPage() {
                     className="text-center mb-10"
                 >
                     <Link href="/" className="inline-block text-white font-black text-3xl tracking-tight">
-                        BARBER<span className="text-indigo-500">SAAS</span>
+                        <BrandMark iconClassName="h-12 w-12 rounded-2xl bg-indigo-500/15 text-indigo-300" iconSize={22} />
                     </Link>
                 </motion.div>
 
