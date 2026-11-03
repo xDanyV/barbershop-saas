@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, ImageIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { PublicBusinessGalleryItem } from "../lib/business-page.types";
 import LightboxImage from "./LightboxImage";
 
@@ -11,6 +12,7 @@ type Props = {
 };
 
 export default function BusinessGallery({ gallery }: Props) {
+    const t = useTranslations("BusinessPage.gallery");
     const [activeIndex, setActiveIndex] = useState(0);
 
     if (gallery.length === 0) {
@@ -22,15 +24,15 @@ export default function BusinessGallery({ gallery }: Props) {
                     </div>
 
                     <div>
-                        <h2 className="text-xl font-black">Galería</h2>
-                        <p className="text-gray-400 text-sm">Fotos del negocio.</p>
+                        <h2 className="text-xl font-black">{t("title")}</h2>
+                        <p className="text-gray-400 text-sm">{t("subtitle")}</p>
                     </div>
                 </div>
 
                 <div className="border border-dashed border-white/10 rounded-2xl p-6 text-center">
                     <ImageIcon className="mx-auto text-gray-600 mb-3" size={34} />
                     <p className="text-gray-400 text-sm">
-                        Aún no hay fotos en la galería.
+                        {t("empty")}
                     </p>
                 </div>
             </div>
@@ -60,9 +62,9 @@ export default function BusinessGallery({ gallery }: Props) {
                     </div>
 
                     <div>
-                        <h2 className="text-xl font-black">Galería</h2>
+                        <h2 className="text-xl font-black">{t("title")}</h2>
                         <p className="text-gray-400 text-sm">
-                            {gallery.length} foto{gallery.length === 1 ? "" : "s"}.
+                            {t("count", { count: gallery.length })}
                         </p>
                     </div>
                 </div>
@@ -99,7 +101,7 @@ export default function BusinessGallery({ gallery }: Props) {
                     >
                         <LightboxImage
                             src={activeImage.imageUrl}
-                            alt={activeImage.caption || "Foto del negocio"}
+                            alt={activeImage.caption || t("imageAlt")}
                             caption={activeImage.caption}
                             imageClassName="w-full h-72 object-contain bg-black/30"
                         />
@@ -129,7 +131,7 @@ export default function BusinessGallery({ gallery }: Props) {
                         >
                             <img
                                 src={item.imageUrl}
-                                alt={item.caption || "Foto del negocio"}
+                                alt={item.caption || t("imageAlt")}
                                 className="w-full h-full object-cover"
                             />
                         </button>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Clock, User, Calendar as CalendarIcon, History, AlertTriangle } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { formatPriceFromCents } from "@/lib/billing/pricing";
 
 type Appointment = {
@@ -18,6 +18,7 @@ type Appointment = {
 
 export default function CustomerHome() {
   const t = useTranslations("CustomerHome");
+  const dateLocale = useLocale() === "en" ? "en-US" : "es-MX";
   const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [history, setHistory] = useState<Appointment[]>([]);
@@ -259,7 +260,7 @@ export default function CustomerHome() {
               <AnimatePresence mode="popLayout">
                 {list.map((a, idx) => {
                   const date = new Date(a.date);
-                  const formattedTime = date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+                  const formattedTime = date.toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" });
 
                   /* ── History row ── */
                   if (showHistory) {
@@ -275,7 +276,7 @@ export default function CustomerHome() {
                         <div className="flex items-center gap-3">
                           <div className="text-center min-w-11 bg-gray-50 py-2 px-2 rounded-xl group-hover:bg-white transition-colors border border-gray-100/50">
                             <p className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">
-                              {date.toLocaleDateString("en-US", { month: "short" })}
+                              {date.toLocaleDateString(dateLocale, { month: "short" })}
                             </p>
                             <p className="text-sm font-black text-gray-800 leading-none">{date.getDate()}</p>
                           </div>
@@ -313,7 +314,7 @@ export default function CustomerHome() {
                         {/* Date badge */}
                         <div className="bg-indigo-50/60 border border-indigo-100/80 rounded-2xl px-5 py-3 text-center min-w-20 group-hover:bg-indigo-600 group-hover:border-indigo-600 transition-colors w-full sm:w-auto">
                           <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest group-hover:text-indigo-200">
-                            {date.toLocaleDateString("en-US", { month: "short" })}
+                            {date.toLocaleDateString(dateLocale, { month: "short" })}
                           </p>
                           <p className="text-2xl md:text-3xl font-black text-indigo-600 leading-none group-hover:text-white">
                             {date.getDate()}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, PanInfo } from "framer-motion";
@@ -28,6 +29,7 @@ type Props = {
 const AUTO_PLAY_DELAY = 4500;
 
 export default function BarberCarousel({ barbers, bookUrl }: Props) {
+    const t = useTranslations("BusinessPage.carousel");
     const [activeIndex, setActiveIndex] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
     const [direction, setDirection] = useState(1);
@@ -56,9 +58,9 @@ export default function BarberCarousel({ barbers, bookUrl }: Props) {
                     </div>
 
                     <div>
-                        <h2 className="text-2xl font-black">Nuestro equipo</h2>
+                        <h2 className="text-2xl font-black">{t("title")}</h2>
                         <p className="text-gray-400 text-sm">
-                            No hay barberos disponibles.
+                            {t("empty")}
                         </p>
                     </div>
                 </div>
@@ -114,9 +116,9 @@ export default function BarberCarousel({ barbers, bookUrl }: Props) {
                     </div>
 
                     <div className="min-w-0">
-                        <h2 className="text-2xl font-black">Nuestro equipo</h2>
+                        <h2 className="text-2xl font-black">{t("title")}</h2>
                         <p className="text-gray-400 text-sm">
-                            Conoce a los barberos disponibles.
+                            {t("subtitle")}
                         </p>
                     </div>
                 </div>
@@ -127,7 +129,7 @@ export default function BarberCarousel({ barbers, bookUrl }: Props) {
                             type="button"
                             onClick={() => setIsPaused((prev) => !prev)}
                             className="hidden sm:flex w-10 h-10 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 items-center justify-center transition-colors"
-                            aria-label={isPaused ? "Reproducir carrusel" : "Pausar carrusel"}
+                            aria-label={isPaused ? t("play") : t("pause")}
                         >
                             {isPaused ? <Play size={16} /> : <Pause size={16} />}
                         </button>
@@ -136,7 +138,7 @@ export default function BarberCarousel({ barbers, bookUrl }: Props) {
                             type="button"
                             onClick={goPrevious}
                             className="w-10 h-10 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors"
-                            aria-label="Barbero anterior"
+                            aria-label={t("previous")}
                         >
                             <ArrowLeft size={17} />
                         </button>
@@ -145,7 +147,7 @@ export default function BarberCarousel({ barbers, bookUrl }: Props) {
                             type="button"
                             onClick={goNext}
                             className="w-10 h-10 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors"
-                            aria-label="Siguiente barbero"
+                            aria-label={t("next")}
                         >
                             <ArrowRight size={17} />
                         </button>
@@ -198,7 +200,7 @@ export default function BarberCarousel({ barbers, bookUrl }: Props) {
                             {activeBarber.name}
                         </p>
                         <p className="text-indigo-100 text-xs font-black uppercase tracking-widest mt-1">
-                            Barbero profesional
+                            {t("role")}
                         </p>
                     </div>
                 </motion.div>
@@ -206,7 +208,7 @@ export default function BarberCarousel({ barbers, bookUrl }: Props) {
                 <div>
                     <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-400/20 text-indigo-200 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] mb-4">
                         <Scissors size={13} />
-                        Barbero destacado
+                        {t("featured")}
                     </div>
 
                     <AnimatePresence mode="wait">
@@ -222,7 +224,7 @@ export default function BarberCarousel({ barbers, bookUrl }: Props) {
                             </h3>
 
                             <p className="text-gray-400 mt-3 leading-relaxed">
-                                Selecciona tu servicio y horario disponible para reservar una cita con el equipo de este negocio.
+                                {t("description")}
                             </p>
                         </motion.div>
                     </AnimatePresence>
@@ -232,7 +234,7 @@ export default function BarberCarousel({ barbers, bookUrl }: Props) {
                         className="mt-6 inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black px-5 py-3 rounded-2xl transition-colors"
                     >
                         <CalendarDays size={17} />
-                        Reservar cita
+                        {t("book")}
                     </Link>
 
                     {hasMultipleBarbers && (

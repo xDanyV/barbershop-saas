@@ -1,6 +1,7 @@
 import { getBookingBusiness } from "@/lib/cache/business-pages";
 import { canBusinessAcceptBookings, getBillingStatus } from "@/lib/billing/status";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import BusinessBookingClient from "./BusinessBookingClient";
 
 type BookPageProps = {
@@ -19,6 +20,7 @@ export default async function BusinessBookPage({ params }: BookPageProps) {
         notFound();
     }
 
+    const t = await getTranslations("BookingPage");
     const canAcceptBookings = canBusinessAcceptBookings(getBillingStatus(business.subscription));
 
     if (!canAcceptBookings) {
@@ -32,11 +34,11 @@ export default async function BusinessBookPage({ params }: BookPageProps) {
                     <h1 className="text-2xl font-black">{business.name}</h1>
 
                     <p className="text-gray-400 mt-4">
-                        Las reservas de este negocio están pausadas temporalmente.
+                        {t("paused")}
                     </p>
 
                     <p className="text-gray-500 text-sm mt-3">
-                        Por favor, intenta más tarde o contacta directamente a la barbería.
+                        {t("pausedHint")}
                     </p>
                 </div>
             </main>
@@ -49,8 +51,7 @@ export default async function BusinessBookPage({ params }: BookPageProps) {
                 <div className="max-w-md bg-white/5 border border-white/10 rounded-3xl p-8 text-center">
                     <h1 className="text-2xl font-black">{business.name}</h1>
                     <p className="text-gray-400 mt-4">
-                        {business.settings.maintenanceMessage ||
-                            "El servicio está temporalmente inactivo."}
+                        {business.settings.maintenanceMessage || t("inactive")}
                     </p>
                 </div>
             </main>

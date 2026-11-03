@@ -28,7 +28,7 @@ export default function DashboardNavbar({ role }: { role: string }) {
     } else if (role === "OWNER") {
         menuItems = [
             { name: t("menu.adminControl"), path: "/dashboard/admin", icon: ShieldCheck },
-            { name: "Mi negocio", path: "/dashboard/admin/my-business", icon: Store },
+            { name: t("menu.myBusiness"), path: "/dashboard/admin/my-business", icon: Store },
             { name: t("menu.myAppointments"), path: "/dashboard/barber", icon: CalendarDays },
             { name: t("menu.catalog"), path: "/dashboard/barber/catalog", icon: Scissors },
         ];
@@ -41,7 +41,7 @@ export default function DashboardNavbar({ role }: { role: string }) {
         menuItems = [
             { name: t("menu.myAppointments"), path: "/dashboard/customer/home", icon: CalendarDays },
             { name: t("menu.book"), path: "/dashboard/customer/barbers", icon: BookOpen },
-            { name: "Crear negocio", path: "/dashboard/business/new", icon: Store },
+            { name: t("menu.createBusiness"), path: "/dashboard/business/new", icon: Store },
         ];
     }
 

@@ -1,7 +1,8 @@
 import { GroupedService, PublicBusinessService } from "./business-page.types";
 
-export function formatDate(date: Date) {
-    return new Intl.DateTimeFormat("es-MX", {
+// Fecha corta en el idioma activo (es-MX / en-US)
+export function formatDate(date: Date, locale = "es") {
+    return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -18,10 +19,12 @@ export function getInitials(name: string) {
         .slice(0, 2);
 }
 
+// wa.me necesita el número internacional: uno local de 10 dígitos (Tijuana / México) se completa con 52
 export function getWhatsAppUrl(phone: string) {
     const cleanPhone = phone.replace(/\D/g, "");
+    const internationalPhone = cleanPhone.length === 10 ? `52${cleanPhone}` : cleanPhone;
 
-    return `https://wa.me/${cleanPhone}`;
+    return `https://wa.me/${internationalPhone}`;
 }
 
 export function groupServicesByName(

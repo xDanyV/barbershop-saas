@@ -90,7 +90,7 @@ export default function AvailableSlots({
       <div className="mb-4 flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-xl md:text-2xl font-black tracking-tight text-gray-900">
-            Horarios disponibles
+            {t("title")}
           </h3>
         </div>
 
@@ -136,7 +136,7 @@ export default function AvailableSlots({
               </p>
 
               <p className="mt-2 max-w-sm text-xs md:text-sm text-gray-400">
-                Intenta seleccionar otra fecha o cambiar de barbero para ver más horarios.
+                {t("soldOutHint")}
               </p>
             </motion.div>
           ) : (

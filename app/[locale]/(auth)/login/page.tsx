@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const t = useTranslations("Login");
+  const locale = useLocale();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -55,21 +56,21 @@ export default function LoginPage() {
       }
 
       if (data.user.role === "ADMIN" || data.user.role === "OWNER") {
-        window.location.href = "/dashboard/admin";
+        window.location.href = `/${locale}/dashboard/admin`;
         return;
       }
 
       if (data.user.role === "BARBER") {
-        window.location.href = "/dashboard/barber";
+        window.location.href = `/${locale}/dashboard/barber`;
         return;
       }
 
       if (data.user.role === "CUSTOMER") {
-        window.location.href = "/dashboard/customer/home";
+        window.location.href = `/${locale}/dashboard/customer/home`;
         return;
       }
 
-      window.location.href = "/login";
+      window.location.href = `/${locale}/login`;
     } catch {
       setError(t("errors.generic"));
     } finally {

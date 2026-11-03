@@ -1,4 +1,5 @@
 import { Newspaper } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { PublicBusinessPost } from "../lib/business-page.types";
 import { formatDate } from "../lib/business-page.utils";
 import LightboxImage from "./LightboxImage";
@@ -8,6 +9,8 @@ type Props = {
 };
 
 export default function BusinessPosts({ posts }: Props) {
+    const t = useTranslations("BusinessPage.posts");
+    const locale = useLocale();
     const latestPosts = posts.slice(0, 6);
 
     return (
@@ -20,18 +23,17 @@ export default function BusinessPosts({ posts }: Props) {
 
                     <div>
                         <h2 className="text-2xl md:text-3xl font-black tracking-tight">
-                            Publicaciones
+                            {t("title")}
                         </h2>
                         <p className="text-gray-400 text-sm mt-1">
-                            Avisos, promociones y novedades del negocio.
+                            {t("subtitle")}
                         </p>
                     </div>
                 </div>
 
                 {latestPosts.length > 0 && (
                     <p className="text-[10px] font-black uppercase tracking-[0.22em] text-indigo-300">
-                        {latestPosts.length} publicación
-                        {latestPosts.length === 1 ? "" : "es"}
+                        {t("count", { count: latestPosts.length })}
                     </p>
                 )}
             </div>
@@ -43,11 +45,11 @@ export default function BusinessPosts({ posts }: Props) {
                     </div>
 
                     <p className="text-gray-300 font-black text-lg">
-                        Aún no hay publicaciones.
+                        {t("empty")}
                     </p>
 
                     <p className="text-gray-500 text-sm mt-2 max-w-md">
-                        Cuando el negocio agregue promociones, avisos o novedades, aparecerán en esta sección.
+                        {t("emptyHint")}
                     </p>
                 </div>
             ) : (
@@ -60,7 +62,7 @@ export default function BusinessPosts({ posts }: Props) {
                             {post.imageUrl && (
                                 <LightboxImage
                                     src={post.imageUrl}
-                                    alt="Imagen de publicación"
+                                    alt={t("imageAlt")}
                                     caption={post.content}
                                     imageClassName="w-full h-auto max-h-[560px] object-contain bg-black/30"
                                 />
@@ -72,7 +74,7 @@ export default function BusinessPosts({ posts }: Props) {
                                 </p>
 
                                 <p className="text-xs text-gray-500 mt-4 font-bold">
-                                    {formatDate(post.createdAt)}
+                                    {formatDate(post.createdAt, locale)}
                                 </p>
                             </div>
                         </article>

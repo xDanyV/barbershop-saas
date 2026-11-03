@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "../../../../i18n/routing";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
@@ -35,28 +35,28 @@ export default function RegisterPage() {
 
         // 1. Validaciones del lado del cliente (Frontend)
         if (!role) {
-            setError("Please select an account type");
+            setError(t("errors.selectType"));
             return;
         }
 
         if (role === "BARBER" && !form.businessSlug.trim()) {
-            setError("Please enter the business slug or public business link");
+            setError(t("errors.slugRequired"));
             return;
         }
 
         if (form.password !== form.confirmPassword) {
-            setError("Passwords do not match");
+            setError(t("errors.passwordMismatch"));
             return;
         }
         if (form.password.length < 8) {
-            setError("Password must be at least 8 characters long");
+            setError(t("errors.passwordLength"));
             return;
         }
 
         setError("");
         setLoading(true);
 
-        const loadingToast = toast.loading("Creating your workspace...");
+        const loadingToast = toast.loading(t("toasts.creating"));
 
         try {
             // Excluimos confirmPassword para no enviarlo a la API
@@ -71,13 +71,13 @@ export default function RegisterPage() {
             const data = await response.json();
 
             if (!response.ok) {
-                setError(data.error || "Something went wrong");
-                toast.error(data.error || "Failed to create account", { id: loadingToast });
+                setError(data.error || t("errors.generic"));
+                toast.error(data.error || t("toasts.failed"), { id: loadingToast });
                 setLoading(false);
                 return;
             }
 
-            toast.success("Welcome aboard! Redirecting...", {
+            toast.success(t("toasts.success"), {
                 id: loadingToast,
                 duration: 4000
             });
@@ -87,8 +87,8 @@ export default function RegisterPage() {
             }, 1500);
 
         } catch {
-            setError("Connection error. Please check your internet and try again.");
-            toast.error("Connection error. Please try again.", { id: loadingToast });
+            setError(t("errors.connection"));
+            toast.error(t("toasts.connection"), { id: loadingToast });
             setLoading(false);
         }
     };
@@ -208,7 +208,7 @@ export default function RegisterPage() {
                                     <input
                                         name="name"
                                         type="text"
-                                        placeholder="John Doe"
+                                        placeholder={t("placeholders.name")}
                                         value={form.name}
                                         onChange={handleChange}
                                         required
@@ -234,7 +234,7 @@ export default function RegisterPage() {
                                 <input
                                     name="email"
                                     type="email"
-                                    placeholder="you@example.com"
+                                    placeholder={t("placeholders.email")}
                                     value={form.email}
                                     onChange={handleChange}
                                     required
@@ -249,7 +249,7 @@ export default function RegisterPage() {
                                     className="bg-indigo-500/5 border border-indigo-500/20 rounded-2xl p-4"
                                 >
                                     <label className="text-xs font-semibold text-indigo-300 mb-2 block uppercase tracking-wider">
-                                        Business slug or public link
+                                        {t("form.businessSlug")}
                                     </label>
 
                                     <input
@@ -263,11 +263,11 @@ export default function RegisterPage() {
                                     />
 
                                     <p className="text-[11px] text-gray-500 mt-2 leading-relaxed">
-                                        You can enter only the slug, like{" "}
+                                        {t("form.businessSlugHintBefore")}{" "}
                                         <span className="text-indigo-300 font-bold">
                                             barberia-el-nuevo-rey
                                         </span>
-                                        , or paste the full public business link.
+                                        {t("form.businessSlugHintAfter")}
                                     </p>
                                 </motion.div>
                             )}
