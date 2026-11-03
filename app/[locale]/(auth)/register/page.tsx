@@ -8,6 +8,7 @@ import { toast } from "react-hot-toast";
 import { useLocale, useTranslations } from "next-intl";
 import { Eye, EyeOff } from "lucide-react";
 import BrandMark from "@/[locale]/components/BrandMark";
+import { normalizeMxPhone } from "@/lib/phone";
 
 export default function RegisterPage() {
     const t = useTranslations("Register");
@@ -51,6 +52,11 @@ export default function RegisterPage() {
             setError(t("errors.passwordMismatch"));
             return;
         }
+        if (!normalizeMxPhone(form.phone)) {
+            setError(t("errors.phone"));
+            return;
+        }
+
         if (form.password.length < 8) {
             setError(t("errors.passwordLength"));
             return;
@@ -86,6 +92,7 @@ export default function RegisterPage() {
             const data = await response.json();
 
             if (!response.ok) {
+                if (response.status === 429) data.error = t("errors.tooManyAttempts");
                 setError(data.error || t("errors.generic"));
                 toast.error(data.error || t("toasts.failed"), { id: loadingToast });
                 setLoading(false);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAppointment } from "@/lib/services/appointment.service";
+import { RATE_LIMITS, consumeRateLimit } from "@/lib/rate-limit";
 import { AppError, errorResponse } from "@/lib/errors";
 import { requireAuth } from "@/lib/api/auth";
 import { parseJsonBody } from "@/lib/api/validation";
@@ -14,6 +15,9 @@ export async function POST(request: NextRequest) {
     if (auth.isBanned) {
       throw new AppError("Account suspended. You cannot book appointments.", 403);
     }
+
+    // Evita que una cuenta llene agendas con reservas en ráfaga
+    await consumeRateLimit(`booking:user:${auth.userId}`, RATE_LIMITS.bookingUser);
 
     const body = await parseJsonBody(request, createAppointmentSchema);
 

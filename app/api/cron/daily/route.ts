@@ -4,11 +4,13 @@ import {
     expireUnconfirmedAppointments,
     updateExpiredSubscriptions,
 } from "@/lib/cron/tasks";
+import { purgeExpiredRateLimits } from "@/lib/rate-limit";
 
 const TASKS = {
     appointments: completePastAppointments,
     unconfirmed: expireUnconfirmedAppointments,
     billing: updateExpiredSubscriptions,
+    rateLimits: purgeExpiredRateLimits,
 };
 
 // Único cron diario (Vercel): ejecuta todas las tareas; un fallo en una no detiene las demás

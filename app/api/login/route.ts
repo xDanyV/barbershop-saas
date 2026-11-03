@@ -10,6 +10,15 @@ import {
   sessionCookieOptions,
   signSessionToken,
 } from "@/lib/auth/session";
+import {
+  RATE_LIMITS,
+  assertNotRateLimited,
+  consumeRateLimit,
+  getClientIp,
+  recordRateLimitHit,
+  resetRateLimit,
+} from "@/lib/rate-limit";
+import { errorResponse } from "@/lib/errors";
 
 // Hash de referencia para que un email inexistente tarde lo mismo que una contraseña incorrecta
 const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 10);
@@ -27,6 +36,10 @@ export async function POST(req: Request) {
       );
     }
 
+    // Freno a la fuerza bruta: por IP en cada intento y por correo solo en los fallidos
+    await consumeRateLimit(`login:ip:${getClientIp(req)}`, RATE_LIMITS.loginIp);
+    await assertNotRateLimited(`login:email:${email}`, RATE_LIMITS.loginEmail);
+
     const user = await prisma.user.findUnique({
       where: { email },
       select: {
@@ -35,12 +48,14 @@ export async function POST(req: Request) {
         email: true,
         phone: true,
         password: true,
+        sessionVersion: true,
       },
     });
 
     const passwordMatch = await bcrypt.compare(password, user?.password ?? DUMMY_HASH);
 
     if (!user || !passwordMatch) {
+      await recordRateLimitHit(`login:email:${email}`, RATE_LIMITS.loginEmail);
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 }
@@ -56,7 +71,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const token = await signSessionToken(user.id);
+    await resetRateLimit(`login:email:${email}`);
+
+    const token = await signSessionToken(user.id, user.sessionVersion);
 
     const response = NextResponse.json({
       message: "Login successful",
@@ -85,10 +102,6 @@ export async function POST(req: Request) {
     return response;
 
   } catch (error) {
-    console.error("Login Error:", error);
-    return NextResponse.json(
-      { error: "Something went wrong" },
-      { status: 500 }
-    );
+    return errorResponse(error, "Login error");
   }
 }

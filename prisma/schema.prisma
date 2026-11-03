@@ -19,6 +19,8 @@ model User {
   termsAcceptedAt DateTime?
   // Cuenta eliminada por el usuario: sus datos se anonimizan y ya no puede iniciar sesión
   deletedAt       DateTime?
+  // Sube al cambiar la contraseña o al cerrar todas las sesiones: invalida los tokens anteriores
+  sessionVersion  Int                   @default(0)
   barberProfile   Barber?
   appointments    Appointment[]
   ownedBusinesses Business[]            @relation("BusinessOwner")
@@ -284,4 +286,14 @@ model BusinessCustomerBan {
 
   @@unique([businessId, userId])
   @@index([userId])
+}
+
+// Contador de intentos por clave (IP, correo, usuario) en una ventana de tiempo fija.
+// Lo usa app/lib/rate-limit.ts; el cron diario borra las ventanas vencidas.
+model RateLimit {
+  key         String   @id
+  count       Int
+  windowStart DateTime
+
+  @@index([windowStart])
 }

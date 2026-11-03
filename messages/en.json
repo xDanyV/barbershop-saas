@@ -35,7 +35,9 @@
             "passwordLength": "Password must be at least 8 characters long",
             "generic": "Something went wrong",
             "connection": "Connection error. Please check your internet and try again.",
-            "acceptTerms": "To create your account you must accept the Terms and the Privacy Notice."
+            "acceptTerms": "To create your account you must accept the Terms and the Privacy Notice.",
+            "tooManyAttempts": "Too many sign-ups from this connection. Please try again later.",
+            "phone": "Enter a 10-digit Mexican phone number."
         },
         "toasts": {
             "creating": "Creating your account...",
@@ -58,7 +60,8 @@
         },
         "errors": {
             "invalidCredentials": "Invalid credentials",
-            "generic": "Something went wrong. Please try again."
+            "generic": "Something went wrong. Please try again.",
+            "tooManyAttempts": "Too many attempts. Wait a few minutes and try again."
         },
         "buttons": {
             "signingIn": "Signing in...",
@@ -820,7 +823,8 @@
             "save": "Save changes",
             "saving": "Saving...",
             "saved": "Details saved",
-            "phoneTaken": "That phone number is already used by another account."
+            "phoneTaken": "That phone number is already used by another account.",
+            "phoneInvalid": "Enter a 10-digit Mexican phone number."
         },
         "password": {
             "title": "Password",
@@ -829,7 +833,7 @@
             "hint": "At least 8 characters.",
             "save": "Change password",
             "saving": "Changing...",
-            "saved": "Password updated",
+            "saved": "Password updated. We signed you out on your other devices.",
             "wrong": "Your current password is not correct."
         },
         "danger": {
@@ -846,6 +850,13 @@
             "terms": "Terms and Conditions",
             "accepted": "You accepted them on {date}."
         },
-        "error": "Something went wrong. Please try again."
+        "error": "Something went wrong. Please try again.",
+        "sessions": {
+            "title": "Sessions",
+            "text": "If you signed in on a phone or computer you no longer use, sign out of it here. This device stays signed in.",
+            "button": "Sign out of other devices",
+            "working": "Signing out...",
+            "done": "We signed you out on your other devices."
+        }
     }
 }
