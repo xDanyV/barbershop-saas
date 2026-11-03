@@ -1,6 +1,7 @@
 import { SignJWT, jwtVerify } from "jose";
 import type { BarberStatus, Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { TERMS_VERSION } from "@/lib/legal";
 
 export const SESSION_COOKIE = "token";
 // Negocio activo de un OWNER con varios negocios
@@ -27,6 +28,8 @@ export type SessionIdentity = {
     businessId: string | null;
     // true cuando barberId es otro barbero del equipo y no el perfil propio del OWNER
     isManagingTeamBarber: boolean;
+    // false si aún no aceptó la versión vigente de los Términos y el Aviso de Privacidad
+    hasAcceptedTerms: boolean;
 };
 
 function getSecret() {
@@ -68,6 +71,8 @@ export async function loadSessionIdentity(
             id: true,
             role: true,
             isBanned: true,
+            termsVersion: true,
+            deletedAt: true,
             barberProfile: {
                 select: {
                     id: true,
@@ -82,7 +87,8 @@ export async function loadSessionIdentity(
         },
     });
 
-    if (!user) return null;
+    // Una cuenta eliminada no tiene sesión aunque el token siga vigente
+    if (!user || user.deletedAt) return null;
 
     let businessId = user.barberProfile?.businessId ?? null;
 
@@ -124,6 +130,7 @@ export async function loadSessionIdentity(
         userId: user.id,
         role: user.role,
         isBanned: user.isBanned,
+        hasAcceptedTerms: user.termsVersion === TERMS_VERSION,
         barberId,
         barberStatus,
         businessId,

@@ -14,6 +14,11 @@ model User {
   password        String
   role            Role                  @default(CUSTOMER)
   isBanned        Boolean               @default(false)
+  // Versión de los Términos y el Aviso de Privacidad que aceptó y cuándo
+  termsVersion    String?
+  termsAcceptedAt DateTime?
+  // Cuenta eliminada por el usuario: sus datos se anonimizan y ya no puede iniciar sesión
+  deletedAt       DateTime?
   barberProfile   Barber?
   appointments    Appointment[]
   ownedBusinesses Business[]            @relation("BusinessOwner")

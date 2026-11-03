@@ -23,6 +23,7 @@ const IDENTITY_HEADERS = [
   "x-business-id",
   "x-user-banned",
   "x-managing-team-barber",
+  "x-terms-pending",
 ];
 
 export async function proxy(request: NextRequest) {
@@ -123,6 +124,7 @@ export async function proxy(request: NextRequest) {
   if (session.businessId) request.headers.set("x-business-id", session.businessId);
   if (session.isBanned) request.headers.set("x-user-banned", "true");
   if (session.isManagingTeamBarber) request.headers.set("x-managing-team-barber", "true");
+  if (!session.hasAcceptedTerms) request.headers.set("x-terms-pending", "true");
 
   if (isProtectedApi) {
     return NextResponse.next({ request: { headers: request.headers } });

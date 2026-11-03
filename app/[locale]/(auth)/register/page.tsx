@@ -5,12 +5,14 @@ import { useRouter } from "../../../../i18n/routing";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Eye, EyeOff } from "lucide-react";
 import BrandMark from "@/[locale]/components/BrandMark";
 
 export default function RegisterPage() {
     const t = useTranslations("Register");
+    const locale = useLocale();
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
     const router = useRouter();
     const [role, setRole] = useState<"CUSTOMER" | "BARBER" | null>(null);
     const [form, setForm] = useState({
@@ -54,6 +56,11 @@ export default function RegisterPage() {
             return;
         }
 
+        if (!acceptedTerms) {
+            setError(t("errors.acceptTerms"));
+            return;
+        }
+
         setError("");
         setLoading(true);
 
@@ -67,6 +74,7 @@ export default function RegisterPage() {
                 phone: form.phone,
                 password: form.password,
                 businessSlug: form.businessSlug,
+                acceptTerms: acceptedTerms,
             };
 
             const response = await fetch("/api/register", {
@@ -326,6 +334,32 @@ export default function RegisterPage() {
                                     />
                                 </div>
                             </div>
+
+                            {/* Aceptación de los Términos y el Aviso de Privacidad (obligatoria) */}
+                            <label className="mt-2 flex items-start gap-3 text-sm leading-relaxed text-gray-400">
+                                <input
+                                    type="checkbox"
+                                    name="acceptTerms"
+                                    checked={acceptedTerms}
+                                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                                    required
+                                    className="mt-1 h-4 w-4 shrink-0 accent-indigo-500"
+                                />
+                                <span>
+                                    {t.rich("form.acceptTerms", {
+                                        terms: (chunks) => (
+                                            <a href={`/${locale}/terms`} target="_blank" rel="noopener noreferrer" className="text-indigo-300 underline underline-offset-2 hover:text-indigo-200">
+                                                {chunks}
+                                            </a>
+                                        ),
+                                        privacy: (chunks) => (
+                                            <a href={`/${locale}/privacy`} target="_blank" rel="noopener noreferrer" className="text-indigo-300 underline underline-offset-2 hover:text-indigo-200">
+                                                {chunks}
+                                            </a>
+                                        ),
+                                    })}
+                                </span>
+                            </label>
 
                             {/* Error Alert */}
                             {error && (

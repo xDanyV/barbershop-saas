@@ -36,6 +36,23 @@ export const registerSchema = z.object({
     password: z.string().min(8).max(72),
     role: z.enum(["CUSTOMER", "BARBER"]).optional().default("CUSTOMER"),
     businessSlug: z.string().trim().max(300).optional(),
+    acceptTerms: z.literal(true, { error: "You must accept the Terms and the Privacy Notice" }),
+});
+
+// ---------- Mi cuenta ----------
+
+export const updateProfileSchema = z.object({
+    name: z.string().trim().min(1, "Name is required").max(100),
+    phone: z.string().trim().min(1, "Phone number is required").max(20),
+});
+
+export const changePasswordSchema = z.object({
+    currentPassword: z.string().min(1).max(200),
+    newPassword: z.string().min(8).max(72),
+});
+
+export const deleteAccountSchema = z.object({
+    password: z.string().min(1).max(200),
 });
 
 // ---------- Citas ----------
