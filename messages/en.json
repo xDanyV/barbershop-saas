@@ -46,59 +46,6 @@
             "email": "you@example.com"
         }
     },
-    "Home": {
-        "nav": {
-            "signIn": "Sign in",
-            "getStarted": "Get started"
-        },
-        "hero": {
-            "badge": "Barbershop management platform",
-            "headlineLine1": "YOUR CUTS.",
-            "headlineLine2": "YOUR SCHEDULE.",
-            "subheadline": "Book appointments, manage your barber's calendar, and stay on top of every cut — all in one place.",
-            "ctaPrimary": "Get started — it's free",
-            "ctaSecondary": "Sign in"
-        },
-        "features": {
-            "eyebrow": "Everything you need",
-            "headlinePrimary": "Built for barbers.",
-            "headlineSecondary": "Loved by clients.",
-            "items": {
-                "scheduling": {
-                    "title": "Smart Scheduling",
-                    "description": "Customers book directly from your live calendar. No back-and-forth, no phone calls."
-                },
-                "catalog": {
-                    "title": "Service Catalog",
-                    "description": "Create and manage your services with custom prices and durations."
-                },
-                "confirmations": {
-                    "title": "Instant Confirmations",
-                    "description": "Confirm or cancel appointments in one tap. Customers are always in the loop."
-                },
-                "exceptions": {
-                    "title": "Exception Blocks",
-                    "description": "Block out vacations or emergencies. Affected appointments are cancelled automatically."
-                },
-                "history": {
-                    "title": "Appointment History",
-                    "description": "Full history of past and upcoming bookings for both barbers and customers."
-                },
-                "security": {
-                    "title": "Secure by Default",
-                    "description": "JWT authentication with role-based access. Barbers and customers each see only what they need."
-                }
-            }
-        },
-        "footerCta": {
-            "title": "Ready to take control of your schedule?",
-            "description": "Join the barbers already managing their bookings online.",
-            "button": "Create your account"
-        },
-        "footer": {
-            "rights": "© {year} All rights reserved."
-        }
-    },
     "Login": {
         "title": "Welcome back",
         "subtitle": "Sign in to your account to continue",
@@ -669,5 +616,169 @@
         "home": "Try again",
         "cardLabel": "Booking confirmed",
         "cardDetail": "Tuesday · Haircut · $150"
+    },
+    "Landing": {
+        "nav": {
+            "how": "How it works",
+            "tijuana": "Tijuana",
+            "pricing": "Pricing",
+            "faq": "Questions",
+            "login": "Sign in",
+            "start": "Set up my barbershop"
+        },
+        "hero": {
+            "title": "Online booking for your barbershop",
+            "lead": "Your clients choose a barber, a service and a time from their phone. You get the appointment in your schedule. 150 pesos a month.",
+            "primary": "Set up my barbershop",
+            "secondary": "I already have an account"
+        },
+        "demo": {
+            "label": "Sample",
+            "shop": "Barbería Calle Segunda",
+            "area": "Zona Centro, Tijuana",
+            "chooseDay": "Pick a day",
+            "chooseTime": "Pick a time",
+            "chooseService": "Service",
+            "days": {
+                "today": "Today",
+                "tomorrow": "Tomorrow",
+                "thu": "Thursday"
+            },
+            "taken": "taken",
+            "services": {
+                "cut": "Classic haircut",
+                "beard": "Beard trim",
+                "both": "Haircut and beard"
+            },
+            "minutes": "{minutes} min",
+            "confirm": "Confirm booking",
+            "confirmedTitle": "Booking confirmed",
+            "confirmedWith": "with Luis · {service}",
+            "again": "Pick another time",
+            "ownerTitle": "Today's schedule",
+            "ownerNote": "What the barber sees",
+            "setupTitle": "Your page",
+            "setupItems": {
+                "services": "3 services",
+                "hours": "Mon to Sat · 10:00 to 20:00",
+                "rest": "Break 14:00 to 15:00",
+                "team": "2 barbers"
+            },
+            "tryIt": "Tap a time to try it.",
+            "you": "You",
+            "pickFirst": "Pick a time"
+        },
+        "how": {
+            "title": "How it works",
+            "steps": {
+                "setup": {
+                    "title": "Set up your barbershop in minutes.",
+                    "text": "Add services, prices, opening hours, your break and the days you are closed."
+                },
+                "share": {
+                    "title": "Share your link or your QR code.",
+                    "text": "Clients open it from WhatsApp, Instagram or your counter, with nothing to download."
+                },
+                "book": {
+                    "title": "Get bookings without phone calls.",
+                    "text": "Each client only sees free times. Two people can never book the same slot."
+                }
+            }
+        },
+        "tijuana": {
+            "title": "Made for Tijuana",
+            "text": "Schedules follow Tijuana time, including the daylight saving change. Prices are in pesos, WhatsApp links already include the 52, and your clients can book in Spanish or in English.",
+            "photoAlt": "Sunset at Playas de Tijuana",
+            "cityAlt": "Panoramic view of Tijuana"
+        },
+        "team": {
+            "title": "Your team, in order",
+            "text": "Approve your barbers, adjust each one's schedule, block days off and record when a client does not show up. Your public page adds a gallery, posts and your location.",
+            "poleAlt": "Antique illustration of a barber pole",
+            "razorAlt": "Straight razor shave"
+        },
+        "pricing": {
+            "title": "Pricing",
+            "plansGroup": "Monthly plans",
+            "founder": {
+                "name": "Founder plan",
+                "text": "For the first barbershops to join."
+            },
+            "basic": {
+                "name": "Basic plan",
+                "text": "Every feature for your barbershop."
+            },
+            "includedGroup": "Included in both",
+            "included": {
+                "page": {
+                    "name": "Public page with QR code",
+                    "text": "Your profile, services, team and gallery."
+                },
+                "bookings": {
+                    "name": "Unlimited bookings",
+                    "text": "No fee per booking or per client."
+                },
+                "team": {
+                    "name": "Barbers on your team",
+                    "text": "Each with their own schedule and services."
+                },
+                "setup": {
+                    "name": "Setup",
+                    "text": "No sign-up fee."
+                }
+            },
+            "perMonth": "/mo",
+            "free": "Included",
+            "noCost": "$0"
+        },
+        "faq": {
+            "title": "Questions",
+            "items": {
+                "app": {
+                    "q": "Do my clients need to download an app?",
+                    "a": "No. They open your link in their phone's browser and create an account with their name, email and phone the first time."
+                },
+                "team": {
+                    "q": "Can I have several barbers?",
+                    "a": "Yes. Each barber has their own hours, services and bookings, and you can manage everyone's schedule."
+                },
+                "closed": {
+                    "q": "What if I am closed one day?",
+                    "a": "Mark it as a day off. That day stops showing for booking and any existing appointments are cancelled."
+                },
+                "double": {
+                    "q": "Can two bookings overlap?",
+                    "a": "No. The system checks the time and the length of the service before confirming, even when two clients book at the same moment."
+                },
+                "noshow": {
+                    "q": "What if a client does not show up?",
+                    "a": "Record it as a no-show. If it keeps happening, you can block them from booking at your barbershop."
+                },
+                "english": {
+                    "q": "Does it work in English?",
+                    "a": "Yes. Every page your clients see is available in Spanish and in English."
+                },
+                "pay": {
+                    "q": "How do I pay?",
+                    "a": "The membership is monthly. For now, payment is arranged directly with us when you set up your barbershop."
+                }
+            }
+        },
+        "cta": {
+            "text": "Set up your barbershop today and share your link with your clients tomorrow morning.",
+            "button": "Set up my barbershop",
+            "login": "Sign in"
+        },
+        "footer": {
+            "about": "Online booking for Tijuana barbershops",
+            "links": {
+                "how": "How it works",
+                "pricing": "Pricing",
+                "faq": "Questions",
+                "login": "Sign in"
+            },
+            "rights": "© {year}",
+            "credits": "Photos"
+        }
     }
 }

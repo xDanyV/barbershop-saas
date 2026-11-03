@@ -46,59 +46,6 @@
             "email": "tu@correo.com"
         }
     },
-    "Home": {
-        "nav": {
-            "signIn": "Iniciar sesión",
-            "getStarted": "Comenzar"
-        },
-        "hero": {
-            "badge": "Plataforma de gestión para barberías",
-            "headlineLine1": "TUS CORTES.",
-            "headlineLine2": "TU AGENDA.",
-            "subheadline": "Reserva citas, gestiona el calendario de tu barbero y mantén el control de cada corte — todo en un solo lugar.",
-            "ctaPrimary": "Comenzar — es gratis",
-            "ctaSecondary": "Iniciar sesión"
-        },
-        "features": {
-            "eyebrow": "Todo lo que necesitas",
-            "headlinePrimary": "Hecho para barberos.",
-            "headlineSecondary": "Amado por clientes.",
-            "items": {
-                "scheduling": {
-                    "title": "Agenda inteligente",
-                    "description": "Los clientes reservan directamente desde tu calendario en vivo. Sin llamadas, sin idas y vueltas."
-                },
-                "catalog": {
-                    "title": "Catálogo de servicios",
-                    "description": "Crea y gestiona tus servicios con precios y duraciones personalizados."
-                },
-                "confirmations": {
-                    "title": "Confirmaciones instantáneas",
-                    "description": "Confirma o cancela citas con un toque. Los clientes siempre están al tanto."
-                },
-                "exceptions": {
-                    "title": "Bloqueos por excepción",
-                    "description": "Bloquea vacaciones o emergencias. Las citas afectadas se cancelan automáticamente."
-                },
-                "history": {
-                    "title": "Historial de citas",
-                    "description": "Historial completo de reservas pasadas y futuras para barberos y clientes."
-                },
-                "security": {
-                    "title": "Seguro por defecto",
-                    "description": "Autenticación JWT con acceso basado en roles. Cada usuario ve solo lo que necesita."
-                }
-            }
-        },
-        "footerCta": {
-            "title": "¿Listo para tomar el control de tu agenda?",
-            "description": "Únete a los barberos que ya gestionan sus reservas en línea.",
-            "button": "Crea tu cuenta"
-        },
-        "footer": {
-            "rights": "© {year} Todos los derechos reservados."
-        }
-    },
     "Login": {
         "title": "Bienvenido de vuelta",
         "subtitle": "Inicia sesión en tu cuenta para continuar",
@@ -669,5 +616,169 @@
         "home": "Volver a intentar",
         "cardLabel": "Cita confirmada",
         "cardDetail": "Martes · Corte · $150"
+    },
+    "Landing": {
+        "nav": {
+            "how": "Cómo funciona",
+            "tijuana": "Tijuana",
+            "pricing": "Precio",
+            "faq": "Preguntas",
+            "login": "Entrar",
+            "start": "Crear mi barbería"
+        },
+        "hero": {
+            "title": "Citas en línea para tu barbería",
+            "lead": "Tus clientes eligen barbero, servicio y hora desde el teléfono. Tú recibes la cita lista en tu agenda. 150 pesos al mes.",
+            "primary": "Crear mi barbería",
+            "secondary": "Ya tengo cuenta"
+        },
+        "demo": {
+            "label": "Ejemplo",
+            "shop": "Barbería Calle Segunda",
+            "area": "Zona Centro, Tijuana",
+            "chooseDay": "Elige el día",
+            "chooseTime": "Elige la hora",
+            "chooseService": "Servicio",
+            "days": {
+                "today": "Hoy",
+                "tomorrow": "Mañana",
+                "thu": "Jueves"
+            },
+            "taken": "ocupado",
+            "services": {
+                "cut": "Corte clásico",
+                "beard": "Arreglo de barba",
+                "both": "Corte y barba"
+            },
+            "minutes": "{minutes} min",
+            "confirm": "Confirmar cita",
+            "confirmedTitle": "Cita confirmada",
+            "confirmedWith": "con Luis · {service}",
+            "again": "Elegir otra hora",
+            "ownerTitle": "Agenda de hoy",
+            "ownerNote": "Así la ve el barbero",
+            "setupTitle": "Tu página",
+            "setupItems": {
+                "services": "3 servicios",
+                "hours": "Lun a sáb · 10:00 a 20:00",
+                "rest": "Descanso 14:00 a 15:00",
+                "team": "2 barberos"
+            },
+            "tryIt": "Toca una hora para probarlo.",
+            "you": "Tú",
+            "pickFirst": "Elige una hora"
+        },
+        "how": {
+            "title": "Cómo funciona",
+            "steps": {
+                "setup": {
+                    "title": "Registra tu barbería en minutos.",
+                    "text": "Agrega servicios, precios, horario, descanso y los días que no abres."
+                },
+                "share": {
+                    "title": "Comparte tu enlace o tu código QR.",
+                    "text": "Tus clientes lo abren desde WhatsApp, Instagram o el mostrador, sin descargar nada."
+                },
+                "book": {
+                    "title": "Recibe citas sin llamadas.",
+                    "text": "Cada cliente ve solo las horas libres. Dos personas nunca reservan la misma hora."
+                }
+            }
+        },
+        "tijuana": {
+            "title": "Hecho para Tijuana",
+            "text": "Los horarios siguen la hora de Tijuana, también cuando cambia el horario de verano. Los precios están en pesos, los enlaces de WhatsApp ya llevan el 52 y tus clientes pueden reservar en español o en inglés.",
+            "photoAlt": "Atardecer en Playas de Tijuana",
+            "cityAlt": "Vista panorámica de Tijuana"
+        },
+        "team": {
+            "title": "Tu equipo, en orden",
+            "text": "Aprueba a tus barberos, ajusta la agenda de cada uno, marca días libres y registra cuando un cliente no llega. Tu página pública suma galería, publicaciones y tu ubicación.",
+            "poleAlt": "Ilustración antigua de un poste de barbería",
+            "razorAlt": "Afeitado con navaja"
+        },
+        "pricing": {
+            "title": "Precio",
+            "plansGroup": "Planes mensuales",
+            "founder": {
+                "name": "Plan Fundador",
+                "text": "Para las primeras barberías que se unan."
+            },
+            "basic": {
+                "name": "Plan Básico",
+                "text": "Todas las funciones para tu barbería."
+            },
+            "includedGroup": "Incluido en ambos",
+            "included": {
+                "page": {
+                    "name": "Página pública con código QR",
+                    "text": "Tu perfil, servicios, equipo y galería."
+                },
+                "bookings": {
+                    "name": "Citas ilimitadas",
+                    "text": "Sin cobro por cita ni por cliente."
+                },
+                "team": {
+                    "name": "Barberos de tu equipo",
+                    "text": "Cada uno con su agenda y sus servicios."
+                },
+                "setup": {
+                    "name": "Instalación",
+                    "text": "Sin costo de alta."
+                }
+            },
+            "perMonth": "/mes",
+            "free": "Incluido",
+            "noCost": "$0"
+        },
+        "faq": {
+            "title": "Preguntas",
+            "items": {
+                "app": {
+                    "q": "¿Mis clientes necesitan descargar una app?",
+                    "a": "No. Abren tu enlace en el navegador del teléfono y la primera vez crean su cuenta con nombre, correo y teléfono."
+                },
+                "team": {
+                    "q": "¿Puedo tener varios barberos?",
+                    "a": "Sí. Cada barbero tiene su horario, sus servicios y sus citas, y tú puedes administrar la agenda de todos."
+                },
+                "closed": {
+                    "q": "¿Qué pasa si un día no abro?",
+                    "a": "Lo marcas como día libre. Ese día deja de aparecer para reservar y las citas que ya había se cancelan."
+                },
+                "double": {
+                    "q": "¿Se pueden encimar dos citas?",
+                    "a": "No. El sistema revisa la hora y la duración del servicio antes de confirmar, aunque dos clientes reserven al mismo tiempo."
+                },
+                "noshow": {
+                    "q": "¿Y si un cliente no llega?",
+                    "a": "Lo registras como inasistencia. Si se vuelve un problema, puedes bloquearlo para que no reserve en tu barbería."
+                },
+                "english": {
+                    "q": "¿Funciona en inglés?",
+                    "a": "Sí. Las páginas que ven tus clientes están en español y en inglés."
+                },
+                "pay": {
+                    "q": "¿Cómo se paga?",
+                    "a": "La membresía es mensual. Por ahora el pago se coordina directamente con nosotros al dar de alta tu barbería."
+                }
+            }
+        },
+        "cta": {
+            "text": "Configura tu barbería hoy y comparte tu enlace con tus clientes mañana temprano.",
+            "button": "Crear mi barbería",
+            "login": "Entrar"
+        },
+        "footer": {
+            "about": "Citas en línea para barberías de Tijuana",
+            "links": {
+                "how": "Cómo funciona",
+                "pricing": "Precio",
+                "faq": "Preguntas",
+                "login": "Entrar"
+            },
+            "rights": "© {year}",
+            "credits": "Fotos"
+        }
     }
 }
