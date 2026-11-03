@@ -16,7 +16,9 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # Misma versión que en desarrollo: npm 11 genera el package-lock.json
+          # y npm 10 (Node 22) lo considera desincronizado al hacer npm ci
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
