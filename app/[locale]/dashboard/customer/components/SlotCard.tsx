@@ -25,13 +25,18 @@ type Service = {
 
 type Props = {
   time: string;
+  // Slot start as ISO string, computed by the server in the business timezone
+  start: string;
+  maxMinutes: number;
   selectedDate: Date;
   barberId: string;
-  onBook?: (bookedTime: string) => void;
+  onBook?: (bookedStart: string) => void;
 };
 
 export default function SlotCard({
   time,
+  start,
+  maxMinutes,
   selectedDate,
   barberId,
   onBook,
@@ -54,10 +59,11 @@ export default function SlotCard({
 
     fetch(`/api/catalog?barberId=${barberId}`)
       .then((res) => res.json())
-      .then((data: Service[]) => setServices(data))
+      // Only services that fit before the next booking, break or closing time
+      .then((data: Service[]) => setServices(data.filter((s) => s.duration <= maxMinutes)))
       .catch(() => toast.error(t("errors.loadFailed")))
       .finally(() => setLoading(false));
-  }, [popoverOpen, barberId, services.length, t]);
+  }, [popoverOpen, barberId, services.length, maxMinutes, t]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -89,19 +95,6 @@ export default function SlotCard({
     setModalOpen(true);
   };
 
-  const buildDateTime = (): string => {
-    const [timePart, modifier] = time.split(" ");
-    let [hours, minutes] = timePart.split(":").map(Number);
-
-    if (modifier === "PM" && hours !== 12) hours += 12;
-    if (modifier === "AM" && hours === 12) hours = 0;
-
-    const year = selectedDate.getFullYear();
-    const month = selectedDate.getMonth();
-    const day = selectedDate.getDate();
-
-    return new Date(year, month, day, hours, minutes, 0, 0).toISOString();
-  };
 
   const getLoginRedirectUrl = () => {
     const currentPath = window.location.pathname + window.location.search;
@@ -130,7 +123,7 @@ export default function SlotCard({
         body: JSON.stringify({
           barberId,
           serviceId: selectedService,
-          date: buildDateTime(),
+          date: start,
         }),
       });
 
@@ -149,7 +142,7 @@ export default function SlotCard({
 
       toast.success(t("success.booked", { name: service?.name ?? "" }));
 
-      onBook?.(time);
+      onBook?.(start);
 
       setModalOpen(false);
       setSelectedService(null);

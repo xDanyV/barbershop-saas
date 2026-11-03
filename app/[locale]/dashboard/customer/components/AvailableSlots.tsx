@@ -12,128 +12,62 @@ type Props = {
   barberId: string;
 };
 
+type Slot = {
+  start: string;
+  label: string;
+  maxMinutes: number;
+};
+
+type DayResponse = {
+  timezone: string;
+  schedule: { startTime: string; endTime: string } | null;
+  slots: Slot[];
+};
+
+// The calendar day the customer picked, interpreted by the server in the business timezone
+function toDateKey(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
 export default function AvailableSlots({
   selectedDate,
-  selectedService,
   barberId,
 }: Props) {
   const t = useTranslations("AvailableSlots");
-  const [availability, setAvailability] = useState<any[]>([]);
-  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [schedule, setSchedule] = useState<DayResponse["schedule"]>(null);
+  const [availableSlots, setAvailableSlots] = useState<Slot[]>([]);
+  // Request the current data belongs to; while it differs from the selected one we are loading
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
 
-  // Fetch barber availability (working hours & days)
+  const requestKey = `${barberId}|${toDateKey(selectedDate)}`;
+  const loading = loadedKey !== requestKey;
+
+  // Slots are computed server-side (working hours, break, bookings, exceptions, timezone)
   useEffect(() => {
-    async function fetchAvailability() {
-      try {
-        const res = await fetch(`/api/availability/${barberId}`);
-        if (!res.ok) return;
-        const data = await res.json();
-        setAvailability(data);
-      } catch (error) {
-        console.error("Error loading availability", error);
-      }
-    }
-    fetchAvailability();
-  }, [barberId]);
+    let ignore = false;
+    const dateKey = requestKey.split("|")[1];
 
-  // Fetch booked slots for the selected date and normalize to 12h format
-  useEffect(() => {
-    setLoading(true);
-
-    const startOfDay = new Date(selectedDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(selectedDate);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    // Send the browser's timezone offset so the server formats booked slot
-    // times in local time, matching the format generateSlots() produces.
-    const tzOffset = new Date().getTimezoneOffset();
-
-    fetch(
-      `/api/appointments/barber/${barberId}/booked?start=${startOfDay.toISOString()}&end=${endOfDay.toISOString()}&tzOffset=${tzOffset}`
-    )
-      .then((res) => res.json())
-      .then((data: string[]) => {
-        // Server now returns pre-formatted "HH:MM AM/PM" strings
-        // adjusted to the browser's local timezone via the tzOffset param.
-        setBookedSlots(data);
+    fetch(`/api/availability/${barberId}/slots?date=${dateKey}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .catch((err) => {
+        console.error("Could not load slots", err);
+        return null;
       })
-      .catch((err) => console.error("Could not load booked slots", err))
-      .finally(() => setLoading(false));
-  }, [selectedDate, barberId]);
+      .then((data: DayResponse | null) => {
+        if (ignore) return;
+        setSchedule(data?.schedule ?? null);
+        setAvailableSlots(data?.slots ?? []);
+        setLoadedKey(requestKey);
+      });
 
-  // Convert any time string (12h or 24h) to total minutes
-  const timeToMinutes = (timeStr: string): number => {
-    if (timeStr.includes("M")) {
-      // 12h format: "08:00 AM" / "01:30 PM"
-      const [time, modifier] = timeStr.split(" ");
-      let [hours, minutes] = time.split(":").map(Number);
-      if (modifier === "PM" && hours < 12) hours += 12;
-      if (modifier === "AM" && hours === 12) hours = 0;
-      return hours * 60 + minutes;
-    }
-    // 24h format: "08:00"
-    const [hours, minutes] = timeStr.split(":").map(Number);
-    return hours * 60 + minutes;
-  };
+    return () => {
+      ignore = true;
+    };
+  }, [requestKey, barberId]);
 
-  const dayOfWeek = selectedDate.getDay();
-  const schedule = availability.find((a) => a.dayOfWeek === dayOfWeek);
-
-  // Generate hourly slots between start and end time
-  function generateSlots(start: string, end: string, interval = 60): string[] {
-    const slots: string[] = [];
-    const [startHour, startMinute] = start.split(":").map(Number);
-    const [endHour, endMinute] = end.split(":").map(Number);
-
-    const startDate = new Date(selectedDate);
-    startDate.setHours(startHour, startMinute, 0, 0);
-    const endDate = new Date(selectedDate);
-    endDate.setHours(endHour, endMinute, 0, 0);
-
-    const current = new Date(startDate);
-    while (current < endDate) {
-      slots.push(
-        current.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      );
-      current.setMinutes(current.getMinutes() + interval);
-    }
-    return slots;
-  }
-
-  const allSlots = schedule
-    ? generateSlots(schedule.startTime, schedule.endTime)
-    : [];
-
-  const availableSlots = allSlots.filter((slot) => {
-    // Remove already-booked slots (normalized comparison)
-    if (bookedSlots.includes(slot)) return false;
-
-    // Remove slots that fall within the break window
-    if (schedule?.breakStart && schedule?.breakEnd) {
-      const slotMin = timeToMinutes(slot);
-      const breakStartMin = timeToMinutes(schedule.breakStart);
-      const breakEndMin = timeToMinutes(schedule.breakEnd);
-      if (slotMin >= breakStartMin && slotMin < breakEndMin) return false;
-    }
-
-    // Remove past slots for today
-    const now = new Date();
-    const isToday = selectedDate.toDateString() === now.toDateString();
-    if (isToday) {
-      const slotMin = timeToMinutes(slot);
-      const nowMin = now.getHours() * 60 + now.getMinutes();
-      return slotMin > nowMin;
-    }
-
-    return true;
-  });
-
-  if (!schedule) {
+  if (!schedule && !loading) {
     return (
       <div className="rounded-3xl border border-amber-100 bg-amber-50/70 p-6 md:p-8 text-center">
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-amber-500 shadow-sm">
@@ -161,9 +95,11 @@ export default function AvailableSlots({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex items-center rounded-2xl bg-indigo-50 px-3 py-2 text-[11px] font-black text-indigo-600">
-            {schedule.startTime} — {schedule.endTime}
-          </div>
+          {schedule && (
+            <div className="inline-flex items-center rounded-2xl bg-indigo-50 px-3 py-2 text-[11px] font-black text-indigo-600">
+              {schedule.startTime} — {schedule.endTime}
+            </div>
+          )}
 
           {!loading && (
             <div className="inline-flex items-center rounded-2xl bg-gray-50 px-3 py-2 text-[11px] font-black text-gray-500">
@@ -207,18 +143,22 @@ export default function AvailableSlots({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {availableSlots.map((slot, index) => (
                 <motion.div
-                  key={slot}
+                  key={slot.start}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.03 }}
                   className="min-w-0"
                 >
                   <SlotCard
-                    time={slot}
+                    time={slot.label}
+                    start={slot.start}
+                    maxMinutes={slot.maxMinutes}
                     selectedDate={selectedDate}
                     barberId={barberId}
-                    onBook={(bookedTime) =>
-                      setBookedSlots((prev) => [...prev, bookedTime])
+                    onBook={(bookedStart) =>
+                      setAvailableSlots((prev) =>
+                        prev.filter((s) => s.start !== bookedStart)
+                      )
                     }
                   />
                 </motion.div>
