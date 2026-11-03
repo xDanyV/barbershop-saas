@@ -20,22 +20,32 @@ export async function createAppointment(data: {
         select: {
             id: true,
             active: true,
+            status: true,
             businessId: true,
             business: {
                 select: {
                     active: true,
                     billingStatus: true,
+                    settings: {
+                        select: {
+                            isServiceActive: true,
+                        },
+                    },
                 },
             },
         },
     });
 
-    if (!barber || !barber.active) {
+    if (!barber || !barber.active || barber.status !== "APPROVED") {
         throw new Error("Barber not available");
     }
 
     if (!barber.business.active) {
         throw new Error("Business is not active");
+    }
+
+    if (barber.business.settings && !barber.business.settings.isServiceActive) {
+        throw new Error("Business is temporarily closed");
     }
 
     if (!canBusinessAcceptBookings(barber.business.billingStatus)) {

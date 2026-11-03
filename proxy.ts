@@ -7,8 +7,22 @@ import { routing } from "./i18n/routing";
 // Inicializamos el middleware de idiomas
 const intlMiddleware = createMiddleware(routing);
 
+// Cabeceras de identidad que solo el proxy puede definir a partir del JWT
+const IDENTITY_HEADERS = [
+  "x-user-id",
+  "x-user-role",
+  "x-barber-id",
+  "x-barber-status",
+  "x-business-id",
+];
+
 export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
+
+  // Eliminamos cualquier cabecera de identidad enviada por el cliente
+  for (const header of IDENTITY_HEADERS) {
+    request.headers.delete(header);
+  }
 
   // Identificar si la URL ya tiene un idioma para no perderlo en las redirecciones
   const localeMatch = pathname.match(/^\/(en|es)/);
@@ -24,7 +38,9 @@ export async function proxy(request: NextRequest) {
 
   // Si NO es una ruta protegida y NO es una API, solo aplicamos el idioma
   if (!isProtectedApi && !isProtectedPage) {
-    return isApiRoute ? NextResponse.next() : intlMiddleware(request);
+    return isApiRoute
+      ? NextResponse.next({ request: { headers: request.headers } })
+      : intlMiddleware(request);
   }
 
   // --- INICIO DE LÓGICA DE PROTECCIÓN (AUTH & JWT) ---
