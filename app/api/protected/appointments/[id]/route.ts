@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateAppointmentStatus } from "@/lib/services/appointment.service";
 import { AppointmentStatus } from "@prisma/client";
+import { errorResponse } from "@/lib/errors";
 
 export async function PATCH(
   request: NextRequest,
@@ -44,12 +45,6 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Internal error";
-
-    return NextResponse.json(
-      { error: message },
-      { status: 400 }
-    );
+    return errorResponse(error, "Update appointment status error");
   }
 }

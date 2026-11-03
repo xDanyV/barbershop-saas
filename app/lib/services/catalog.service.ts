@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { AppError } from "@/lib/errors";
 
 function canManageCatalog(role: string) {
   return role === "BARBER" || role === "OWNER" || role === "ADMIN";
@@ -12,19 +13,19 @@ export async function createCatalogService(
   barberId: string
 ) {
   if (!canManageCatalog(role)) {
-    throw new Error("Only barbers or owners can create services");
+    throw new AppError("Only barbers or owners can create services");
   }
 
   if (!name || !price || !duration || !barberId) {
-    throw new Error("Missing required fields");
+    throw new AppError("Missing required fields");
   }
 
   if (price <= 0) {
-    throw new Error("Price must be greater than 0");
+    throw new AppError("Price must be greater than 0");
   }
 
   if (duration <= 0) {
-    throw new Error("Duration must be greater than 0");
+    throw new AppError("Duration must be greater than 0");
   }
 
   const barber = await prisma.barber.findUnique({
@@ -37,7 +38,7 @@ export async function createCatalogService(
   });
 
   if (!barber || !barber.active) {
-    throw new Error("Barber not available");
+    throw new AppError("Barber not available");
   }
 
   return prisma.service.create({
@@ -63,7 +64,7 @@ export async function updateCatalogService(
   barberId: string
 ) {
   if (!canManageCatalog(role)) {
-    throw new Error("Only barbers or owners can update services");
+    throw new AppError("Only barbers or owners can update services");
   }
 
   const existing = await prisma.service.findUnique({
@@ -71,19 +72,19 @@ export async function updateCatalogService(
   });
 
   if (!existing) {
-    throw new Error("Service not found");
+    throw new AppError("Service not found", 404);
   }
 
   if (existing.barberId !== barberId) {
-    throw new Error("Not authorized");
+    throw new AppError("Not authorized", 403);
   }
 
   if (data.price !== undefined && data.price <= 0) {
-    throw new Error("Price must be greater than 0");
+    throw new AppError("Price must be greater than 0");
   }
 
   if (data.duration !== undefined && data.duration <= 0) {
-    throw new Error("Duration must be greater than 0");
+    throw new AppError("Duration must be greater than 0");
   }
 
   return prisma.service.update({
@@ -98,7 +99,7 @@ export async function deleteCatalogService(
   barberId: string
 ) {
   if (!canManageCatalog(role)) {
-    throw new Error("Only barbers or owners can delete services");
+    throw new AppError("Only barbers or owners can delete services");
   }
 
   const existing = await prisma.service.findUnique({
@@ -106,15 +107,15 @@ export async function deleteCatalogService(
   });
 
   if (!existing) {
-    throw new Error("Service not found");
+    throw new AppError("Service not found", 404);
   }
 
   if (existing.barberId !== barberId) {
-    throw new Error("Not authorized");
+    throw new AppError("Not authorized", 403);
   }
 
   if (!existing.active) {
-    throw new Error("Service is already inactive");
+    throw new AppError("Service is already inactive");
   }
 
   return prisma.service.update({

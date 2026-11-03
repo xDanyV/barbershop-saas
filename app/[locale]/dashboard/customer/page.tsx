@@ -11,10 +11,9 @@ import { useTranslations } from "next-intl";
 
 type Barber = {
   id: string;
+  profileImageUrl: string | null;
   user: {
     name: string | null;
-    email: string;
-    phone: string;
   };
 };
 

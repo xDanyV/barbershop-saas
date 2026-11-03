@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createCatalogService } from "@/lib/services/catalog.service";
 import { prisma } from "@/lib/prisma";
+import { errorResponse } from "@/lib/errors";
 
 function canManageCatalog(role: string | null) {
     return role === "BARBER" || role === "OWNER" || role === "ADMIN";
@@ -28,8 +29,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json(service, { status: 201 });
     } catch (error) {
-        const message = error instanceof Error ? error.message : "Internal server error";
-        return NextResponse.json({ error: message }, { status: 400 });
+        return errorResponse(error, "Catalog POST error");
     }
 }
 

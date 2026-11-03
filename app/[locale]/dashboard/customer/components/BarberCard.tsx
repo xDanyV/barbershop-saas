@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Mail, Phone, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 type Barber = {
@@ -9,8 +9,6 @@ type Barber = {
     profileImageUrl?: string | null;
     user: {
         name: string | null;
-        email: string;
-        phone: string;
     };
 };
 
@@ -70,22 +68,6 @@ export default function BarberCard({ barber }: Props) {
                     <h3 className="font-black text-gray-900 text-lg tracking-tight truncate">
                         {barberName}
                     </h3>
-
-                    <div className="space-y-1 mt-2">
-                        <div className="flex items-center gap-2 text-gray-400 group-hover:text-gray-600 transition-colors">
-                            <Phone size={12} className="text-indigo-400 shrink-0" />
-                            <p className="text-xs font-bold tracking-tight truncate">
-                                {barber.user.phone}
-                            </p>
-                        </div>
-
-                        <div className="flex items-center gap-2 text-gray-400 group-hover:text-gray-600 transition-colors">
-                            <Mail size={12} className="text-indigo-400 shrink-0" />
-                            <p className="text-xs font-bold tracking-tight truncate">
-                                {barber.user.email}
-                            </p>
-                        </div>
-                    </div>
                 </div>
             </div>
         </motion.div>

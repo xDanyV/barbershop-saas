@@ -39,8 +39,6 @@ export default async function BusinessBookPage({ params }: BookPageProps) {
                     user: {
                         select: {
                             name: true,
-                            email: true,
-                            phone: true,
                         },
                     },
                 },

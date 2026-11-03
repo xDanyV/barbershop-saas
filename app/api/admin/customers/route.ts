@@ -94,6 +94,13 @@ export async function PATCH(req: Request) {
         const updatedCustomer = await prisma.user.update({
             where: { id: customerId },
             data: { isBanned },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                isBanned: true,
+            },
         });
 
         return NextResponse.json({ success: true, user: updatedCustomer });
