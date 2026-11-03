@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
+import { useRouter } from "../../../../../i18n/routing";
 import {
     ArrowRight,
     Building2,
@@ -32,16 +33,12 @@ type Business = {
 };
 
 export default function BusinessesPage() {
+    // useRouter de next-intl agrega el idioma actual a las rutas
     const router = useRouter();
-    const pathname = usePathname();
+    const t = useTranslations("BusinessDirectory");
 
     const [businesses, setBusinesses] = useState<Business[]>([]);
     const [loading, setLoading] = useState(true);
-
-    const localePrefix = useMemo(() => {
-        const match = pathname.match(/^\/(en|es)/);
-        return match ? match[0] : "";
-    }, [pathname]);
 
     useEffect(() => {
         fetch("/api/businesses")
@@ -73,7 +70,7 @@ export default function BusinessesPage() {
                     className="flex items-center justify-center md:justify-start gap-2 text-indigo-600 font-bold tracking-widest uppercase text-[10px] md:text-xs mb-3"
                 >
                     <Store size={14} />
-                    <span>Available Businesses</span>
+                    <span>{t("eyebrow")}</span>
                 </motion.div>
 
                 <motion.h1
@@ -81,7 +78,7 @@ export default function BusinessesPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="text-3xl md:text-5xl font-black text-gray-900 tracking-tight"
                 >
-                    Choose a Barbershop
+                    {t("title")}
                 </motion.h1>
 
                 <motion.p
@@ -90,7 +87,7 @@ export default function BusinessesPage() {
                     transition={{ delay: 0.1 }}
                     className="text-gray-500 mt-3 text-base md:text-lg font-medium max-w-2xl mx-auto md:mx-0"
                 >
-                    Browse registered businesses and book your appointment with the team that fits your style.
+                    {t("subtitle")}
                 </motion.p>
             </header>
 
@@ -120,10 +117,10 @@ export default function BusinessesPage() {
                 >
                     <Building2 className="mx-auto text-gray-300 mb-4" size={48} />
                     <p className="text-gray-500 font-bold text-xl">
-                        No businesses available
+                        {t("emptyTitle")}
                     </p>
                     <p className="text-gray-400 text-sm mt-1">
-                        Registered barbershops will appear here.
+                        {t("emptySubtitle")}
                     </p>
                 </motion.div>
             ) : (
@@ -190,7 +187,7 @@ export default function BusinessesPage() {
                                                 {business.name}
                                             </p>
                                             <p className="text-indigo-100 text-[11px] font-bold uppercase tracking-widest">
-                                                Barbershop
+                                                {t("badge")}
                                             </p>
                                         </div>
                                     </div>
@@ -198,8 +195,7 @@ export default function BusinessesPage() {
 
                                 <div className="p-5 md:p-6">
                                     <p className="text-sm text-gray-500 leading-relaxed line-clamp-3 min-h-15">
-                                        {business.description ||
-                                            "Business profile available for appointments and services."}
+                                        {business.description || t("defaultDescription")}
                                     </p>
 
                                     <div className="mt-5 space-y-2">
@@ -221,7 +217,7 @@ export default function BusinessesPage() {
                                     <div className="mt-5 grid grid-cols-2 gap-2">
                                         <div className="rounded-2xl bg-gray-50 border border-gray-100 p-3">
                                             <p className="text-[10px] text-gray-400 uppercase tracking-widest font-black">
-                                                Barbers
+                                                {t("barbers")}
                                             </p>
                                             <p className="text-lg font-black text-gray-900">
                                                 {business.barberCount}
@@ -230,7 +226,7 @@ export default function BusinessesPage() {
 
                                         <div className="rounded-2xl bg-gray-50 border border-gray-100 p-3">
                                             <p className="text-[10px] text-gray-400 uppercase tracking-widest font-black">
-                                                Services
+                                                {t("services")}
                                             </p>
                                             <p className="text-lg font-black text-gray-900">
                                                 {business.serviceCount}
@@ -241,8 +237,7 @@ export default function BusinessesPage() {
                                     {!isServiceActive && (
                                         <div className="mt-4 rounded-2xl bg-amber-50 border border-amber-100 p-3">
                                             <p className="text-xs text-amber-700 font-bold">
-                                                {business.settings?.maintenanceMessage ||
-                                                    "Appointments are temporarily paused."}
+                                                {business.settings?.maintenanceMessage || t("paused")}
                                             </p>
                                         </div>
                                     )}
@@ -251,11 +246,11 @@ export default function BusinessesPage() {
                                         <motion.button
                                             whileTap={{ scale: 0.97 }}
                                             onClick={() =>
-                                                router.push(`${localePrefix}/business/${business.slug}`)
+                                                router.push(`/business/${business.slug}`)
                                             }
                                             className="w-full py-3 rounded-xl bg-gray-100 text-gray-700 text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
                                         >
-                                            View Business
+                                            {t("view")}
                                             <ArrowRight size={16} />
                                         </motion.button>
 
@@ -263,14 +258,14 @@ export default function BusinessesPage() {
                                             whileTap={{ scale: 0.97 }}
                                             onClick={() =>
                                                 router.push(
-                                                    `${localePrefix}/business/${business.slug}/book`
+                                                    `/business/${business.slug}/book`
                                                 )
                                             }
                                             disabled={!isServiceActive || business.barberCount === 0}
                                             className="w-full py-3.5 rounded-xl bg-gray-900 text-white text-xs font-black uppercase tracking-widest hover:bg-indigo-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                                         >
                                             <CalendarDays size={16} />
-                                            Book Appointment
+                                            {t("book")}
                                         </motion.button>
                                     </div>
                                 </div>

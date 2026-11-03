@@ -14,7 +14,7 @@ import {
   ChevronDown,
   ArrowRight,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { formatPriceFromCents } from "@/lib/billing/pricing";
 
 type Service = {
@@ -43,6 +43,7 @@ export default function SlotCard({
   onBook,
 }: Props) {
   const t = useTranslations("SlotCard");
+  const locale = useLocale();
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<string | null>(null);
@@ -99,18 +100,11 @@ export default function SlotCard({
 
   const getLoginRedirectUrl = () => {
     const currentPath = window.location.pathname + window.location.search;
-    const localeMatch = window.location.pathname.match(/^\/(en|es)/);
-    const localePrefix = localeMatch ? localeMatch[0] : "";
 
-    return `${localePrefix}/login?redirectTo=${encodeURIComponent(currentPath)}`;
+    return `/${locale}/login?redirectTo=${encodeURIComponent(currentPath)}`;
   };
 
-  const getCustomerHomeUrl = () => {
-    const localeMatch = window.location.pathname.match(/^\/(en|es)/);
-    const localePrefix = localeMatch ? localeMatch[0] : "";
-
-    return `${localePrefix}/dashboard/customer/home`;
-  };
+  const getCustomerHomeUrl = () => `/${locale}/dashboard/customer/home`;
 
   const handleFinalConfirm = async () => {
     if (!selectedService) return;
@@ -131,7 +125,7 @@ export default function SlotCard({
       const data = await res.json().catch(() => null);
 
       if (res.status === 401) {
-        toast.error("Inicia sesión para reservar esta cita");
+        toast.error(t("errors.loginRequired"));
         window.location.href = getLoginRedirectUrl();
         return;
       }
@@ -156,7 +150,7 @@ export default function SlotCard({
     }
   };
 
-  const formattedDate = selectedDate.toLocaleDateString("en-US", {
+  const formattedDate = selectedDate.toLocaleDateString(locale === "en" ? "en-US" : "es-MX", {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -270,7 +264,7 @@ export default function SlotCard({
                     ) : services.length === 0 ? (
                       <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-5 text-center">
                         <p className="text-xs font-bold text-gray-400">
-                          No hay servicios disponibles.
+                          {t("noServices")}
                         </p>
                       </div>
                     ) : (
@@ -376,7 +370,7 @@ export default function SlotCard({
                     </Dialog.Title>
 
                     <p className="mt-1 text-sm text-gray-500">
-                      Revisa los datos antes de completar tu reserva.
+                      {t("modal.subtitle")}
                     </p>
                   </div>
 
@@ -435,7 +429,7 @@ export default function SlotCard({
                   {booking ? (
                     <>
                       <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                      Reservando...
+                      {t("buttons.booking")}
                     </>
                   ) : (
                     t("buttons.completeBooking")

@@ -3,10 +3,10 @@ import { createNavigation } from 'next-intl/navigation';
 
 export const routing = defineRouting({
     // A list of all locales that are supported
-    locales: ['en', 'es'],
+    locales: ['es', 'en'],
 
-    // Used when no locale matches
-    defaultLocale: 'en'
+    // Producto para Tijuana / Baja California: español por defecto
+    defaultLocale: 'es'
 });
 
 // Lightweight wrappers around Next.js' navigation APIs

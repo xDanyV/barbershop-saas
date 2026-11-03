@@ -22,6 +22,7 @@ import {
   Transition,
 } from "@headlessui/react";
 import { useTranslations } from "next-intl";
+import { getWhatsAppUrl } from "@/[locale]/business/[slug]/lib/business-page.utils";
 
 type AppointmentStatus = "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
 
@@ -288,7 +289,7 @@ export default function AppointmentCard({
 
                       {appointment.customerPhone && (
                         <a
-                          href={`https://wa.me/${appointment.customerPhone}`}
+                          href={getWhatsAppUrl(appointment.customerPhone)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 rounded-lg bg-gray-50 text-gray-400 hover:bg-emerald-500 hover:text-white transition-all shrink-0"

@@ -13,7 +13,10 @@
             "phone": "Número de teléfono",
             "email": "Correo electrónico",
             "password": "Contraseña",
-            "confirmPassword": "Confirmar Contraseña"
+            "confirmPassword": "Confirmar Contraseña",
+            "businessSlug": "Slug o enlace público de la barbería",
+            "businessSlugHintBefore": "Puedes escribir solo el slug, por ejemplo",
+            "businessSlugHintAfter": ", o pegar el enlace público completo de la barbería."
         },
         "buttons": {
             "creating": "Configurando tu espacio...",
@@ -23,6 +26,24 @@
         "login": {
             "question": "¿Ya tienes una cuenta?",
             "action": "Inicia sesión"
+        },
+        "errors": {
+            "selectType": "Selecciona un tipo de cuenta",
+            "slugRequired": "Escribe el nombre corto (slug) o el enlace público de la barbería",
+            "passwordMismatch": "Las contraseñas no coinciden",
+            "passwordLength": "La contraseña debe tener al menos 8 caracteres",
+            "generic": "Algo salió mal",
+            "connection": "Error de conexión. Revisa tu internet e inténtalo de nuevo."
+        },
+        "toasts": {
+            "creating": "Creando tu cuenta...",
+            "failed": "No se pudo crear la cuenta",
+            "success": "¡Bienvenido! Redirigiendo...",
+            "connection": "Error de conexión. Inténtalo de nuevo."
+        },
+        "placeholders": {
+            "name": "Juan Pérez",
+            "email": "tu@correo.com"
         }
     },
     "Home": {
@@ -101,10 +122,12 @@
     },
     "DashboardNavbar": {
         "menu": {
-            "adminControl": "Admin Control",
+            "adminControl": "Panel de control",
             "myAppointments": "Mis Citas",
             "catalog": "Catálogo",
-            "book": "Reservar"
+            "book": "Reservar",
+            "myBusiness": "Mi negocio",
+            "createBusiness": "Crear negocio"
         },
         "logout": "Cerrar Sesión",
         "errors": {
@@ -329,12 +352,6 @@
             "cancel": "Cancelar"
         }
     },
-    "CustomerDashboard": {
-        "backToBarbers": "Volver a Barberos",
-        "step1": "Paso 1: Selecciona Fecha",
-        "step2": "Paso 2: Elige Horario",
-        "note": "Nota: Las cancelaciones solo se permiten hasta 2 horas antes de la cita."
-    },
     "CustomerHome": {
         "title": "Mis Citas",
         "subtitleUpcoming": "Tu próximo estilo te espera",
@@ -369,24 +386,14 @@
             "keep": "Mantener"
         }
     },
-    "BarbersPage": {
-        "eyebrow": "Personal Profesional",
-        "title": "Nuestros Barberos",
-        "subtitle": "Selecciona un profesional experto para elevar tu estilo.",
-        "selectBarber": "Seleccionar",
-        "empty": {
-            "title": "Sin barberos disponibles",
-            "subtitle": "Por favor vuelve más tarde o contacta soporte."
-        },
-        "fallbackName": "Barbero Experto"
-    },
     "AvailableSlots": {
-        "title": "Horarios Disponibles",
+        "title": "Horarios disponibles",
         "soldOut": "¡Sin disponibilidad!",
         "noAvailability": {
             "title": "Sin disponibilidad",
             "subtitle": "El barbero no trabaja este día."
-        }
+        },
+        "soldOutHint": "Intenta seleccionar otra fecha o cambiar de barbero para ver más horarios."
     },
     "CalendarPickerCustomer": {
         "legend": {
@@ -404,7 +411,8 @@
             "book": "Reservar",
             "close": "Cerrar",
             "continue": "Continuar",
-            "completeBooking": "Confirmar Reserva"
+            "completeBooking": "Confirmar Reserva",
+            "booking": "Reservando..."
         },
         "modal": {
             "title": "Confirmar Reserva",
@@ -413,17 +421,20 @@
                 "time": "Hora",
                 "service": "Servicio",
                 "total": "Total"
-            }
+            },
+            "subtitle": "Revisa los datos antes de completar tu reserva."
         },
         "errors": {
             "noService": "Por favor selecciona un servicio",
             "loadFailed": "No se pudieron cargar los servicios",
             "bookFailed": "No se pudo reservar la cita",
-            "network": "Error de red, por favor intenta de nuevo"
+            "network": "Error de red, por favor intenta de nuevo",
+            "loginRequired": "Inicia sesión para reservar esta cita"
         },
         "success": {
             "booked": "¡{name} reservado exitosamente!"
-        }
+        },
+        "noServices": "No hay servicios disponibles para este horario."
     },
     "BarberCard": {
         "fallbackName": "Barbero Experto",
@@ -560,5 +571,96 @@
         "self": "Mi agenda",
         "hint": "La agenda, los servicios y los días libres se aplican al barbero seleccionado.",
         "error": "No se pudo cambiar de barbero"
+    },
+    "BusinessPage": {
+        "hero": {
+            "profile": "Perfil del negocio",
+            "defaultDescription": "Agenda tu cita con profesionales listos para atenderte.",
+            "book": "Reservar cita",
+            "paused": "Reservas pausadas",
+            "inactive": "El servicio de reservas está temporalmente inactivo.",
+            "services": "Servicios",
+            "barbers": "Barberos",
+            "photos": "Fotos"
+        },
+        "navbar": {
+            "browse": "Ver barberías"
+        },
+        "cta": {
+            "title": "¿Listo para tu próximo corte?",
+            "subtitle": "Agenda tu cita con {name} y elige el horario que mejor se adapte a ti.",
+            "book": "Reservar cita",
+            "paused": "Reservas temporalmente pausadas"
+        },
+        "contact": {
+            "whatsappMobile": "Contactar por WhatsApp",
+            "title": "Contacto",
+            "whatsapp": "Enviar WhatsApp"
+        },
+        "gallery": {
+            "title": "Galería",
+            "subtitle": "Fotos del negocio.",
+            "empty": "Aún no hay fotos en la galería.",
+            "count": "{count, plural, one {# foto} other {# fotos}}.",
+            "imageAlt": "Foto del negocio"
+        },
+        "posts": {
+            "title": "Publicaciones",
+            "subtitle": "Avisos, promociones y novedades del negocio.",
+            "count": "{count, plural, one {# publicación} other {# publicaciones}}",
+            "empty": "Aún no hay publicaciones.",
+            "emptyHint": "Cuando el negocio agregue promociones, avisos o novedades, aparecerán en esta sección.",
+            "imageAlt": "Imagen de publicación"
+        },
+        "carousel": {
+            "title": "Nuestro equipo",
+            "empty": "No hay barberos disponibles.",
+            "subtitle": "Conoce a los barberos disponibles.",
+            "play": "Reproducir carrusel",
+            "pause": "Pausar carrusel",
+            "previous": "Barbero anterior",
+            "next": "Siguiente barbero",
+            "role": "Barbero profesional",
+            "featured": "Barbero destacado",
+            "description": "Selecciona tu servicio y horario disponible para reservar una cita con el equipo de este negocio.",
+            "book": "Reservar cita",
+            "fallbackName": "Barbero"
+        }
+    },
+    "BookingPage": {
+        "barberFallback": "Barbero",
+        "noBarbers": "Este negocio aún no tiene barberos disponibles para reservar.",
+        "chooseBarber": "Elige un barbero",
+        "seeTimes": "Ver horarios disponibles",
+        "changeBarberOrDate": "Cambiar barbero o fecha",
+        "backToProfile": "Volver al perfil",
+        "bookings": "Reservas",
+        "title": "Reservar cita",
+        "steps": {
+            "details": "Barbero y fecha",
+            "slots": "Horario",
+            "confirm": "Confirmar"
+        },
+        "paused": "Las reservas de este negocio están pausadas temporalmente.",
+        "pausedHint": "Por favor, intenta más tarde o contacta directamente a la barbería.",
+        "inactive": "El servicio está temporalmente inactivo."
+    },
+    "BusinessDirectory": {
+        "eyebrow": "Barberías disponibles",
+        "title": "Elige una barbería",
+        "subtitle": "Explora las barberías registradas y reserva con el equipo que va con tu estilo.",
+        "emptyTitle": "No hay barberías disponibles",
+        "emptySubtitle": "Las barberías registradas aparecerán aquí.",
+        "badge": "Barbería",
+        "defaultDescription": "Perfil del negocio disponible para citas y servicios.",
+        "barbers": "Barberos",
+        "services": "Servicios",
+        "paused": "Las reservas están pausadas temporalmente.",
+        "view": "Ver negocio",
+        "book": "Reservar cita"
+    },
+    "Metadata": {
+        "title": "BarberSaaS | Citas para tu barbería",
+        "description": "Reserva y administra las citas de tu barbería en Tijuana."
     }
 }

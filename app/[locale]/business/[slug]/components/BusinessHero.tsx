@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
     CalendarDays,
     MapPin,
@@ -37,6 +38,7 @@ export default function BusinessHero({
     barberCount,
     galleryCount,
 }: Props) {
+    const t = useTranslations("BusinessPage.hero");
     const bookUrl = `/${locale}/business/${business.slug}/book`;
 
     return (
@@ -81,7 +83,7 @@ export default function BusinessHero({
                             <div className="flex-1">
                                 <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-400/20 text-indigo-200 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] mb-4">
                                     <Sparkles size={13} />
-                                    Perfil del negocio
+                                    {t("profile")}
                                 </div>
 
                                 <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[0.95]">
@@ -89,8 +91,7 @@ export default function BusinessHero({
                                 </h1>
 
                                 <p className="text-gray-300 mt-4 max-w-2xl leading-relaxed">
-                                    {business.description ||
-                                        "Agenda tu cita con profesionales listos para atenderte."}
+                                    {business.description || t("defaultDescription")}
                                 </p>
 
                                 <div className="flex flex-wrap gap-3 mt-6 text-sm text-gray-300">
@@ -118,12 +119,12 @@ export default function BusinessHero({
                                     className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black px-6 py-4 rounded-2xl transition-colors shadow-xl shadow-indigo-950/30"
                                 >
                                     <CalendarDays size={18} />
-                                    Reservar cita
+                                    {t("book")}
                                 </Link>
                             ) : (
                                 <div className="inline-flex items-center justify-center gap-2 bg-gray-700/60 text-gray-300 font-black px-6 py-4 rounded-2xl cursor-not-allowed">
                                     <CalendarDays size={18} />
-                                    Reservas pausadas
+                                    {t("paused")}
                                 </div>
                             )}
 
@@ -143,8 +144,7 @@ export default function BusinessHero({
 
                     {!isServiceActive && (
                         <div className="mt-7 bg-amber-500/10 border border-amber-500/30 text-amber-100 rounded-2xl px-4 py-3 text-sm font-medium">
-                            {business.settings?.maintenanceMessage ||
-                                "El servicio de reservas está temporalmente inactivo."}
+                            {business.settings?.maintenanceMessage || t("inactive")}
                         </div>
                     )}
 
@@ -152,21 +152,21 @@ export default function BusinessHero({
                         <div className="bg-black/20 border border-white/10 rounded-2xl p-4">
                             <p className="text-2xl font-black">{serviceCount}</p>
                             <p className="text-[10px] md:text-xs text-gray-400 font-black uppercase tracking-widest mt-1">
-                                Servicios
+                                {t("services")}
                             </p>
                         </div>
 
                         <div className="bg-black/20 border border-white/10 rounded-2xl p-4">
                             <p className="text-2xl font-black">{barberCount}</p>
                             <p className="text-[10px] md:text-xs text-gray-400 font-black uppercase tracking-widest mt-1">
-                                Barberos
+                                {t("barbers")}
                             </p>
                         </div>
 
                         <div className="bg-black/20 border border-white/10 rounded-2xl p-4">
                             <p className="text-2xl font-black">{galleryCount}</p>
                             <p className="text-[10px] md:text-xs text-gray-400 font-black uppercase tracking-widest mt-1">
-                                Fotos
+                                {t("photos")}
                             </p>
                         </div>
                     </div>

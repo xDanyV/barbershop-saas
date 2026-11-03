@@ -1,4 +1,5 @@
 import { MapPin, MessageCircle, Phone } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { getWhatsAppUrl } from "../lib/business-page.utils";
 
 type Props = {
@@ -7,6 +8,8 @@ type Props = {
 };
 
 export default function FloatingContactCard({ phone, address }: Props) {
+    const t = useTranslations("BusinessPage.contact");
+
     if (!phone && !address) return null;
 
     return (
@@ -20,7 +23,7 @@ export default function FloatingContactCard({ phone, address }: Props) {
                         className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 text-white px-5 py-3 text-sm font-black shadow-2xl shadow-black/30"
                     >
                         <MessageCircle size={18} />
-                        Contactar por WhatsApp
+                        {t("whatsappMobile")}
                     </a>
                 ) : (
                     <div className="rounded-2xl bg-white/10 border border-white/10 backdrop-blur-xl px-5 py-3 text-white text-sm font-bold shadow-2xl shadow-black/30">
@@ -32,7 +35,7 @@ export default function FloatingContactCard({ phone, address }: Props) {
             <aside className="hidden sm:block fixed right-6 bottom-6 z-40 w-80">
                 <div className="bg-white/10 border border-white/10 backdrop-blur-xl rounded-3xl p-5 text-white shadow-2xl shadow-black/30">
                     <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-200 mb-4">
-                        Contacto
+                        {t("title")}
                     </p>
 
                     <div className="space-y-3">
@@ -59,7 +62,7 @@ export default function FloatingContactCard({ phone, address }: Props) {
                             className="mt-5 w-full inline-flex items-center justify-center gap-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/30 text-emerald-100 font-black px-4 py-3 rounded-2xl transition-colors"
                         >
                             <MessageCircle size={18} />
-                            Enviar WhatsApp
+                            {t("whatsapp")}
                         </a>
                     )}
                 </div>

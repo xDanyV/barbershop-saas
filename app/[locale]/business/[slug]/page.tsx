@@ -1,5 +1,6 @@
 import { getPublicBusinessPage } from "@/lib/cache/business-pages";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import BusinessHero from "./components/BusinessHero";
 import BarberCarousel from "./components/BarberCarousel";
 import BusinessGallery from "./components/BusinessGallery";
@@ -26,6 +27,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
         notFound();
     }
 
+    const tCarousel = await getTranslations("BusinessPage.carousel");
     const isServiceActive = business.settings?.isServiceActive ?? true;
     const bookUrl = `/${locale}/business/${business.slug}/book`;
 
@@ -33,7 +35,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
 
     const barbersForCarousel = business.barbers.map((barber) => ({
         id: barber.id,
-        name: barber.user.name || "Barbero",
+        name: barber.user.name || tCarousel("fallbackName"),
         imageUrl: barber.profileImageUrl || null,
     }));
 
