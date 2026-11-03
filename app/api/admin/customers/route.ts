@@ -1,32 +1,30 @@
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
-import { headers } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
+import { AppError, errorResponse } from "@/lib/errors";
+import { requireAuth } from "@/lib/api/auth";
+import { parseJsonBody } from "@/lib/api/validation";
+import { updateCustomerBanSchema } from "@/lib/validations/schemas";
 
-export async function GET() {
+// ADMIN ve a todos los clientes; OWNER solo a los que tienen citas en su negocio
+function requireCustomerManager(request: NextRequest) {
+    const auth = requireAuth(request, ["ADMIN", "OWNER"]);
+
+    if (auth.role === "OWNER" && !auth.businessId) {
+        throw new AppError("Business context is required", 403);
+    }
+
+    return auth;
+}
+
+export async function GET(request: NextRequest) {
     try {
-        const headersList = await headers();
-        const role = headersList.get("x-user-role");
-        const businessId = headersList.get("x-business-id");
-
-        if (role !== "ADMIN" && role !== "OWNER") {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-        }
-
-        if (role === "OWNER" && !businessId) {
-            return NextResponse.json({ error: "Business context is required" }, { status: 403 });
-        }
+        const auth = requireCustomerManager(request);
 
         const customers = await prisma.user.findMany({
             where: {
                 role: "CUSTOMER",
-                ...(role === "OWNER"
-                    ? {
-                        appointments: {
-                            some: {
-                                businessId: businessId!,
-                            },
-                        },
-                    }
+                ...(auth.role === "OWNER"
+                    ? { appointments: { some: { businessId: auth.businessId! } } }
                     : {}),
             },
             select: {
@@ -49,46 +47,37 @@ export async function GET() {
 
         return NextResponse.json(customers);
     } catch (error) {
-        console.error("Error fetching customers:", error);
-        return NextResponse.json({ error: "Failed to fetch customers" }, { status: 500 });
+        return errorResponse(error, "Error fetching customers");
     }
 }
 
-export async function PATCH(req: Request) {
+export async function PATCH(request: NextRequest) {
     try {
-        const headersList = await headers();
-        const role = headersList.get("x-user-role");
-        const businessId = headersList.get("x-business-id");
+        const auth = requireCustomerManager(request);
+        const { customerId, isBanned } = await parseJsonBody(request, updateCustomerBanSchema);
 
-        if (role !== "ADMIN" && role !== "OWNER") {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-        }
-
-        if (role === "OWNER" && !businessId) {
-            return NextResponse.json({ error: "Business context is required" }, { status: 403 });
-        }
-
-        const body = await req.json();
-        const { customerId, isBanned } = body;
-
-        if (!customerId || typeof isBanned !== "boolean") {
-            return NextResponse.json({ error: "Invalid data" }, { status: 400 });
-        }
-
-        if (role === "OWNER") {
+        if (auth.role === "OWNER") {
             const hasAppointmentInBusiness = await prisma.appointment.findFirst({
                 where: {
                     userId: customerId,
-                    businessId: businessId!,
+                    businessId: auth.businessId!,
                 },
-                select: {
-                    id: true,
-                },
+                select: { id: true },
             });
 
             if (!hasAppointmentInBusiness) {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+                throw new AppError("Forbidden", 403);
             }
+        }
+
+        // Solo se puede bloquear a clientes, nunca a barberos, owners o admins
+        const customer = await prisma.user.findFirst({
+            where: { id: customerId, role: "CUSTOMER" },
+            select: { id: true },
+        });
+
+        if (!customer) {
+            throw new AppError("Customer not found", 404);
         }
 
         const updatedCustomer = await prisma.user.update({
@@ -105,7 +94,6 @@ export async function PATCH(req: Request) {
 
         return NextResponse.json({ success: true, user: updatedCustomer });
     } catch (error) {
-        console.error("Error updating customer ban status:", error);
-        return NextResponse.json({ error: "Failed to update customer" }, { status: 500 });
+        return errorResponse(error, "Error updating customer ban status");
     }
 }

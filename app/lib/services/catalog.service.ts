@@ -1,33 +1,22 @@
 import { prisma } from "@/lib/prisma";
 import { AppError } from "@/lib/errors";
 
-function canManageCatalog(role: string) {
-  return role === "BARBER" || role === "OWNER" || role === "ADMIN";
+// La validación de formato (zod) y de rol se hace en las rutas; aquí solo reglas de negocio
+
+export async function getActiveServices(barberId: string) {
+  return prisma.service.findMany({
+    where: {
+      barberId,
+      active: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
 }
 
 export async function createCatalogService(
-  name: string,
-  price: number,
-  duration: number,
-  role: string,
+  data: { name: string; priceCents: number; duration: number },
   barberId: string
 ) {
-  if (!canManageCatalog(role)) {
-    throw new AppError("Only barbers or owners can create services");
-  }
-
-  if (!name || !price || !duration || !barberId) {
-    throw new AppError("Missing required fields");
-  }
-
-  if (price <= 0) {
-    throw new AppError("Price must be greater than 0");
-  }
-
-  if (duration <= 0) {
-    throw new AppError("Duration must be greater than 0");
-  }
-
   const barber = await prisma.barber.findUnique({
     where: { id: barberId },
     select: {
@@ -41,8 +30,6 @@ export async function createCatalogService(
     throw new AppError("Barber not available");
   }
 
-  const trimmedName = name.trim();
-
   // El borrado es lógico (active=false) y el nombre es único por barbero:
   // volver a crear un servicio eliminado lo reactiva con los datos nuevos
   const sameName = await prisma.service.findUnique({
@@ -50,7 +37,7 @@ export async function createCatalogService(
       businessId_barberId_name: {
         businessId: barber.businessId,
         barberId,
-        name: trimmedName,
+        name: data.name,
       },
     },
     select: { id: true, active: true },
@@ -63,36 +50,20 @@ export async function createCatalogService(
   if (sameName) {
     return prisma.service.update({
       where: { id: sameName.id },
-      data: { price, duration, active: true },
+      data: { priceCents: data.priceCents, duration: data.duration, active: true },
     });
   }
 
   return prisma.service.create({
     data: {
-      name: trimmedName,
-      price,
-      duration,
+      ...data,
       barberId,
       businessId: barber.businessId,
     },
   });
 }
 
-export async function updateCatalogService(
-  serviceId: string,
-  data: {
-    name?: string;
-    price?: number;
-    duration?: number;
-    active?: boolean;
-  },
-  role: string,
-  barberId: string
-) {
-  if (!canManageCatalog(role)) {
-    throw new AppError("Only barbers or owners can update services");
-  }
-
+async function getOwnedService(serviceId: string, barberId: string) {
   const existing = await prisma.service.findUnique({
     where: { id: serviceId },
   });
@@ -105,13 +76,20 @@ export async function updateCatalogService(
     throw new AppError("Not authorized", 403);
   }
 
-  if (data.price !== undefined && data.price <= 0) {
-    throw new AppError("Price must be greater than 0");
-  }
+  return existing;
+}
 
-  if (data.duration !== undefined && data.duration <= 0) {
-    throw new AppError("Duration must be greater than 0");
-  }
+export async function updateCatalogService(
+  serviceId: string,
+  data: {
+    name?: string;
+    priceCents?: number;
+    duration?: number;
+    active?: boolean;
+  },
+  barberId: string
+) {
+  await getOwnedService(serviceId, barberId);
 
   return prisma.service.update({
     where: { id: serviceId },
@@ -119,26 +97,8 @@ export async function updateCatalogService(
   });
 }
 
-export async function deleteCatalogService(
-  serviceId: string,
-  role: string,
-  barberId: string
-) {
-  if (!canManageCatalog(role)) {
-    throw new AppError("Only barbers or owners can delete services");
-  }
-
-  const existing = await prisma.service.findUnique({
-    where: { id: serviceId },
-  });
-
-  if (!existing) {
-    throw new AppError("Service not found", 404);
-  }
-
-  if (existing.barberId !== barberId) {
-    throw new AppError("Not authorized", 403);
-  }
+export async function deleteCatalogService(serviceId: string, barberId: string) {
+  const existing = await getOwnedService(serviceId, barberId);
 
   if (!existing.active) {
     throw new AppError("Service is already inactive");

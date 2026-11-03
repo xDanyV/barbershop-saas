@@ -2,185 +2,82 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { BarberStatus, Role } from "@prisma/client";
-
-const MIN_PASSWORD_LENGTH = 8;
-// bcrypt solo usa los primeros 72 bytes
-const MAX_PASSWORD_LENGTH = 72;
+import { AppError, errorResponse } from "@/lib/errors";
+import { parseJsonBody } from "@/lib/api/validation";
+import { registerSchema } from "@/lib/validations/schemas";
+import { extractBusinessSlug } from "@/lib/slug";
 
 function getBootstrapAdminEmail() {
     return process.env.ADMIN_BOOTSTRAP_EMAIL?.trim().toLowerCase() || null;
 }
 
-function createSlug(value: string) {
-    return value
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/ñ/g, "n")
-        .replace(/[^a-z0-9\s-]/g, "")
-        .trim()
-        .replace(/\s+/g, "-")
-        .replace(/-+/g, "-");
-}
-
-function extractBusinessSlug(value: string) {
-    let rawValue = value.trim();
-
-    try {
-        const url = new URL(rawValue);
-        rawValue = url.pathname;
-    } catch {
-        // If it is not a full URL, use it as plain text/path.
-    }
-
-    const segments = rawValue.split("/").filter(Boolean);
-    const lastSegment = segments[segments.length - 1] ?? rawValue;
-
-    return createSlug(lastSegment);
-}
-
 export async function POST(req: Request) {
     try {
-        const body = await req.json();
-        const { name, email, password, phone, role, businessSlug } = body;
-
-        const normalizedName =
-            typeof name === "string" ? name.trim() : "";
-
-        const normalizedEmail =
-            typeof email === "string" ? email.trim().toLowerCase() : "";
-
-        const normalizedPhone =
-            typeof phone === "string" ? phone.trim() : "";
-
-        if (!normalizedEmail || !password || typeof password !== "string") {
-            return NextResponse.json(
-                { error: "Email and password are required" },
-                { status: 400 }
-            );
-        }
-
-        if (password.length < MIN_PASSWORD_LENGTH || password.length > MAX_PASSWORD_LENGTH) {
-            return NextResponse.json(
-                { error: `Password must be between ${MIN_PASSWORD_LENGTH} and ${MAX_PASSWORD_LENGTH} characters` },
-                { status: 400 }
-            );
-        }
-
-        if (!normalizedName) {
-            return NextResponse.json(
-                { error: "Name is required" },
-                { status: 400 }
-            );
-        }
-
-        if (!normalizedPhone) {
-            return NextResponse.json(
-                { error: "Phone number is required" },
-                { status: 400 }
-            );
-        }
-
-        const duplicateFilters = [
-            { email: normalizedEmail },
-            { phone: normalizedPhone },
-        ];
+        const { name, email, phone, password, role, businessSlug } = await parseJsonBody(req, registerSchema);
 
         const existingUser = await prisma.user.findFirst({
             where: {
-                OR: duplicateFilters,
+                OR: [{ email }, { phone }],
             },
+            select: { email: true, phone: true },
         });
 
-        if (existingUser) {
-            if (existingUser.email === normalizedEmail) {
-                return NextResponse.json(
-                    { error: "This email address is already registered." },
-                    { status: 400 }
-                );
-            }
+        if (existingUser?.email === email) {
+            throw new AppError("This email address is already registered.");
+        }
 
-            if (existingUser.phone === normalizedPhone) {
-                return NextResponse.json(
-                    { error: "This phone number is already registered." },
-                    { status: 400 }
-                );
-            }
+        if (existingUser?.phone === phone) {
+            throw new AppError("This phone number is already registered.");
         }
 
         // El administrador de la plataforma solo se crea a partir de ADMIN_BOOTSTRAP_EMAIL,
         // y únicamente mientras no exista ningún ADMIN
         const isBootstrapAdmin =
-            normalizedEmail === getBootstrapAdminEmail() &&
+            email === getBootstrapAdminEmail() &&
             (await prisma.user.count({ where: { role: Role.ADMIN } })) === 0;
 
-        const requestedRole = role === Role.BARBER ? Role.BARBER : Role.CUSTOMER;
+        let barberBusinessId: string | null = null;
 
-        let barberBusiness: { id: string; name: string } | null = null;
-
-        if (!isBootstrapAdmin && requestedRole === Role.BARBER) {
-            if (!businessSlug || typeof businessSlug !== "string") {
-                return NextResponse.json(
-                    { error: "Business slug is required for barber accounts." },
-                    { status: 400 }
-                );
-            }
-
-            const slug = extractBusinessSlug(businessSlug);
+        if (!isBootstrapAdmin && role === Role.BARBER) {
+            const slug = businessSlug ? extractBusinessSlug(businessSlug) : "";
 
             if (!slug) {
-                return NextResponse.json(
-                    { error: "Invalid business slug." },
-                    { status: 400 }
-                );
+                throw new AppError("Business slug is required for barber accounts.");
             }
 
             const business = await prisma.business.findUnique({
                 where: { slug },
-                select: {
-                    id: true,
-                    name: true,
-                    active: true,
-                },
+                select: { id: true, active: true },
             });
 
             if (!business || !business.active) {
-                return NextResponse.json(
-                    { error: "Business not found or inactive." },
-                    { status: 404 }
-                );
+                throw new AppError("Business not found or inactive.", 404);
             }
 
-            barberBusiness = {
-                id: business.id,
-                name: business.name,
-            };
+            barberBusinessId = business.id;
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        const finalRole = isBootstrapAdmin ? Role.ADMIN : role;
 
-        const finalRole = isBootstrapAdmin ? Role.ADMIN : requestedRole;
-
-        await prisma.$transaction(async (tx) => {
-            const newUser = await tx.user.create({
-                data: {
-                    name: normalizedName,
-                    email: normalizedEmail,
-                    phone: normalizedPhone,
-                    password: hashedPassword,
-                    role: finalRole,
-                },
-            });
-
-            if (finalRole === Role.BARBER && barberBusiness) {
-                await tx.barber.create({
-                    data: {
-                        userId: newUser.id,
-                        businessId: barberBusiness.id,
-                        status: BarberStatus.PENDING,
-                    },
-                });
-            }
+        await prisma.user.create({
+            data: {
+                name,
+                email,
+                phone,
+                password: hashedPassword,
+                role: finalRole,
+                ...(finalRole === Role.BARBER && barberBusinessId
+                    ? {
+                        barberProfile: {
+                            create: {
+                                businessId: barberBusinessId,
+                                status: BarberStatus.PENDING,
+                            },
+                        },
+                    }
+                    : {}),
+            },
         });
 
         return NextResponse.json(
@@ -193,11 +90,6 @@ export async function POST(req: Request) {
             { status: 201 }
         );
     } catch (error) {
-        console.error("Registration route error:", error);
-
-        return NextResponse.json(
-            { error: "An unexpected error occurred. Please try again." },
-            { status: 500 }
-        );
+        return errorResponse(error, "Registration route error");
     }
 }

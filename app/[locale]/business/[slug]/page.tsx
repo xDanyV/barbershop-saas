@@ -68,7 +68,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                 select: {
                     id: true,
                     name: true,
-                    price: true,
+                    priceCents: true,
                     duration: true,
                     barber: {
                         select: {

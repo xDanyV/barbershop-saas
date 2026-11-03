@@ -149,8 +149,8 @@ export async function getUserAppointments(userId: string) {
                     },
                 },
             },
-            service: true,
-            business: true,
+            service: { select: { id: true, name: true, duration: true, priceCents: true } },
+            business: { select: { id: true, name: true, slug: true } },
         },
     });
 }
@@ -174,8 +174,8 @@ export async function getBarberAppointments(barberId: string) {
                     phone: true,
                 },
             },
-            service: true,
-            business: true,
+            service: { select: { id: true, name: true, duration: true, priceCents: true } },
+            business: { select: { id: true, name: true, slug: true } },
         },
         orderBy: {
             date: "asc",

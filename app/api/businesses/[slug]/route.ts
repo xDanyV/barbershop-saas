@@ -71,7 +71,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
                     select: {
                         id: true,
                         name: true,
-                        price: true,
+                        priceCents: true,
                         duration: true,
                         barberId: true,
                         barber: {
