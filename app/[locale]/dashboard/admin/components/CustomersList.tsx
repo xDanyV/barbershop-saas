@@ -1,19 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Search, User, Mail, Phone, CalendarDays, Ban, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { useTranslations } from "next-intl";
 
+type Customer = {
+    id: string;
+    name: string | null;
+    email: string;
+    phone: string;
+    createdAt: string;
+    isBanned: boolean;
+    _count: { appointments: number };
+};
+
 export default function CustomersList() {
     const t = useTranslations("CustomersList");
-    const [customers, setCustomers] = useState<any[]>([]);
-    const [filteredCustomers, setFilteredCustomers] = useState<any[]>([]);
+    const [customers, setCustomers] = useState<Customer[]>([]);
+    const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
 
-    const fetchCustomers = async () => {
+    const fetchCustomers = useCallback(async () => {
         try {
             setLoading(true);
             const res = await fetch("/api/admin/customers");
@@ -34,11 +44,11 @@ export default function CustomersList() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [t]);
 
     useEffect(() => {
         fetchCustomers();
-    }, []);
+    }, [fetchCustomers]);
 
     useEffect(() => {
         if (!searchTerm.trim()) {
@@ -133,7 +143,7 @@ export default function CustomersList() {
                         {filteredCustomers.length === 0 ? (
                             <p className="text-center py-10 text-gray-400 font-bold italic">{t("empty")}</p>
                         ) : (
-                            filteredCustomers.map((customer: any) => (
+                            filteredCustomers.map((customer) => (
                                 <motion.div
                                     key={customer.id}
                                     layout

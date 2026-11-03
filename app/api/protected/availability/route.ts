@@ -1,83 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { errorResponse } from "@/lib/errors";
+import { requireBarberAuth } from "@/lib/api/auth";
+import { parseJsonBody } from "@/lib/api/validation";
+import { availabilitySchema } from "@/lib/validations/schemas";
 
 export async function GET(request: NextRequest) {
     try {
-        const role = request.headers.get("x-user-role");
-        const userId = request.headers.get("x-user-id");
+        const { barberId } = requireBarberAuth(request);
 
-        if ((role !== "BARBER" && role !== "ADMIN") || !userId) {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
-
-        // Find the barber associated with the user ID from the token
-        const barber = await prisma.barber.findUnique({
-            where: { userId },
-        });
-
-        if (!barber) {
-            return NextResponse.json({ error: "Barber not found" }, { status: 404 });
-        }
-
-        // Fetch the availability for the found barber
         const availability = await prisma.availability.findMany({
             where: {
-                barberId: barber.id,
+                barberId,
+            },
+            orderBy: {
+                dayOfWeek: "asc",
             },
         });
 
         return NextResponse.json(availability);
-
-    } catch {
-        return NextResponse.json(
-            { error: "Internal server error" },
-            { status: 500 }
-        );
+    } catch (error) {
+        return errorResponse(error, "Availability GET error");
     }
 }
 
 export async function POST(request: NextRequest) {
     try {
-        const role = request.headers.get("x-user-role");
-        const userId = request.headers.get("x-user-id");
+        const { barberId } = requireBarberAuth(request);
+        const { days, startTime, endTime, breakStart, breakEnd } = await parseJsonBody(
+            request,
+            availabilitySchema
+        );
 
-        if ((role !== "BARBER" && role !== "ADMIN") || !userId) {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
-
-        const barber = await prisma.barber.findUnique({
-            where: { userId },
-        });
-
-        if (!barber) {
-            return NextResponse.json({ error: "Barber not found" }, { status: 404 });
-        }
-
-        const body = await request.json();
-        const { days, startTime, endTime, breakStart, breakEnd } = body;
-
-        await prisma.availability.deleteMany({
-            where: { barberId: barber.id },
-        });
-
-        const availability = await prisma.availability.createMany({
-            data: days.map((day: number) => ({
-                barberId: barber.id,
-                dayOfWeek: day,
-                startTime,
-                endTime,
-                breakStart: breakStart || null,
-                breakEnd: breakEnd || null,
-            })),
-        });
+        // Reemplazo atómico: si falla la creación no se pierde el horario anterior
+        const [, availability] = await prisma.$transaction([
+            prisma.availability.deleteMany({
+                where: { barberId },
+            }),
+            prisma.availability.createMany({
+                data: days.map((day) => ({
+                    barberId,
+                    dayOfWeek: day,
+                    startTime,
+                    endTime,
+                    breakStart: breakStart ?? null,
+                    breakEnd: breakEnd ?? null,
+                })),
+            }),
+        ]);
 
         return NextResponse.json(availability);
-
     } catch (error) {
-        console.error("API Availability Error:", error);
-        return NextResponse.json(
-            { error: "Internal server error" },
-            { status: 500 }
-        );
+        return errorResponse(error, "Availability POST error");
     }
 }

@@ -1,56 +1,41 @@
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
-import { headers } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
+import { errorResponse } from "@/lib/errors";
+import { requireAuth } from "@/lib/api/auth";
+import { parseJsonBody } from "@/lib/api/validation";
+import { systemSettingsSchema } from "@/lib/validations/schemas";
 
-export async function GET() {
+// Mantenimiento global de la plataforma (solo ADMIN).
+// Los ajustes de cada negocio se editan en "Mi negocio" (/api/protected/businesses/me).
+export async function GET(request: NextRequest) {
     try {
-        const headersList = await headers();
-        const role = headersList.get("x-user-role");
+        requireAuth(request, ["ADMIN"]);
 
-        if (role !== "ADMIN") {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-        }
-
-        // Buscamos la configuración o la creamos si es la primera vez que se accede
-        let settings = await prisma.systemSettings.findUnique({
-            where: { id: "global" }
+        const settings = await prisma.systemSettings.upsert({
+            where: { id: "global" },
+            update: {},
+            create: { id: "global", isServiceActive: true },
         });
-
-        if (!settings) {
-            settings = await prisma.systemSettings.create({
-                data: { id: "global", isServiceActive: true }
-            });
-        }
 
         return NextResponse.json(settings);
     } catch (error) {
-        console.error("Error fetching settings:", error);
-        return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 });
+        return errorResponse(error, "Error fetching settings");
     }
 }
 
-export async function PATCH(req: Request) {
+export async function PATCH(request: NextRequest) {
     try {
-        const headersList = await headers();
-        const role = headersList.get("x-user-role");
+        requireAuth(request, ["ADMIN"]);
+        const data = await parseJsonBody(request, systemSettingsSchema);
 
-        if (role !== "ADMIN") {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-        }
-
-        const body = await req.json();
-        const { isServiceActive, maintenanceMessage } = body;
-
-        // Upsert garantiza que si por alguna razón no existe, lo crea al intentar actualizar
         const updatedSettings = await prisma.systemSettings.upsert({
             where: { id: "global" },
-            update: { isServiceActive, maintenanceMessage },
-            create: { id: "global", isServiceActive, maintenanceMessage }
+            update: data,
+            create: { id: "global", ...data },
         });
 
         return NextResponse.json({ success: true, settings: updatedSettings });
     } catch (error) {
-        console.error("Error updating settings:", error);
-        return NextResponse.json({ error: "Failed to update settings" }, { status: 500 });
+        return errorResponse(error, "Error updating settings");
     }
 }

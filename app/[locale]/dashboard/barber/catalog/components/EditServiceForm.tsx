@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 type Service = {
     id: string;
     name: string;
-    price: number;
+    priceCents: number;
     duration: number;
 };
 
@@ -21,7 +21,7 @@ type Props = {
 export default function EditServiceForm({ service, onCancel, onSuccess }: Props) {
     const t = useTranslations("EditServiceForm");
     const [name, setName] = useState(service.name);
-    const [price, setPrice] = useState(service.price);
+    const [price, setPrice] = useState(service.priceCents / 100);
     const [duration, setDuration] = useState(service.duration);
     const [isSubmitting, setIsSubmitting] = useState(false);
 

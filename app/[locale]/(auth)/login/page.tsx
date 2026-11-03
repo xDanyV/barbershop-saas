@@ -3,16 +3,31 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Eye, EyeOff } from "lucide-react";
+import BrandMark from "@/[locale]/components/BrandMark";
 
 export default function LoginPage() {
   const t = useTranslations("Login");
+  const locale = useLocale();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
+
+  const getSafeRedirectPath = () => {
+    const params = new URLSearchParams(window.location.search);
+    const redirectTo = params.get("redirectTo");
+
+    if (!redirectTo) return null;
+
+    if (!redirectTo.startsWith("/") || redirectTo.startsWith("//")) {
+      return null;
+    }
+
+    return redirectTo;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,12 +49,29 @@ export default function LoginPage() {
         return;
       }
 
-      if (data.user.role === "BARBER") {
-        window.location.href = "/dashboard/barber";
-      } else {
-        window.location.href = "/dashboard/customer/home";
+      const safeRedirectPath = getSafeRedirectPath();
+
+      if (safeRedirectPath) {
+        window.location.href = safeRedirectPath;
+        return;
       }
 
+      if (data.user.role === "ADMIN" || data.user.role === "OWNER") {
+        window.location.href = `/${locale}/dashboard/admin`;
+        return;
+      }
+
+      if (data.user.role === "BARBER") {
+        window.location.href = `/${locale}/dashboard/barber`;
+        return;
+      }
+
+      if (data.user.role === "CUSTOMER") {
+        window.location.href = `/${locale}/dashboard/customer/home`;
+        return;
+      }
+
+      window.location.href = `/${locale}/login`;
     } catch {
       setError(t("errors.generic"));
     } finally {
@@ -49,12 +81,9 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4 relative overflow-hidden">
-
-      {/* Background glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-xl h-75 bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-64 h-64 bg-indigo-900/15 blur-[100px] rounded-full pointer-events-none" />
 
-      {/* Grid background */}
       <div
         className="absolute inset-0 opacity-[0.03]"
         style={{
@@ -64,8 +93,6 @@ export default function LoginPage() {
       />
 
       <div className="relative z-10 w-full max-w-sm sm:max-w-md">
-
-        {/* Logo */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -73,11 +100,10 @@ export default function LoginPage() {
           className="text-center mb-6 sm:mb-8"
         >
           <Link href="/" className="inline-block text-white font-black text-2xl tracking-tight">
-            BARBER<span className="text-indigo-400">SAAS</span>
+            <BrandMark iconClassName="h-12 w-12 rounded-2xl bg-indigo-500/15 text-indigo-300" iconSize={22} />
           </Link>
         </motion.div>
 
-        {/* Card */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -87,16 +113,17 @@ export default function LoginPage() {
           <h1 className="text-xl sm:text-2xl font-black text-white mb-1 tracking-tight">
             {t("title")}
           </h1>
+
           <p className="text-gray-500 text-xs sm:text-sm mb-6 sm:mb-8 leading-relaxed">
             {t("subtitle")}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-
             <div>
               <label className="text-xs font-medium text-gray-400 mb-1.5 block">
                 {t("form.email")}
               </label>
+
               <input
                 type="email"
                 placeholder={t("form.emailPlaceholder")}
@@ -132,7 +159,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Error message */}
             {error && (
               <motion.p
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -157,12 +183,9 @@ export default function LoginPage() {
                 t("buttons.signIn")
               )}
             </button>
-
           </form>
-
         </motion.div>
 
-        {/* Register redirect */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -177,7 +200,6 @@ export default function LoginPage() {
             {t("register.action")}
           </Link>
         </motion.p>
-
       </div>
     </main>
   );

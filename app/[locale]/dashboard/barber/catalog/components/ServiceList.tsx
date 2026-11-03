@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Service } from "@prisma/client";
 import { motion } from "framer-motion";
-import { Edit2, Trash2, Clock, DollarSign } from "lucide-react";
+import { Edit2, Trash2, Clock } from "lucide-react";
+import { formatPriceFromCents } from "@/lib/billing/pricing";
 import { useTranslations } from "next-intl";
 
 type Props = {
@@ -76,8 +77,8 @@ export default function ServiceList({ onEdit }: Props) {
                         </h3>
                         <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2">
                             <span className="flex items-center gap-1 text-xs md:text-sm font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md">
-                                <DollarSign size={14} />
-                                {service.price.toFixed(2)}
+
+                                {formatPriceFromCents(service.priceCents)}
                             </span>
                             <span className="flex items-center gap-1 text-xs md:text-sm text-gray-400 font-medium">
                                 <Clock size={14} />

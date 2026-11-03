@@ -1,23 +1,13 @@
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { jwtVerify } from "jose";
 import DashboardNavbar from "@/[locale]/components/DashboardNavbar";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("token")?.value;
+  // El proxy valida la sesión y define el rol actual (leído de la base) en cada petición
+  const headerList = await headers();
+  const userRole = headerList.get("x-user-role");
 
-  if (!token) redirect("/login");
-
-  const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-  let userRole: string;
-
-  try {
-    const { payload } = await jwtVerify(token, secret);
-    userRole = payload.role as string;
-  } catch (error) {
-    redirect("/login");
-  }
+  if (!userRole) redirect("/login");
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col">

@@ -13,7 +13,10 @@
             "phone": "Phone number",
             "email": "Email address",
             "password": "Password",
-            "confirmPassword": "Confirm Password"
+            "confirmPassword": "Confirm Password",
+            "businessSlug": "Business slug or public link",
+            "businessSlugHintBefore": "You can enter only the slug, like",
+            "businessSlugHintAfter": ", or paste the full public business link."
         },
         "buttons": {
             "creating": "Setting up your workspace...",
@@ -23,6 +26,24 @@
         "login": {
             "question": "Already have an account?",
             "action": "Sign in to your workspace"
+        },
+        "errors": {
+            "selectType": "Please select an account type",
+            "slugRequired": "Please enter the business slug or public business link",
+            "passwordMismatch": "Passwords do not match",
+            "passwordLength": "Password must be at least 8 characters long",
+            "generic": "Something went wrong",
+            "connection": "Connection error. Please check your internet and try again."
+        },
+        "toasts": {
+            "creating": "Creating your account...",
+            "failed": "Failed to create account",
+            "success": "Welcome aboard! Redirecting...",
+            "connection": "Connection error. Please try again."
+        },
+        "placeholders": {
+            "name": "John Doe",
+            "email": "you@example.com"
         }
     },
     "Home": {
@@ -71,11 +92,11 @@
         },
         "footerCta": {
             "title": "Ready to take control of your schedule?",
-            "description": "Join barbers already managing their bookings with BarberSaaS.",
+            "description": "Join the barbers already managing their bookings online.",
             "button": "Create your account"
         },
         "footer": {
-            "rights": "© {year} BarberSaaS. All rights reserved."
+            "rights": "© {year} All rights reserved."
         }
     },
     "Login": {
@@ -104,7 +125,9 @@
             "adminControl": "Admin Control",
             "myAppointments": "My Appointments",
             "catalog": "Catalog",
-            "book": "Book"
+            "book": "Book",
+            "myBusiness": "My business",
+            "createBusiness": "Create business"
         },
         "logout": "Log out",
         "errors": {
@@ -192,16 +215,20 @@
         "status": {
             "PENDING": "Pending",
             "CONFIRMED": "Confirmed",
-            "COMPLETED": "Completed"
+            "COMPLETED": "Completed",
+            "NO_SHOW": "No-show"
         },
         "confirm": "Confirm",
         "errors": {
             "confirmFailed": "Could not confirm appointment",
-            "network": "Network error"
+            "network": "Network error",
+            "noShowFailed": "Could not record the no-show"
         },
         "success": {
-            "confirmed": "{name} appointment confirmed"
-        }
+            "confirmed": "{name} appointment confirmed",
+            "noShow": "No-show recorded for {name}"
+        },
+        "markNoShow": "No-show"
     },
     "AvailabilityModal": {
         "triggerButton": "Availability",
@@ -325,12 +352,6 @@
             "cancel": "Cancel"
         }
     },
-    "CustomerDashboard": {
-        "backToBarbers": "Back to Barbers",
-        "step1": "Step 1: Select Date",
-        "step2": "Step 2: Choose Time",
-        "note": "Note: Cancellations are only allowed up to 2 hours before the appointment."
-    },
     "CustomerHome": {
         "title": "My Appointments",
         "subtitleUpcoming": "Your next style is waiting",
@@ -346,7 +367,8 @@
             "PENDING": "Pending",
             "CONFIRMED": "Confirmed",
             "CANCELLED": "Cancelled",
-            "COMPLETED": "Completed"
+            "COMPLETED": "Completed",
+            "NO_SHOW": "No-show"
         },
         "errors": {
             "tooLate": "Appointments cannot be cancelled less than 2 hours before the scheduled time",
@@ -364,24 +386,14 @@
             "keep": "Keep it"
         }
     },
-    "BarbersPage": {
-        "eyebrow": "Professional Staff",
-        "title": "Our Barbers",
-        "subtitle": "Select an expert professional to elevate your style.",
-        "selectBarber": "Select Barber",
-        "empty": {
-            "title": "No barbers available",
-            "subtitle": "Please check back later or contact support."
-        },
-        "fallbackName": "Master Barber"
-    },
     "AvailableSlots": {
-        "title": "Available Slots",
+        "title": "Available times",
         "soldOut": "Sold Out!",
         "noAvailability": {
             "title": "No availability",
             "subtitle": "The barber is not working on this day."
-        }
+        },
+        "soldOutHint": "Try another date or a different barber to see more times."
     },
     "CalendarPickerCustomer": {
         "legend": {
@@ -399,7 +411,8 @@
             "book": "Book",
             "close": "Close",
             "continue": "Continue",
-            "completeBooking": "Complete Booking"
+            "completeBooking": "Complete Booking",
+            "booking": "Booking..."
         },
         "modal": {
             "title": "Confirm Booking",
@@ -408,17 +421,20 @@
                 "time": "Time",
                 "service": "Service",
                 "total": "Total"
-            }
+            },
+            "subtitle": "Review the details before completing your booking."
         },
         "errors": {
             "noService": "Please select a service",
             "loadFailed": "Could not load services",
             "bookFailed": "Could not book appointment",
-            "network": "Network error, please try again"
+            "network": "Network error, please try again",
+            "loginRequired": "Sign in to book this appointment"
         },
         "success": {
             "booked": "{name} booked successfully!"
-        }
+        },
+        "noServices": "No services fit this time slot."
     },
     "BarberCard": {
         "fallbackName": "Master Barber",
@@ -539,7 +555,8 @@
             "pending": "Pending Barbers",
             "barbers": "Manage Barbers",
             "customers": "Manage Customers",
-            "settings": "Global Settings"
+            "settings": "Global Settings",
+            "billing": "Subscriptions"
         }
     },
     "BannedCustomerScreen": {
@@ -548,5 +565,109 @@
         "message": "Your account has been temporarily suspended due to a violation of our policies or multiple missed appointments. You cannot book new appointments at this time.",
         "home": "Go to Home",
         "logout": "Log Out"
+    },
+    "TeamBarberSelector": {
+        "label": "Managing",
+        "self": "My schedule",
+        "hint": "Schedule, services and time off apply to the selected barber.",
+        "error": "Could not switch barber"
+    },
+    "BusinessPage": {
+        "hero": {
+            "profile": "Business profile",
+            "defaultDescription": "Book your appointment with professionals ready to take care of you.",
+            "book": "Book appointment",
+            "paused": "Bookings paused",
+            "inactive": "Online booking is temporarily unavailable.",
+            "services": "Services",
+            "barbers": "Barbers",
+            "photos": "Photos"
+        },
+        "navbar": {
+            "browse": "Browse barbershops"
+        },
+        "cta": {
+            "title": "Ready for your next cut?",
+            "subtitle": "Book with {name} and pick the time that works best for you.",
+            "book": "Book appointment",
+            "paused": "Bookings temporarily paused"
+        },
+        "contact": {
+            "whatsappMobile": "Contact on WhatsApp",
+            "title": "Contact",
+            "whatsapp": "Send WhatsApp"
+        },
+        "gallery": {
+            "title": "Gallery",
+            "subtitle": "Photos of the business.",
+            "empty": "No photos in the gallery yet.",
+            "count": "{count, plural, one {# photo} other {# photos}}.",
+            "imageAlt": "Business photo"
+        },
+        "posts": {
+            "title": "Posts",
+            "subtitle": "Announcements, promotions and news from the business.",
+            "count": "{count, plural, one {# post} other {# posts}}",
+            "empty": "No posts yet.",
+            "emptyHint": "When the business shares promotions, announcements or news, they will show up here.",
+            "imageAlt": "Post image"
+        },
+        "carousel": {
+            "title": "Our team",
+            "empty": "No barbers available.",
+            "subtitle": "Meet the available barbers.",
+            "play": "Play carousel",
+            "pause": "Pause carousel",
+            "previous": "Previous barber",
+            "next": "Next barber",
+            "role": "Professional barber",
+            "featured": "Featured barber",
+            "description": "Choose your service and an available time to book with this business's team.",
+            "book": "Book appointment",
+            "fallbackName": "Barber"
+        }
+    },
+    "BookingPage": {
+        "barberFallback": "Barber",
+        "noBarbers": "This business has no barbers available for booking yet.",
+        "chooseBarber": "Choose a barber",
+        "seeTimes": "See available times",
+        "changeBarberOrDate": "Change barber or date",
+        "backToProfile": "Back to profile",
+        "bookings": "Bookings",
+        "title": "Book appointment",
+        "steps": {
+            "details": "Barber and date",
+            "slots": "Time",
+            "confirm": "Confirm"
+        },
+        "paused": "Bookings for this business are temporarily paused.",
+        "pausedHint": "Please try again later or contact the barbershop directly.",
+        "inactive": "The service is temporarily unavailable."
+    },
+    "BusinessDirectory": {
+        "eyebrow": "Available businesses",
+        "title": "Choose a barbershop",
+        "subtitle": "Browse registered barbershops and book with the team that fits your style.",
+        "emptyTitle": "No businesses available",
+        "emptySubtitle": "Registered barbershops will appear here.",
+        "badge": "Barbershop",
+        "defaultDescription": "Business profile available for appointments and services.",
+        "barbers": "Barbers",
+        "services": "Services",
+        "paused": "Appointments are temporarily paused.",
+        "view": "View business",
+        "book": "Book appointment"
+    },
+    "Metadata": {
+        "title": "Barbershop appointments in Tijuana",
+        "description": "Book and manage your barbershop appointments in Tijuana."
+    },
+    "ComingSoon": {
+        "headline": "Opening\nsoon",
+        "lead": "We are getting online booking ready for Tijuana barbershops. Check back in a few days.",
+        "home": "Try again",
+        "cardLabel": "Booking confirmed",
+        "cardDetail": "Tuesday · Haircut · $150"
     }
 }

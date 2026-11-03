@@ -5,18 +5,20 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Clock, User, Calendar as CalendarIcon, History, AlertTriangle } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { formatPriceFromCents } from "@/lib/billing/pricing";
 
 type Appointment = {
   id: string;
   date: string;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
-  service: { name: string; duration: number; price: number };
+  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
+  service: { name: string; duration: number; priceCents: number };
   barber: { user: { name: string | null } };
 };
 
 export default function CustomerHome() {
   const t = useTranslations("CustomerHome");
+  const dateLocale = useLocale() === "en" ? "en-US" : "es-MX";
   const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [history, setHistory] = useState<Appointment[]>([]);
@@ -129,22 +131,30 @@ export default function CustomerHome() {
 
   const executeCancel = async (appointmentId: string) => {
     setCancelling(appointmentId);
+
     try {
-      const res = await fetch(`/api/protected/appointments/${appointmentId}/confirm`, {
+      const res = await fetch(`/api/protected/appointments/${appointmentId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "CANCELLED" }),
       });
+
       const data = await res.json();
+
       if (!res.ok) {
         toast.error(data.error ?? t("errors.cancelFailed"));
         return;
       }
+
       setAppointments((prev) => prev.filter((a) => a.id !== appointmentId));
+
       toast.success(t("success.cancelled"), {
         style: {
-          borderRadius: "12px", background: "#f0fdf4",
-          color: "#166534", border: "1px solid #bbf7d0", fontSize: "13px",
+          borderRadius: "12px",
+          background: "#f0fdf4",
+          color: "#166534",
+          border: "1px solid #bbf7d0",
+          fontSize: "13px",
         },
       });
     } catch {
@@ -250,7 +260,7 @@ export default function CustomerHome() {
               <AnimatePresence mode="popLayout">
                 {list.map((a, idx) => {
                   const date = new Date(a.date);
-                  const formattedTime = date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+                  const formattedTime = date.toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" });
 
                   /* ── History row ── */
                   if (showHistory) {
@@ -266,7 +276,7 @@ export default function CustomerHome() {
                         <div className="flex items-center gap-3">
                           <div className="text-center min-w-11 bg-gray-50 py-2 px-2 rounded-xl group-hover:bg-white transition-colors border border-gray-100/50">
                             <p className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">
-                              {date.toLocaleDateString("en-US", { month: "short" })}
+                              {date.toLocaleDateString(dateLocale, { month: "short" })}
                             </p>
                             <p className="text-sm font-black text-gray-800 leading-none">{date.getDate()}</p>
                           </div>
@@ -280,8 +290,8 @@ export default function CustomerHome() {
                           </div>
                         </div>
                         <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold tracking-wide border ${a.status === "COMPLETED"
-                            ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                            : "bg-rose-50 text-rose-600 border-rose-100"
+                          ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                          : "bg-rose-50 text-rose-600 border-rose-100"
                           }`}>
                           {t(`status.${a.status}`)}
                         </span>
@@ -304,7 +314,7 @@ export default function CustomerHome() {
                         {/* Date badge */}
                         <div className="bg-indigo-50/60 border border-indigo-100/80 rounded-2xl px-5 py-3 text-center min-w-20 group-hover:bg-indigo-600 group-hover:border-indigo-600 transition-colors w-full sm:w-auto">
                           <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest group-hover:text-indigo-200">
-                            {date.toLocaleDateString("en-US", { month: "short" })}
+                            {date.toLocaleDateString(dateLocale, { month: "short" })}
                           </p>
                           <p className="text-2xl md:text-3xl font-black text-indigo-600 leading-none group-hover:text-white">
                             {date.getDate()}
@@ -318,8 +328,8 @@ export default function CustomerHome() {
                               {a.service.name}
                             </h3>
                             <span className={`w-fit mx-auto sm:mx-0 text-[9px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-widest border ${a.status === "CONFIRMED"
-                                ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                                : "bg-amber-50 text-amber-600 border-amber-100"
+                              ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                              : "bg-amber-50 text-amber-600 border-amber-100"
                               }`}>
                               {t(`status.${a.status}`)}
                             </span>
@@ -330,7 +340,7 @@ export default function CustomerHome() {
                               {formattedTime} · {a.service.duration}m
                             </div>
                             <div className="flex items-center gap-1 text-emerald-600 font-black tracking-normal">
-                              $ {a.service.price.toFixed(2)}
+                              {formatPriceFromCents(a.service.priceCents)}
                             </div>
                             <div className="flex items-center gap-1.5">
                               <User size={12} className="text-indigo-400" />

@@ -1,6 +1,7 @@
 import HeroSection from "@/[locale]/components/landing/HeroSection";
 import FeaturesSection from "@/[locale]/components/landing/FeaturesSection";
 import Link from "next/link";
+import BrandMark from "@/[locale]/components/BrandMark";
 import { useTranslations } from "next-intl";
 
 export default function Home() {
@@ -13,9 +14,7 @@ export default function Home() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0d0d1a]/80 backdrop-blur-md border-b border-white/6">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
 
-          <span className="text-white font-black text-lg tracking-tight">
-            BARBER<span className="text-indigo-400">SAAS</span>
-          </span>
+          <BrandMark />
 
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
@@ -62,9 +61,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-[#0a0a0f] border-t border-white/6 py-8 px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-white font-black text-sm tracking-tight">
-            BARBER<span className="text-indigo-400">SAAS</span>
-          </span>
+          <BrandMark />
           <p className="text-gray-600 text-[10px] sm:text-xs text-center">
             {t("footer.rights", { year: new Date().getFullYear() })}
           </p>

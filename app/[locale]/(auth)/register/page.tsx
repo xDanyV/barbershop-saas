@@ -1,18 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "../../../../i18n/routing";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
 import { useTranslations } from "next-intl";
 import { Eye, EyeOff } from "lucide-react";
+import BrandMark from "@/[locale]/components/BrandMark";
 
 export default function RegisterPage() {
     const t = useTranslations("Register");
     const router = useRouter();
     const [role, setRole] = useState<"CUSTOMER" | "BARBER" | null>(null);
-    const [form, setForm] = useState({ name: "", phone: "", email: "", password: "", confirmPassword: "" });
+    const [form, setForm] = useState({
+        name: "",
+        phone: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        businessSlug: "",
+    });
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -28,26 +36,38 @@ export default function RegisterPage() {
 
         // 1. Validaciones del lado del cliente (Frontend)
         if (!role) {
-            setError("Please select an account type");
+            setError(t("errors.selectType"));
             return;
         }
+
+        if (role === "BARBER" && !form.businessSlug.trim()) {
+            setError(t("errors.slugRequired"));
+            return;
+        }
+
         if (form.password !== form.confirmPassword) {
-            setError("Passwords do not match");
+            setError(t("errors.passwordMismatch"));
             return;
         }
         if (form.password.length < 8) {
-            setError("Password must be at least 8 characters long");
+            setError(t("errors.passwordLength"));
             return;
         }
 
         setError("");
         setLoading(true);
 
-        const loadingToast = toast.loading("Creating your workspace...");
+        const loadingToast = toast.loading(t("toasts.creating"));
 
         try {
-            // Excluimos confirmPassword para no enviarlo a la API
-            const { confirmPassword, ...apiData } = form;
+            // confirmPassword solo se valida en el cliente; no se envía a la API
+            const apiData = {
+                name: form.name,
+                email: form.email,
+                phone: form.phone,
+                password: form.password,
+                businessSlug: form.businessSlug,
+            };
 
             const response = await fetch("/api/register", {
                 method: "POST",
@@ -58,13 +78,13 @@ export default function RegisterPage() {
             const data = await response.json();
 
             if (!response.ok) {
-                setError(data.error || "Something went wrong");
-                toast.error(data.error || "Failed to create account", { id: loadingToast });
+                setError(data.error || t("errors.generic"));
+                toast.error(data.error || t("toasts.failed"), { id: loadingToast });
                 setLoading(false);
                 return;
             }
 
-            toast.success("Welcome aboard! Redirecting...", {
+            toast.success(t("toasts.success"), {
                 id: loadingToast,
                 duration: 4000
             });
@@ -74,8 +94,8 @@ export default function RegisterPage() {
             }, 1500);
 
         } catch {
-            setError("Connection error. Please check your internet and try again.");
-            toast.error("Connection error. Please try again.", { id: loadingToast });
+            setError(t("errors.connection"));
+            toast.error(t("toasts.connection"), { id: loadingToast });
             setLoading(false);
         }
     };
@@ -102,7 +122,7 @@ export default function RegisterPage() {
                     className="text-center mb-10"
                 >
                     <Link href="/" className="inline-block text-white font-black text-3xl tracking-tight">
-                        BARBER<span className="text-indigo-500">SAAS</span>
+                        <BrandMark iconClassName="h-12 w-12 rounded-2xl bg-indigo-500/15 text-indigo-300" iconSize={22} />
                     </Link>
                 </motion.div>
 
@@ -125,7 +145,10 @@ export default function RegisterPage() {
                             {/* Customer option */}
                             <button
                                 type="button"
-                                onClick={() => setRole("CUSTOMER")}
+                                onClick={() => {
+                                    setRole("CUSTOMER");
+                                    setForm((prev) => ({ ...prev, businessSlug: "" }));
+                                }}
                                 className={`w-full p-5 rounded-xl border text-left transition-all duration-300 ${role === "CUSTOMER"
                                     ? "bg-indigo-600/10 border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.15)]"
                                     : "bg-white/2 border-white/5 hover:border-white/10 hover:bg-white/4"
@@ -192,7 +215,7 @@ export default function RegisterPage() {
                                     <input
                                         name="name"
                                         type="text"
-                                        placeholder="John Doe"
+                                        placeholder={t("placeholders.name")}
                                         value={form.name}
                                         onChange={handleChange}
                                         required
@@ -218,13 +241,43 @@ export default function RegisterPage() {
                                 <input
                                     name="email"
                                     type="email"
-                                    placeholder="you@example.com"
+                                    placeholder={t("placeholders.email")}
                                     value={form.email}
                                     onChange={handleChange}
                                     required
                                     className="w-full bg-[#0f0f16] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
                                 />
                             </div>
+
+                            {role === "BARBER" && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="bg-indigo-500/5 border border-indigo-500/20 rounded-2xl p-4"
+                                >
+                                    <label className="text-xs font-semibold text-indigo-300 mb-2 block uppercase tracking-wider">
+                                        {t("form.businessSlug")}
+                                    </label>
+
+                                    <input
+                                        name="businessSlug"
+                                        type="text"
+                                        placeholder="barberia-el-nuevo-rey"
+                                        value={form.businessSlug}
+                                        onChange={handleChange}
+                                        required={role === "BARBER"}
+                                        className="w-full bg-[#0f0f16] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
+                                    />
+
+                                    <p className="text-[11px] text-gray-500 mt-2 leading-relaxed">
+                                        {t("form.businessSlugHintBefore")}{" "}
+                                        <span className="text-indigo-300 font-bold">
+                                            barberia-el-nuevo-rey
+                                        </span>
+                                        {t("form.businessSlugHintAfter")}
+                                    </p>
+                                </motion.div>
+                            )}
 
                             {/* Contraseñas */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -267,8 +320,8 @@ export default function RegisterPage() {
                                         onChange={handleChange}
                                         required
                                         className={`w-full bg-[#0f0f16] border text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none transition-all ${form.confirmPassword && form.password !== form.confirmPassword
-                                                ? "border-red-500/50 focus:border-red-500 focus:ring-1 focus:ring-red-500/50"
-                                                : "border-white/10 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50"
+                                            ? "border-red-500/50 focus:border-red-500 focus:ring-1 focus:ring-red-500/50"
+                                            : "border-white/10 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50"
                                             }`}
                                     />
                                 </div>

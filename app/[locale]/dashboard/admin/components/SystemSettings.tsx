@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Power, AlertTriangle, Save } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useTranslations } from "next-intl";
@@ -12,7 +12,7 @@ export default function SystemSettings() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
-    const fetchSettings = async () => {
+    const fetchSettings = useCallback(async () => {
         try {
             setLoading(true);
             const res = await fetch("/api/admin/settings");
@@ -29,11 +29,11 @@ export default function SystemSettings() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [t]);
 
     useEffect(() => {
         fetchSettings();
-    }, []);
+    }, [fetchSettings]);
 
     const handleSave = async () => {
         if (!isActive && !message.trim()) {

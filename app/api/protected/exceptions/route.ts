@@ -1,43 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { AppError, errorResponse } from "@/lib/errors";
+import { requireBarberAuth } from "@/lib/api/auth";
+import { parseJsonBody } from "@/lib/api/validation";
+import { createExceptionSchema } from "@/lib/validations/schemas";
+import { addDaysToKey, resolveTimezone, zonedToUtc } from "@/lib/time/zoned";
 
 export async function POST(request: NextRequest) {
     try {
-        const userId = request.headers.get("x-user-id");
-        const role = request.headers.get("x-user-role");
+        const { barberId } = requireBarberAuth(request);
+        const { startDate, endDate, reason } = await parseJsonBody(request, createExceptionSchema);
 
-        if (!userId || (role !== "BARBER" && role !== "ADMIN")) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const barber = await prisma.barber.findUnique({ where: { userId } });
+        // x-barber-id es el perfil propio o un barbero del negocio del OWNER (validado por el proxy)
+        const barber = await prisma.barber.findUnique({
+            where: { id: barberId },
+            select: {
+                id: true,
+                businessId: true,
+                business: {
+                    select: { timezone: true },
+                },
+            },
+        });
 
         if (!barber) {
-            return NextResponse.json({ error: "Barber not found" }, { status: 404 });
+            throw new AppError("Barber not found", 404);
         }
 
-        const body = await request.json();
-        const { startDate, endDate, reason } = body;
-
-        if (!startDate || !endDate) {
-            return NextResponse.json(
-                { error: "startDate and endDate are required" },
-                { status: 400 }
-            );
-        }
-
-        const [sYear, sMonth, sDay] = startDate.split("T")[0].split("-").map(Number);
-        const [eYear, eMonth, eDay] = endDate.split("T")[0].split("-").map(Number);
-
-        const start = new Date(Date.UTC(sYear, sMonth - 1, sDay, 0, 0, 0, 0));
-        const end = new Date(Date.UTC(eYear, eMonth - 1, eDay, 23, 59, 59, 999));
-
-        if (start > end) {
-            return NextResponse.json(
-                { error: "startDate cannot be after endDate" },
-                { status: 400 }
-            );
-        }
+        // Días completos en la zona horaria del negocio
+        const timezone = resolveTimezone(barber.business.timezone);
+        const start = zonedToUtc(startDate, "00:00", timezone);
+        const end = new Date(zonedToUtc(addDaysToKey(endDate, 1), "00:00", timezone).getTime() - 1);
 
         const result = await prisma.$transaction(async (tx) => {
             const exception = await tx.barberException.create({
@@ -45,13 +38,14 @@ export async function POST(request: NextRequest) {
                     barberId: barber.id,
                     startDate: start,
                     endDate: end,
-                    reason: reason ?? null,
+                    reason,
                 },
             });
 
             const cancelledAppointments = await tx.appointment.updateMany({
                 where: {
                     barberId: barber.id,
+                    businessId: barber.businessId,
                     status: { in: ["PENDING", "CONFIRMED"] },
                     date: { gte: start, lte: end },
                 },
@@ -72,12 +66,7 @@ export async function POST(request: NextRequest) {
             },
             { status: 201 }
         );
-
     } catch (error) {
-        console.error("Exception creation error:", error);
-        return NextResponse.json(
-            { error: "Internal server error" },
-            { status: 500 }
-        );
+        return errorResponse(error, "Exception creation error");
     }
 }

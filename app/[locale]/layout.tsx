@@ -5,8 +5,8 @@ import "react-calendar/dist/Calendar.css";
 import "../globals.css";
 
 // Importaciones para next-intl
-import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { NextIntlClientProvider, hasLocale } from "next-intl";
+import { getMessages, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "../../i18n/routing";
 
@@ -21,10 +21,19 @@ const geistMono = Geist_Mono({
 });
 
 
-export const metadata: Metadata = {
-  title: "BarberSaaS | Manage your business",
-  description: "The best platform to book and manage barbershop appointments",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Metadata" });
+
+  return {
+    title: t("title"),
+    description: t("description"),
+  };
+}
 
 export default async function RootLayout({
   children,
@@ -36,7 +45,7 @@ export default async function RootLayout({
   const { locale } = await params;
 
   // 1. Validar que el idioma en la URL (locale) exista en tu routing
-  if (!routing.locales.includes(locale as any)) {
+  if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
 

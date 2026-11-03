@@ -1,19 +1,31 @@
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
-import { headers } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
+import { AppError, errorResponse } from "@/lib/errors";
+import { requireAuth } from "@/lib/api/auth";
+import { parseJsonBody } from "@/lib/api/validation";
+import { updateCustomerBanSchema } from "@/lib/validations/schemas";
 
-export async function GET() {
+// ADMIN ve a todos los clientes; OWNER solo a los que tienen citas en su negocio
+function requireCustomerManager(request: NextRequest) {
+    const auth = requireAuth(request, ["ADMIN", "OWNER"]);
+
+    if (auth.role === "OWNER" && !auth.businessId) {
+        throw new AppError("Business context is required", 403);
+    }
+
+    return auth;
+}
+
+// ADMIN usa el bloqueo global (User.isBanned); OWNER bloquea solo en su negocio (BusinessCustomerBan)
+export async function GET(request: NextRequest) {
     try {
-        const headersList = await headers();
-        const role = headersList.get("x-user-role");
-
-        if (role !== "ADMIN") {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-        }
+        const auth = requireCustomerManager(request);
+        const ownerBusinessId = auth.role === "OWNER" ? auth.businessId! : null;
 
         const customers = await prisma.user.findMany({
             where: {
                 role: "CUSTOMER",
+                ...(ownerBusinessId ? { appointments: { some: { businessId: ownerBusinessId } } } : {}),
             },
             select: {
                 id: true,
@@ -21,50 +33,89 @@ export async function GET() {
                 email: true,
                 phone: true,
                 createdAt: true,
-                isBanned: true, // <--- Ahora traemos este dato
+                isBanned: true,
+                businessBans: ownerBusinessId
+                    ? { where: { businessId: ownerBusinessId }, select: { id: true } }
+                    : false,
                 _count: {
                     select: {
-                        appointments: true,
-                    }
-                }
+                        // Para un OWNER solo cuentan las citas en su negocio
+                        appointments: ownerBusinessId ? { where: { businessId: ownerBusinessId } } : true,
+                    },
+                },
             },
             orderBy: {
-                createdAt: "desc"
-            }
+                createdAt: "desc",
+            },
         });
 
-        return NextResponse.json(customers);
+        return NextResponse.json(
+            customers.map(({ businessBans, ...customer }) => ({
+                ...customer,
+                isBanned: ownerBusinessId ? (businessBans?.length ?? 0) > 0 : customer.isBanned,
+            }))
+        );
     } catch (error) {
-        console.error("Error fetching customers:", error);
-        return NextResponse.json({ error: "Failed to fetch customers" }, { status: 500 });
+        return errorResponse(error, "Error fetching customers");
     }
 }
 
-// NUEVO: Método para bloquear/desbloquear clientes
-export async function PATCH(req: Request) {
+export async function PATCH(request: NextRequest) {
     try {
-        const headersList = await headers();
-        const role = headersList.get("x-user-role");
+        const auth = requireCustomerManager(request);
+        const { customerId, isBanned } = await parseJsonBody(request, updateCustomerBanSchema);
 
-        if (role !== "ADMIN") {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+        // Solo se puede bloquear a clientes, nunca a barberos, owners o admins
+        const customer = await prisma.user.findFirst({
+            where: { id: customerId, role: "CUSTOMER" },
+            select: { id: true, name: true, email: true, phone: true, isBanned: true },
+        });
+
+        if (!customer) {
+            throw new AppError("Customer not found", 404);
         }
 
-        const body = await req.json();
-        const { customerId, isBanned } = body;
+        if (auth.role === "OWNER") {
+            const businessId = auth.businessId!;
 
-        if (!customerId || typeof isBanned !== "boolean") {
-            return NextResponse.json({ error: "Invalid data" }, { status: 400 });
+            const hasAppointmentInBusiness = await prisma.appointment.findFirst({
+                where: { userId: customerId, businessId },
+                select: { id: true },
+            });
+
+            if (!hasAppointmentInBusiness) {
+                throw new AppError("Forbidden", 403);
+            }
+
+            if (isBanned) {
+                await prisma.businessCustomerBan.upsert({
+                    where: { businessId_userId: { businessId, userId: customerId } },
+                    update: {},
+                    create: { businessId, userId: customerId },
+                });
+            } else {
+                await prisma.businessCustomerBan.deleteMany({
+                    where: { businessId, userId: customerId },
+                });
+            }
+
+            return NextResponse.json({ success: true, user: { ...customer, isBanned } });
         }
 
         const updatedCustomer = await prisma.user.update({
             where: { id: customerId },
             data: { isBanned },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                isBanned: true,
+            },
         });
 
         return NextResponse.json({ success: true, user: updatedCustomer });
     } catch (error) {
-        console.error("Error updating customer ban status:", error);
-        return NextResponse.json({ error: "Failed to update customer" }, { status: 500 });
+        return errorResponse(error, "Error updating customer ban status");
     }
 }

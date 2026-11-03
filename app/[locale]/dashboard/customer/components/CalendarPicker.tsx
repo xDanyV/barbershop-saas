@@ -38,7 +38,7 @@ export default function CalendarPicker({ selectedDate, setSelectedDate, barberId
 
         if (availRes.ok) {
           const availData = await availRes.json();
-          availDays = availData.map((d: any) => d.dayOfWeek);
+          availDays = availData.map((d: { dayOfWeek: number }) => d.dayOfWeek);
           setAvailability(availDays);
         }
         if (excRes.ok) {

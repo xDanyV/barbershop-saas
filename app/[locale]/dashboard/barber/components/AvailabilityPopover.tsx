@@ -89,7 +89,7 @@ export default function AvailabilityModal({ isScrolled = false }: { isScrolled?:
                 const data = await res.json();
                 if (!data?.length) return;
 
-                setSelectedDays(data.map((d: any) => d.dayOfWeek));
+                setSelectedDays(data.map((d: { dayOfWeek: number }) => d.dayOfWeek));
                 setStartTime(data[0].startTime);
                 setEndTime(data[0].endTime);
 

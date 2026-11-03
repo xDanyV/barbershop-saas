@@ -1,75 +1,95 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
-import { createBarberFromUser } from "@/lib/services/barber.service";
+import { BarberStatus, Role } from "@prisma/client";
+import { AppError, errorResponse } from "@/lib/errors";
+import { parseJsonBody } from "@/lib/api/validation";
+import { registerSchema } from "@/lib/validations/schemas";
+import { extractBusinessSlug } from "@/lib/slug";
+
+function getBootstrapAdminEmail() {
+    return process.env.ADMIN_BOOTSTRAP_EMAIL?.trim().toLowerCase() || null;
+}
 
 export async function POST(req: Request) {
     try {
-        const body = await req.json();
-        const { name, email, password, phone, role } = body;
-
-        if (!email || !password) {
-            return NextResponse.json(
-                { error: "Email and password are required" },
-                { status: 400 }
-            );
-        }
+        const { name, email, phone, password, role, businessSlug } = await parseJsonBody(req, registerSchema);
 
         const existingUser = await prisma.user.findFirst({
             where: {
-                OR: [
-                    { email: email },
-                    { phone: phone }
-                ]
+                OR: [{ email }, { phone }],
             },
+            select: { email: true, phone: true },
         });
 
-        if (existingUser) {
-            if (existingUser.email === email) {
-                return NextResponse.json(
-                    { error: "This email address is already registered." },
-                    { status: 400 }
-                );
-            }
-            if (existingUser.phone === phone) {
-                return NextResponse.json(
-                    { error: "This phone number is already registered." },
-                    { status: 400 }
-                );
-            }
+        if (existingUser?.email === email) {
+            throw new AppError("This email address is already registered.");
         }
 
-        const userCount = await prisma.user.count();
-        const isFirstUser = userCount === 0;
+        if (existingUser?.phone === phone) {
+            throw new AppError("This phone number is already registered.");
+        }
+
+        // El administrador de la plataforma solo se crea a partir de ADMIN_BOOTSTRAP_EMAIL,
+        // y únicamente mientras no exista ningún ADMIN
+        const isBootstrapAdmin =
+            email === getBootstrapAdminEmail() &&
+            (await prisma.user.count({ where: { role: Role.ADMIN } })) === 0;
+
+        let barberBusinessId: string | null = null;
+
+        if (!isBootstrapAdmin && role === Role.BARBER) {
+            const slug = businessSlug ? extractBusinessSlug(businessSlug) : "";
+
+            if (!slug) {
+                throw new AppError("Business slug is required for barber accounts.");
+            }
+
+            const business = await prisma.business.findUnique({
+                where: { slug },
+                select: { id: true, active: true },
+            });
+
+            if (!business || !business.active) {
+                throw new AppError("Business not found or inactive.", 404);
+            }
+
+            barberBusinessId = business.id;
+        }
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        const finalRole = isBootstrapAdmin ? Role.ADMIN : role;
 
-        const finalRole = (isFirstUser && role === "BARBER") ? "ADMIN" : (role || "CUSTOMER");
-
-        const newUser = await prisma.user.create({
+        await prisma.user.create({
             data: {
                 name,
                 email,
                 phone,
                 password: hashedPassword,
                 role: finalRole,
+                ...(finalRole === Role.BARBER && barberBusinessId
+                    ? {
+                        barberProfile: {
+                            create: {
+                                businessId: barberBusinessId,
+                                status: BarberStatus.PENDING,
+                            },
+                        },
+                    }
+                    : {}),
             },
         });
 
-        if (role === "BARBER" || finalRole === "ADMIN") {
-            await createBarberFromUser(newUser.id, isFirstUser);
-        }
-
         return NextResponse.json(
-            { message: "User created successfully" },
+            {
+                message:
+                    finalRole === Role.BARBER
+                        ? "Barber account created successfully. Waiting for owner approval."
+                        : "User created successfully",
+            },
             { status: 201 }
         );
-
     } catch (error) {
-        console.error("Registration route error:", error);
-        return NextResponse.json(
-            { error: "An unexpected error occurred. Please try again." },
-            { status: 500 }
-        );
+        return errorResponse(error, "Registration route error");
     }
 }
