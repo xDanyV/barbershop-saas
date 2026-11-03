@@ -37,6 +37,7 @@ model Business {
   logoUrl     String?
   coverUrl    String?
   active      Boolean @default(true)
+  timezone    String  @default("America/Mexico_City")
 
   ownerId String
   owner   User   @relation("BusinessOwner", fields: [ownerId], references: [id])
@@ -125,6 +126,7 @@ model Appointment {
   @@index([userId])
   @@index([serviceId])
   @@index([date])
+  @@index([barberId, date])
 }
 
 enum AppointmentStatus {
@@ -208,6 +210,8 @@ model BarberException {
   endDate   DateTime
   reason    String?
   createdAt DateTime @default(now())
+
+  @@index([barberId])
 }
 
 model SystemSettings {

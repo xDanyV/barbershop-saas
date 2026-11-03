@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { addDaysToKey, isValidDateKey, resolveTimezone, zonedToUtc } from "@/lib/time/zoned";
 
 function canManageExceptions(role: string | null) {
     return role === "BARBER" || role === "OWNER" || role === "ADMIN";
@@ -25,11 +26,24 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        const startKey = typeof startDate === "string" ? startDate.split("T")[0] : "";
+        const endKey = typeof endDate === "string" ? endDate.split("T")[0] : "";
+
+        if (!isValidDateKey(startKey) || !isValidDateKey(endKey)) {
+            return NextResponse.json(
+                { error: "Dates must be in YYYY-MM-DD format" },
+                { status: 400 }
+            );
+        }
+
         const barber = await prisma.barber.findUnique({
             where: { id: barberId },
             select: {
                 id: true,
                 businessId: true,
+                business: {
+                    select: { timezone: true },
+                },
             },
         });
 
@@ -41,11 +55,10 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
-        const [sYear, sMonth, sDay] = startDate.split("T")[0].split("-").map(Number);
-        const [eYear, eMonth, eDay] = endDate.split("T")[0].split("-").map(Number);
-
-        const start = new Date(Date.UTC(sYear, sMonth - 1, sDay, 0, 0, 0, 0));
-        const end = new Date(Date.UTC(eYear, eMonth - 1, eDay, 23, 59, 59, 999));
+        // Días completos en la zona horaria del negocio
+        const timezone = resolveTimezone(barber.business.timezone);
+        const start = zonedToUtc(startKey, "00:00", timezone);
+        const end = new Date(zonedToUtc(addDaysToKey(endKey, 1), "00:00", timezone).getTime() - 1);
 
         if (start > end) {
             return NextResponse.json(
