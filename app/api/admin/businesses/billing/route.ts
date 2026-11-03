@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getBillingPlan } from "@/lib/billing/pricing";
 import { toBillingSummary } from "@/lib/billing/status";
 import { AppError, errorResponse } from "@/lib/errors";
+import { revalidateBusinessPages } from "@/lib/cache/business-pages";
 import { addDaysToKey, resolveTimezone, zonedToUtc } from "@/lib/time/zoned";
 import { requireAuth } from "@/lib/api/auth";
 import { parseJsonBody } from "@/lib/api/validation";
@@ -129,6 +130,8 @@ export async function PATCH(req: NextRequest) {
                 canceledAt,
             },
         });
+
+        await revalidateBusinessPages(businessId);
 
         const updatedBusiness = await prisma.business.findUniqueOrThrow({
             where: {

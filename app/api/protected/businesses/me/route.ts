@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { billingSummarySelect, toBillingSummary } from "@/lib/billing/status";
 import { errorResponse } from "@/lib/errors";
+import { revalidateBusinessPages } from "@/lib/cache/business-pages";
 import { requireOwnerAuth } from "@/lib/api/auth";
 import { parseJsonBody } from "@/lib/api/validation";
 import { updateBusinessSchema } from "@/lib/validations/schemas";
@@ -49,6 +50,8 @@ export async function PATCH(req: NextRequest) {
                 create: { businessId, isServiceActive, maintenanceMessage },
             }),
         ]);
+
+        await revalidateBusinessPages(businessId);
 
         return NextResponse.json(await getBusinessWithSettings(businessId));
     } catch (error) {

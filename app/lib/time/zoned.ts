@@ -1,7 +1,8 @@
 // Utilidades de fecha/hora en la zona horaria del negocio (sin dependencias externas).
 // Las fechas se guardan en UTC; los horarios del barbero ("HH:mm") son hora local del negocio.
 
-export const DEFAULT_TIMEZONE = "America/Mexico_City";
+// El producto está pensado para barberías de Tijuana / Baja California (horario de verano como EE. UU.)
+export const DEFAULT_TIMEZONE = "America/Tijuana";
 
 const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const DATE_KEY_REGEX = /^\d{4}-\d{2}-\d{2}$/;

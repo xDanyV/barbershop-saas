@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { AppError } from "@/lib/errors";
+import { revalidateBusinessPages } from "@/lib/cache/business-pages";
 
 // La validación de formato (zod) y de rol se hace en las rutas; aquí solo reglas de negocio
 
@@ -47,20 +48,23 @@ export async function createCatalogService(
     throw new AppError("A service with this name already exists", 409);
   }
 
-  if (sameName) {
-    return prisma.service.update({
+  const service = sameName
+    ? await prisma.service.update({
       where: { id: sameName.id },
       data: { priceCents: data.priceCents, duration: data.duration, active: true },
+    })
+    : await prisma.service.create({
+      data: {
+        ...data,
+        barberId,
+        businessId: barber.businessId,
+      },
     });
-  }
 
-  return prisma.service.create({
-    data: {
-      ...data,
-      barberId,
-      businessId: barber.businessId,
-    },
-  });
+  // Los servicios aparecen en la página pública del negocio
+  await revalidateBusinessPages(barber.businessId);
+
+  return service;
 }
 
 async function getOwnedService(serviceId: string, barberId: string) {
@@ -89,12 +93,16 @@ export async function updateCatalogService(
   },
   barberId: string
 ) {
-  await getOwnedService(serviceId, barberId);
+  const existing = await getOwnedService(serviceId, barberId);
 
-  return prisma.service.update({
+  const service = await prisma.service.update({
     where: { id: serviceId },
     data,
   });
+
+  await revalidateBusinessPages(existing.businessId);
+
+  return service;
 }
 
 export async function deleteCatalogService(serviceId: string, barberId: string) {
@@ -104,8 +112,12 @@ export async function deleteCatalogService(serviceId: string, barberId: string) 
     throw new AppError("Service is already inactive");
   }
 
-  return prisma.service.update({
+  const service = await prisma.service.update({
     where: { id: serviceId },
     data: { active: false },
   });
+
+  await revalidateBusinessPages(existing.businessId);
+
+  return service;
 }

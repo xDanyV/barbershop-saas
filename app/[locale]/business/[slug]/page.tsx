@@ -1,6 +1,5 @@
-import { prisma } from "@/lib/prisma";
+import { getPublicBusinessPage } from "@/lib/cache/business-pages";
 import { notFound } from "next/navigation";
-import { publicBusinessWhere } from "@/lib/billing/status";
 import BusinessHero from "./components/BusinessHero";
 import BarberCarousel from "./components/BarberCarousel";
 import BusinessGallery from "./components/BusinessGallery";
@@ -21,104 +20,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
     const { locale, slug } = await params;
 
     // Los negocios suspendidos o cancelados no se muestran públicamente
-    const business = await prisma.business.findFirst({
-        where: { slug, ...publicBusinessWhere },
-        select: {
-            id: true,
-            name: true,
-            slug: true,
-            description: true,
-            phone: true,
-            address: true,
-            logoUrl: true,
-            coverUrl: true,
-            active: true,
-            settings: {
-                select: {
-                    isServiceActive: true,
-                    maintenanceMessage: true,
-                },
-            },
-            barbers: {
-                where: {
-                    active: true,
-                    status: "APPROVED",
-                },
-                select: {
-                    id: true,
-                    profileImageUrl: true,
-                    user: {
-                        select: {
-                            name: true,
-                        },
-                    },
-                },
-                orderBy: {
-                    createdAt: "asc",
-                },
-            },
-            services: {
-                where: {
-                    active: true,
-                    barber: {
-                        active: true,
-                        status: "APPROVED",
-                    },
-                },
-                select: {
-                    id: true,
-                    name: true,
-                    priceCents: true,
-                    duration: true,
-                    barber: {
-                        select: {
-                            user: {
-                                select: {
-                                    name: true,
-                                },
-                            },
-                        },
-                    },
-                },
-                orderBy: {
-                    createdAt: "desc",
-                },
-            },
-            gallery: {
-                where: {
-                    active: true,
-                },
-                select: {
-                    id: true,
-                    imageUrl: true,
-                    caption: true,
-                    position: true,
-                },
-                orderBy: [
-                    {
-                        position: "asc",
-                    },
-                    {
-                        createdAt: "desc",
-                    },
-                ],
-            },
-            posts: {
-                where: {
-                    active: true,
-                },
-                select: {
-                    id: true,
-                    content: true,
-                    imageUrl: true,
-                    createdAt: true,
-                },
-                orderBy: {
-                    createdAt: "desc",
-                },
-            },
-        },
-    });
+    const business = await getPublicBusinessPage(slug);
 
     if (!business || !business.active) {
         notFound();

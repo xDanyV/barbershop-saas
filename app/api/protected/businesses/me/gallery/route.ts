@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { errorResponse } from "@/lib/errors";
+import { revalidateBusinessPages } from "@/lib/cache/business-pages";
 import { requireOwnerAuth } from "@/lib/api/auth";
 import { parseJsonBody } from "@/lib/api/validation";
 import { galleryItemSchema } from "@/lib/validations/schemas";
@@ -34,6 +35,8 @@ export async function POST(req: NextRequest) {
         const item = await prisma.businessGallery.create({
             data: { businessId, ...data },
         });
+
+        await revalidateBusinessPages(businessId);
 
         return NextResponse.json(item, { status: 201 });
     } catch (error) {
