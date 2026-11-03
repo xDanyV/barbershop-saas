@@ -298,30 +298,61 @@ body {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #d1d5db;
 }
-/* Marca pública: cartel rotulado naranja y negro (landing y "próximamente") */
+/* Marca pública (landing y "próximamente"). Paleta tomada de Tijuana:
+   neblina del Pacífico, el mar al anochecer, el atardecer en Playas y los cerros. */
 .brand {
-  --brand-bg: #ff7a1f;
-  --brand-surface: #ff8633;
-  --brand-ink: #050f16;
-  --brand-muted: #5a2306;
+  --brand-bg: #f1f3f2;
+  --brand-surface: #e6eae8;
+  --brand-ink: #0f2733;
+  --brand-muted: #4a5a61;
+  --brand-field: #0f2733;
+  --brand-field-ink: #f1f3f2;
+  --brand-field-muted: #a9b7bc;
+  --brand-accent: #e8603a;
+  --brand-sand: #e4dccb;
   --brand-paper: #ffffff;
   --step-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
   --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
   --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
-  --step-head: clamp(2rem, 1.3rem + 3.2vw, 4rem);
+  --step-head: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);
+  --step-display: clamp(2.25rem, 1.4rem + 3.6vw, 4.75rem);
   background: var(--brand-bg);
   color: var(--brand-ink);
-  font-family: var(--font-text), system-ui, sans-serif;
+  font-family: var(--font-brand), system-ui, sans-serif;
   font-size: var(--step-body);
   line-height: 1.5;
 }
 
 .brand-display {
-  font-family: var(--font-display), system-ui, sans-serif;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1;
-  text-transform: uppercase;
+  font-family: var(--font-brand), system-ui, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+}
+
+.brand .tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Entrada de los elementos al aparecer (ver components/landing/Reveal.tsx) */
+.brand .reveal {
+  transition: opacity 700ms cubic-bezier(0.2, 0.7, 0.2, 1), transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.brand .reveal[data-hidden="true"] {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+/* La foto de Playas se mueve muy despacio, como el mar */
+@keyframes brand-drift {
+  from { transform: scale(1.04) translateX(0); }
+  to { transform: scale(1.1) translateX(-1.5%); }
+}
+
+.brand .drift {
+  animation: brand-drift 24s ease-in-out infinite alternate;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -329,6 +360,12 @@ body {
   .brand *::before,
   .brand *::after {
     animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
+  }
+
+  .brand .reveal[data-hidden="true"] {
+    opacity: 1;
+    transform: none;
   }
 }
