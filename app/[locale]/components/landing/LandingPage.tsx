@@ -44,13 +44,16 @@ export default async function LandingPage({ locale }: { locale: string }) {
                 <div className="lg:grid lg:grid-cols-[minmax(0,47%)_minmax(0,1fr)]">
                     {/* Mitad fija (escritorio): la página de reservas de ejemplo, siempre a la vista */}
                     <aside className="hidden lg:sticky lg:top-0 lg:block lg:h-svh lg:p-5">
-                        <div className="flex h-full flex-col bg-[var(--brand-field)] p-8 text-[var(--brand-field-ink)] xl:p-12">
+                        <div className="flex h-full flex-col bg-[var(--brand-field)] p-8 text-[var(--brand-field-ink)] xl:p-12 [@media(max-height:820px)]:p-6">
                             <BrandMark
                                 iconClassName="h-9 w-9 bg-[var(--brand-field-ink)] text-[var(--brand-field)]"
                                 iconSize={18}
                             />
-                            <div className="flex flex-1 items-center justify-center py-8">
-                                <BookingDemo />
+                            {/* Si la ventana es baja, el ejemplo se desplaza dentro del panel en lugar de cortarse */}
+                            <div className="flex min-h-0 flex-1 overflow-y-auto py-4">
+                                <div className="m-auto w-full max-w-[400px] [@media(min-height:741px)_and_(max-height:860px)]:[zoom:0.88] [@media(min-height:641px)_and_(max-height:740px)]:[zoom:0.78] [@media(max-height:640px)]:[zoom:0.66]">
+                                    <BookingDemo />
+                                </div>
                             </div>
                             <p className="text-[length:var(--step-small)] text-[var(--brand-field-muted)]">{t("demo.tryIt")}</p>
                         </div>

@@ -48,8 +48,9 @@ export default function BookingDemo() {
                 </span>
             </div>
 
-            {mode === "setup" && (
-                <div className="mt-6">
+            {/* Los tres estados ocupan la misma celda: el alto no salta y se cruzan con un fundido suave */}
+            <div className="mt-6 grid">
+            <Pane active={mode === "setup"}>
                     <p className="text-[length:var(--step-small)] font-semibold text-[var(--brand-muted)]">{t("setupTitle")}</p>
                     <ul className="mt-3 space-y-2">
                         {(["services", "hours", "rest", "team"] as const).map((key) => (
@@ -61,11 +62,9 @@ export default function BookingDemo() {
                     <p className="mt-4 truncate text-[length:var(--step-small)] text-[var(--brand-muted)]">
                         /es/business/barberia-calle-segunda
                     </p>
-                </div>
-            )}
+            </Pane>
 
-            {mode === "book" && (
-                <div className="mt-6">
+            <Pane active={mode === "book"}>
                     <p className="text-[length:var(--step-small)] font-semibold text-[var(--brand-muted)]">{t("chooseDay")}</p>
                     <div className="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label={t("chooseDay")}>
                         {DAYS.map((d) => (
@@ -146,11 +145,9 @@ export default function BookingDemo() {
                     >
                         {time ? `${t("confirm")} · ${time}` : t("pickFirst")}
                     </button>
-                </div>
-            )}
+            </Pane>
 
-            {mode === "confirmed" && (
-                <div className="mt-6">
+            <Pane active={mode === "confirmed"}>
                     <div className="rounded-xl bg-[var(--brand-sand)] p-5">
                         <p className="text-[length:var(--step-small)] font-semibold">{t("confirmedTitle")}</p>
                         <p className="tabular mt-2 text-[2rem] leading-none tracking-tight">{time ?? "11:00 AM"}</p>
@@ -196,8 +193,24 @@ export default function BookingDemo() {
                     >
                         {t("again")}
                     </button>
-                </div>
-            )}
+            </Pane>
+            </div>
+        </div>
+    );
+}
+
+// Un estado del ejemplo; los inactivos quedan ocultos e inertes para el teclado y los lectores de pantalla
+function Pane({ active, children }: { active: boolean; children: React.ReactNode }) {
+    return (
+        <div
+            aria-hidden={!active}
+            inert={!active}
+            className={`[grid-area:1/1] transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.2,0.7,0.2,1)] motion-reduce:transition-none ${active
+                ? "translate-y-0 opacity-100"
+                : "pointer-events-none translate-y-3 opacity-0"
+                }`}
+        >
+            {children}
         </div>
     );
 }
