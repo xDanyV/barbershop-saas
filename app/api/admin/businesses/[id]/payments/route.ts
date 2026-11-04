@@ -39,10 +39,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
 // Anula el último pago y deja la membresía como estaba
 export async function DELETE(request: NextRequest, context: RouteContext) {
     try {
-        requireAuth(request, ["ADMIN"]);
+        const { userId } = requireAuth(request, ["ADMIN"]);
         const { id } = await context.params;
 
-        const payment = await voidLatestPayment(id);
+        const payment = await voidLatestPayment(id, userId);
 
         await revalidateBusinessPages(id);
 

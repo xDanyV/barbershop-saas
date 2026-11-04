@@ -6,6 +6,7 @@ import { AppError, errorResponse } from "@/lib/errors";
 import { revalidateBusinessPages } from "@/lib/cache/business-pages";
 import { endOfDayUtc, resolveTimezone, toDateKey, zonedToUtc } from "@/lib/time/zoned";
 import { requireAuth } from "@/lib/api/auth";
+import { recordAudit } from "@/lib/services/audit.service";
 import { parseJsonBody } from "@/lib/api/validation";
 import { updateBillingSchema } from "@/lib/validations/schemas";
 import {
@@ -93,7 +94,7 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
     try {
-        requireAuth(req, ["ADMIN"]);
+        const { userId } = requireAuth(req, ["ADMIN"]);
         const { businessId, billingStatus, billingPlan, subscriptionEndsAt } = await parseJsonBody(
             req,
             updateBillingSchema
@@ -105,6 +106,7 @@ export async function PATCH(req: NextRequest) {
             },
             select: {
                 id: true,
+                name: true,
                 timezone: true,
             },
         });
@@ -119,32 +121,43 @@ export async function PATCH(req: NextRequest) {
             : null;
         const canceledAt = billingStatus === "CANCELED" ? new Date() : null;
 
-        await prisma.businessSubscription.upsert({
-            where: {
-                businessId,
-            },
-            update: {
-                plan: billingPlan,
-                billingStatus,
-                provider: SubscriptionProvider.MANUAL,
-                setupFeeCents: plan.setupFeeCents,
-                monthlyPriceCents: plan.monthlyPriceCents,
-                currency: plan.currency,
-                currentPeriodEnd,
-                canceledAt,
-            },
-            create: {
-                businessId,
-                plan: billingPlan,
-                billingStatus,
-                provider: SubscriptionProvider.MANUAL,
-                setupFeeCents: plan.setupFeeCents,
-                monthlyPriceCents: plan.monthlyPriceCents,
-                currency: plan.currency,
-                currentPeriodStart: new Date(),
-                currentPeriodEnd,
-                canceledAt,
-            },
+        await prisma.$transaction(async (tx) => {
+            await tx.businessSubscription.upsert({
+                where: {
+                    businessId,
+                },
+                update: {
+                    plan: billingPlan,
+                    billingStatus,
+                    provider: SubscriptionProvider.MANUAL,
+                    setupFeeCents: plan.setupFeeCents,
+                    monthlyPriceCents: plan.monthlyPriceCents,
+                    currency: plan.currency,
+                    currentPeriodEnd,
+                    canceledAt,
+                },
+                create: {
+                    businessId,
+                    plan: billingPlan,
+                    billingStatus,
+                    provider: SubscriptionProvider.MANUAL,
+                    setupFeeCents: plan.setupFeeCents,
+                    monthlyPriceCents: plan.monthlyPriceCents,
+                    currency: plan.currency,
+                    currentPeriodStart: new Date(),
+                    currentPeriodEnd,
+                    canceledAt,
+                },
+            });
+
+            await recordAudit(tx, {
+                actorId: userId,
+                action: "membership_adjusted",
+                targetType: "business",
+                targetId: businessId,
+                targetLabel: existingBusiness.name,
+                metadata: { status: billingStatus, plan: billingPlan, ends: subscriptionEndsAt || null },
+            });
         });
 
         await revalidateBusinessPages(businessId);

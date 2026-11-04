@@ -519,7 +519,9 @@
             "barbers": "Administrar Barberos",
             "customers": "Gestionar Clientes",
             "settings": "Configuración Global",
-            "billing": "Suscripciones"
+            "billing": "Membresías",
+            "businesses": "Negocios",
+            "audit": "Actividad"
         }
     },
     "BannedCustomerScreen": {
@@ -946,7 +948,8 @@
             "suspended": "Tu barbería está suspendida: tu página está oculta y no recibes reservas.",
             "canceled": "Tu membresía está cancelada: tu página está oculta y no recibes reservas.",
             "pending": "Tu barbería no recibe reservas hasta registrar tu primer pago.",
-            "action": "Ver cómo pagar"
+            "action": "Ver cómo pagar",
+            "deactivated": "Tu barbería fue desactivada por la plataforma: tu página está oculta y no recibes reservas. Contáctanos para más información."
         },
         "card": {
             "title": "Membresía",
@@ -1007,6 +1010,61 @@
                 "void": "No se pudo anular el pago.",
                 "voidChanged": "La membresía cambió después de este pago. Corrígela con \"Ajustar\".",
                 "adjust": "No se pudo actualizar la membresía."
+            }
+        }
+    },
+    "Platform": {
+        "title": "Negocios",
+        "subtitle": "Todas las barberías de la plataforma, con su dueño y su actividad.",
+        "stats": {
+            "businesses": "Negocios",
+            "active": "Activos",
+            "customers": "Clientes",
+            "appointments": "Citas en 30 días"
+        },
+        "search": "Buscar",
+        "searchPlaceholder": "Nombre, dueño, correo o teléfono",
+        "noResults": "Ningún negocio coincide con la búsqueda.",
+        "empty": "Todavía no hay negocios registrados.",
+        "deactivated": "Desactivado",
+        "since": "desde {date}",
+        "counts": "{barbers, plural, one {# barbero} other {# barberos}} · {services, plural, one {# servicio} other {# servicios}} · {appointments, plural, one {# cita} other {# citas}} en 30 días",
+        "viewPage": "Ver página",
+        "whatsapp": "WhatsApp",
+        "activate": "Activar",
+        "deactivate": "Desactivar",
+        "close": "Cerrar",
+        "saving": "Guardando...",
+        "activateTitle": "Activar {name}",
+        "deactivateTitle": "Desactivar {name}",
+        "activateHint": "Su página vuelve a mostrarse y puede recibir reservas, si su membresía lo permite.",
+        "deactivateHint": "Su página se oculta y deja de recibir reservas. Las citas ya agendadas no se cancelan y su membresía no cambia.",
+        "reason": "Motivo (opcional)",
+        "activatedToast": "Negocio activado",
+        "deactivatedToast": "Negocio desactivado",
+        "errors": {
+            "load": "No se pudieron cargar los negocios.",
+            "toggle": "No se pudo actualizar el negocio."
+        },
+        "audit": {
+            "title": "Actividad",
+            "subtitle": "Lo que han hecho los administradores en la plataforma, de lo más reciente a lo más antiguo.",
+            "empty": "Todavía no hay actividad registrada.",
+            "error": "No se pudo cargar la actividad.",
+            "more": "Ver más",
+            "system": "Sistema",
+            "removedAccount": "Cuenta eliminada",
+            "actions": {
+                "payment_recorded": "Pago registrado",
+                "payment_voided": "Pago anulado",
+                "membership_adjusted": "Membresía ajustada",
+                "settings_updated": "Configuración actualizada",
+                "customer_banned": "Cliente bloqueado",
+                "customer_unbanned": "Cliente desbloqueado",
+                "barber_updated": "Barbero actualizado",
+                "business_activated": "Negocio activado",
+                "business_deactivated": "Negocio desactivado",
+                "admin_created": "Administrador creado"
             }
         }
     }

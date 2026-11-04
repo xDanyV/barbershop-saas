@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { AppError, errorResponse } from "@/lib/errors";
 import { requireAuth } from "@/lib/api/auth";
+import { recordAudit } from "@/lib/services/audit.service";
 import { parseJsonBody } from "@/lib/api/validation";
 import { updateCustomerBanSchema } from "@/lib/validations/schemas";
 
@@ -102,16 +103,27 @@ export async function PATCH(request: NextRequest) {
             return NextResponse.json({ success: true, user: { ...customer, isBanned } });
         }
 
-        const updatedCustomer = await prisma.user.update({
-            where: { id: customerId },
-            data: { isBanned },
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                phone: true,
-                isBanned: true,
-            },
+        const updatedCustomer = await prisma.$transaction(async (tx) => {
+            const updated = await tx.user.update({
+                where: { id: customerId },
+                data: { isBanned },
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    phone: true,
+                    isBanned: true,
+                },
+            });
+
+            await recordAudit(tx, {
+                actorId: auth.userId,
+                action: isBanned ? "customer_banned" : "customer_unbanned",
+                targetType: "user",
+                targetId: customerId,
+            });
+
+            return updated;
         });
 
         return NextResponse.json({ success: true, user: updatedCustomer });

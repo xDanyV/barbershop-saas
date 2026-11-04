@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { errorResponse } from "@/lib/errors";
 import { requireAuth } from "@/lib/api/auth";
+import { recordAudit } from "@/lib/services/audit.service";
 import { parseJsonBody } from "@/lib/api/validation";
 import { systemSettingsSchema } from "@/lib/validations/schemas";
 
@@ -25,13 +26,25 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
     try {
-        requireAuth(request, ["ADMIN"]);
+        const { userId } = requireAuth(request, ["ADMIN"]);
         const data = await parseJsonBody(request, systemSettingsSchema);
 
-        const updatedSettings = await prisma.systemSettings.upsert({
-            where: { id: "global" },
-            update: data,
-            create: { id: "global", ...data },
+        const updatedSettings = await prisma.$transaction(async (tx) => {
+            const settings = await tx.systemSettings.upsert({
+                where: { id: "global" },
+                update: data,
+                create: { id: "global", ...data },
+            });
+
+            // Solo qué campos: las instrucciones de pago pueden llevar datos bancarios
+            await recordAudit(tx, {
+                actorId: userId,
+                action: "settings_updated",
+                targetType: "settings",
+                metadata: { fields: Object.keys(data) },
+            });
+
+            return settings;
         });
 
         return NextResponse.json({ success: true, settings: updatedSettings });

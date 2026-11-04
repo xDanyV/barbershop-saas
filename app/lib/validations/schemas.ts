@@ -192,6 +192,11 @@ export const systemSettingsSchema = z.object({
     paymentInstructions: z.string().trim().max(1000).nullish(),
 });
 
+export const updateBusinessActiveSchema = z.object({
+    active: z.boolean(),
+    reason: z.string().trim().max(200).optional(),
+});
+
 export const recordPaymentSchema = z.object({
     amountCents: z.number().int().min(0).max(100_000_00),
     method: z.enum(["CASH", "TRANSFER", "CARD", "OTHER"]),
