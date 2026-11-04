@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { UserPlus, Users, Settings, ShieldAlert, CreditCard, Store, History } from "lucide-react";
+import { UserPlus, Users, Settings, ShieldAlert, CreditCard, Store, History, LayoutDashboard } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
 
@@ -13,10 +13,12 @@ import SystemSettings from "./SystemSettings";
 import BusinessBillingManager from "./BusinessBillingManager";
 import PlatformBusinesses from "./PlatformBusinesses";
 import AuditLogList from "./AuditLogList";
+import OwnerOverview from "./OwnerOverview";
 
 
 // Definimos las pestañas solo con sus identificadores e iconos
-const TABS: { id: string; icon: typeof UserPlus; adminOnly?: boolean }[] = [
+const TABS: { id: string; icon: typeof UserPlus; adminOnly?: boolean; ownerOnly?: boolean }[] = [
+    { id: "summary", icon: LayoutDashboard, ownerOnly: true },
     { id: "businesses", icon: Store, adminOnly: true },
     { id: "billing", icon: CreditCard, adminOnly: true },
     { id: "pending", icon: UserPlus },
@@ -32,10 +34,10 @@ type Props = {
 
 export default function AdminDashboardClient({ role }: Props) {
     const t = useTranslations("AdminDashboard");
-    const [activeTab, setActiveTab] = useState(role === "ADMIN" ? "businesses" : "pending");
+    const [activeTab, setActiveTab] = useState(role === "ADMIN" ? "businesses" : "summary");
 
     // Facturación y mantenimiento global son de la plataforma: solo los ve el ADMIN
-    const tabs = TABS.filter((tab) => !tab.adminOnly || role === "ADMIN");
+    const tabs = TABS.filter((tab) => (!tab.adminOnly || role === "ADMIN") && (!tab.ownerOnly || role === "OWNER"));
 
     return (
         <div className="space-y-6 md:space-y-8 px-4 py-6 md:p-8 max-w-6xl mx-auto">
@@ -95,6 +97,7 @@ export default function AdminDashboardClient({ role }: Props) {
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.2 }}
                     >
+                        {activeTab === "summary" && role === "OWNER" && <OwnerOverview />}
                         {activeTab === "pending" && <PendingBarbersList />}
                         {activeTab === "barbers" && <ActiveBarbersList />}
                         {activeTab === "customers" && <CustomersList />}

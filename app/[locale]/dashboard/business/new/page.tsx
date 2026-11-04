@@ -119,7 +119,7 @@ export default function CreateBusinessPage() {
             toast.success("Negocio creado correctamente");
 
             // La sesión ya refleja el nuevo rol y negocio; no hace falta volver a iniciar sesión
-            window.location.href = `${localePrefix}/dashboard/admin/my-business`;
+            window.location.href = `${localePrefix}/dashboard/admin`;
         } catch {
             toast.error("Error al crear el negocio");
         } finally {
