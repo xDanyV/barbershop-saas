@@ -147,7 +147,7 @@ export async function createAppointment(data: {
         });
 
         if (activeUpcomingAppointments >= MAX_ACTIVE_APPOINTMENTS) {
-            throw new AppError("No puedes tener más de 2 citas activas programadas al mismo tiempo");
+            throw new AppError("You cannot have more than 2 active appointments");
         }
 
         const day = await getBarberDay(tx, barberId, dateKey, timezone);
@@ -420,7 +420,6 @@ export async function getUserAppointments(userId: string) {
     const appointments = await prisma.appointment.findMany({
         where: {
             userId,
-            status: { not: "CANCELLED" },
         },
         orderBy: {
             date: "desc",
@@ -437,7 +436,7 @@ export async function getUserAppointments(userId: string) {
                 },
             },
             service: { select: { id: true, name: true, duration: true, priceCents: true } },
-            business: { select: { id: true, name: true, slug: true } },
+            business: { select: { id: true, name: true, slug: true, phone: true } },
         },
     });
 
@@ -583,6 +582,11 @@ export async function updateAppointmentStatus(
 
     return prisma.appointment.update({
         where: { id: appointmentId },
-        data: { status: newStatus },
+        data: {
+            status: newStatus,
+            ...(newStatus === "CANCELLED"
+                ? { cancelledBy: actsAsCustomer(appointment, { userId, role, ...context }) ? ("CUSTOMER" as const) : ("BUSINESS" as const) }
+                : {}),
+        },
     });
 }

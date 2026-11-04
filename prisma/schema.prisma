@@ -131,6 +131,8 @@ model Appointment {
   barber   Barber @relation(fields: [barberId], references: [id])
 
   status    AppointmentStatus @default(PENDING)
+  // Solo en citas canceladas: para explicarle al cliente qué pasó
+  cancelledBy AppointmentCanceller?
   createdAt DateTime          @default(now())
 
   @@index([businessId])
@@ -139,6 +141,12 @@ model Appointment {
   @@index([serviceId])
   @@index([date])
   @@index([barberId, date])
+}
+
+enum AppointmentCanceller {
+  CUSTOMER
+  BUSINESS
+  SYSTEM
 }
 
 enum AppointmentStatus {

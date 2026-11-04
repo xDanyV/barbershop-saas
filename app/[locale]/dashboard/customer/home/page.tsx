@@ -8,17 +8,24 @@ import { Plus, Clock, User, Calendar as CalendarIcon, History, AlertTriangle } f
 import { useLocale, useTranslations } from "next-intl";
 import { formatPriceFromCents } from "@/lib/billing/pricing";
 import RescheduleDialog from "@/[locale]/components/RescheduleDialog";
+import Link from "next/link";
+import { getWhatsAppUrl } from "@/[locale]/business/[slug]/lib/business-page.utils";
+import { useApiError } from "@/[locale]/components/useApiError";
 
 type Appointment = {
   id: string;
   date: string;
   status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
+  cancelledBy: "CUSTOMER" | "BUSINESS" | "SYSTEM" | null;
+  business: { name: string; slug: string; phone: string | null };
   service: { name: string; duration: number; priceCents: number };
   barber: { user: { name: string | null } };
 };
 
 export default function CustomerHome() {
   const t = useTranslations("CustomerHome");
+  const apiError = useApiError();
+  const locale = useLocale();
   const dateLocale = useLocale() === "en" ? "en-US" : "es-MX";
   const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -34,14 +41,14 @@ export default function CustomerHome() {
       .then((data: Appointment[]) => {
         const nowMs = Date.now();
         const ONE_HOUR_MS = 60 * 60 * 1000;
-        setAppointments(data.filter((a) => {
-          const apptMs = new Date(a.date).getTime();
-          return a.status !== "CANCELLED" && (apptMs + ONE_HOUR_MS) > nowMs;
-        }));
-        setHistory(data.filter((a) => {
-          const apptMs = new Date(a.date).getTime();
-          return a.status === "CANCELLED" || (apptMs + ONE_HOUR_MS) <= nowMs;
-        }));
+        // Una cita futura que canceló la barbería se queda a la vista: el cliente tiene que enterarse
+        const isCurrent = (a: Appointment) => {
+          const upcoming = new Date(a.date).getTime() + ONE_HOUR_MS > nowMs;
+          return upcoming && (a.status !== "CANCELLED" || a.cancelledBy === "BUSINESS");
+        };
+
+        setAppointments(data.filter(isCurrent));
+        setHistory(data.filter((a) => !isCurrent(a)).reverse());
       })
       .catch(() => console.error("Could not load appointments"))
       .finally(() => setLoading(false));
@@ -144,11 +151,13 @@ export default function CustomerHome() {
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.error ?? t("errors.cancelFailed"));
+        toast.error(apiError(data, t("errors.cancelFailed")));
         return;
       }
 
+      const cancelled = appointments.find((a) => a.id === appointmentId);
       setAppointments((prev) => prev.filter((a) => a.id !== appointmentId));
+      if (cancelled) setHistory((prev) => [{ ...cancelled, status: "CANCELLED", cancelledBy: "CUSTOMER" }, ...prev]);
 
       toast.success(t("success.cancelled"), {
         style: {
@@ -175,6 +184,13 @@ export default function CustomerHome() {
     }
 
     setRescheduling(appointment);
+  };
+
+  const statusLabel = (a: Appointment) => {
+    if (a.status !== "CANCELLED") return t(`status.${a.status}`);
+    if (a.cancelledBy === "BUSINESS") return t("cancelledByBusiness");
+    if (a.cancelledBy === "SYSTEM") return t("expiredUnconfirmed");
+    return t("status.CANCELLED");
   };
 
   const list = showHistory ? history : appointments;
@@ -220,9 +236,9 @@ export default function CustomerHome() {
           >
             <CalendarIcon size={14} />
             {t("tabs.upcoming")}
-            {appointments.length > 0 && !showHistory && (
+            {appointments.some((a) => a.status !== "CANCELLED") && !showHistory && (
               <span className="bg-indigo-100 text-indigo-600 text-xs font-black px-1.5 py-0.5 rounded-full">
-                {appointments.length}
+                {appointments.filter((a) => a.status !== "CANCELLED").length}
               </span>
             )}
           </button>
@@ -306,7 +322,7 @@ export default function CustomerHome() {
                           ? "bg-emerald-50 text-emerald-600 border-emerald-100"
                           : "bg-rose-50 text-rose-600 border-rose-100"
                           }`}>
-                          {t(`status.${a.status}`)}
+                          {statusLabel(a)}
                         </span>
                       </motion.div>
                     );
@@ -342,9 +358,11 @@ export default function CustomerHome() {
                             </h3>
                             <span className={`w-fit mx-auto sm:mx-0 text-xs px-2.5 py-0.5 rounded-full font-black   border ${a.status === "CONFIRMED"
                               ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                              : "bg-amber-50 text-amber-600 border-amber-100"
+                              : a.status === "CANCELLED"
+                                ? "bg-red-50 text-red-700 border-red-100"
+                                : "bg-amber-50 text-amber-600 border-amber-100"
                               }`}>
-                              {t(`status.${a.status}`)}
+                              {statusLabel(a)}
                             </span>
                           </div>
                           <div className="flex flex-wrap justify-center sm:justify-start gap-x-4 gap-y-1.5 text-xs font-bold text-gray-400  tracking-tight">
@@ -364,6 +382,26 @@ export default function CustomerHome() {
 
                         {/* Cancel button */}
                         <div className="shrink-0 flex flex-col gap-1 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-50">
+                          {a.status === "CANCELLED" && (
+                            <>
+                              <Link
+                                href={`/${locale}/business/${a.business.slug}/book`}
+                                className="flex min-h-11 items-center justify-center bg-gray-900 px-4 text-xs font-bold text-white transition-opacity hover:opacity-90"
+                              >
+                                {t("bookAgain")}
+                              </Link>
+                              {a.business.phone && (
+                                <a
+                                  href={getWhatsAppUrl(a.business.phone)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex min-h-11 items-center justify-center px-4 text-xs font-bold text-gray-900 hover:bg-gray-100"
+                                >
+                                  {t("contactBusiness")}
+                                </a>
+                              )}
+                            </>
+                          )}
                           {(a.status === "PENDING" || a.status === "CONFIRMED") && date.getTime() > Date.now() && (
                             <button
                               type="button"
@@ -373,7 +411,7 @@ export default function CustomerHome() {
                               {t("reschedule")}
                             </button>
                           )}
-                          <motion.button
+                          {a.status !== "CANCELLED" && <motion.button
                             whileTap={{ scale: 0.95 }}
                             onClick={() => confirmCancel(a.id, a.date, a.service.name)}
                             disabled={cancelling === a.id}
@@ -387,7 +425,7 @@ export default function CustomerHome() {
                             ) : (
                               t("cancel")
                             )}
-                          </motion.button>
+                          </motion.button>}
                         </div>
                       </div>
                     </motion.div>

@@ -1,27 +1,24 @@
 {
     "Register": {
-        "choosePath": "Elige tu camino",
-        "choosePathDesc": "Selecciona cómo quieres usar la plataforma. Puedes cambiar tu configuración más tarde.",
-        "customerTitle": "Cliente",
-        "customerDesc": "Reserva citas, gestiona tu horario y descubre a los mejores barberos de tu zona.",
-        "barberTitle": "Socio Barbero",
-        "barberDesc": "Gestiona tu negocio, configura tu catálogo, controla tu disponibilidad y haz crecer tu base de clientes.",
+        "choosePath": "¿Cómo vas a usar la plataforma?",
         "accountDetails": "Detalles de la cuenta",
-        "accountDetailsDesc": "Ingresa tu información para comenzar",
+        "accountDetailsDesc": "Con estos datos la barbería puede contactarte sobre tus citas.",
         "form": {
             "fullName": "Nombre completo",
             "phone": "Número de teléfono",
             "email": "Correo electrónico",
             "password": "Contraseña",
             "confirmPassword": "Confirmar Contraseña",
-            "businessSlug": "Slug o enlace público de la barbería",
-            "businessSlugHintBefore": "Puedes escribir solo el slug, por ejemplo",
-            "businessSlugHintAfter": ", o pegar el enlace público completo de la barbería.",
-            "acceptTerms": "Acepto los <terms>Términos y Condiciones</terms> y el <privacy>Aviso de Privacidad</privacy>."
+            "businessSlug": "Enlace de tu barbería",
+            "acceptTerms": "Acepto los <terms>Términos y Condiciones</terms> y el <privacy>Aviso de Privacidad</privacy>.",
+            "businessSlugHint": "Pídeselo al dueño o cópialo de la página de la barbería.",
+            "passwordHint": "Mínimo 8 caracteres.",
+            "showPassword": "Mostrar contraseña",
+            "hidePassword": "Ocultar contraseña"
         },
         "buttons": {
             "creating": "Configurando tu espacio...",
-            "selectRole": "Selecciona un rol para continuar",
+            "selectRole": "Elige una opción para continuar",
             "create": "Crear cuenta"
         },
         "login": {
@@ -30,7 +27,7 @@
         },
         "errors": {
             "selectType": "Selecciona un tipo de cuenta",
-            "slugRequired": "Escribe el nombre corto (slug) o el enlace público de la barbería",
+            "slugRequired": "Pega el enlace de tu barbería.",
             "passwordMismatch": "Las contraseñas no coinciden",
             "passwordLength": "La contraseña debe tener al menos 8 caracteres",
             "generic": "Algo salió mal",
@@ -39,15 +36,34 @@
             "tooManyAttempts": "Demasiados registros desde esta conexión. Inténtalo más tarde.",
             "phone": "Escribe un teléfono de México de 10 dígitos."
         },
-        "toasts": {
-            "creating": "Creando tu cuenta...",
-            "failed": "No se pudo crear la cuenta",
-            "success": "¡Bienvenido! Redirigiendo...",
-            "connection": "Error de conexión. Inténtalo de nuevo."
-        },
         "placeholders": {
             "name": "Juan Pérez",
-            "email": "tu@correo.com"
+            "email": "tu@correo.com",
+            "businessLink": "Pega aquí el enlace"
+        },
+        "paths": {
+            "owner": {
+                "title": "Tengo una barbería",
+                "text": "Crea tu página, recibe citas y administra a tu equipo. 30 días gratis.",
+                "formTitle": "Crea tu cuenta de dueño",
+                "submit": "Crear cuenta y continuar"
+            },
+            "barber": {
+                "title": "Trabajo en una barbería",
+                "text": "Únete al equipo de tu barbería. El dueño aprobará tu cuenta.",
+                "formTitle": "Únete a tu barbería",
+                "submit": "Crear cuenta"
+            },
+            "customer": {
+                "title": "Quiero reservar una cita",
+                "text": "Agenda con tus barberos y consulta tus citas.",
+                "formTitle": "Crea tu cuenta",
+                "submit": "Crear cuenta"
+            }
+        },
+        "returning": {
+            "title": "Crea tu cuenta para reservar",
+            "text": "Es solo una vez. Al terminar regresas a la barbería para elegir tu horario."
         }
     },
     "Login": {
@@ -363,7 +379,11 @@
             "confirm": "Sí, cancelar",
             "keep": "Mantener"
         },
-        "reschedule": "Cambiar horario"
+        "reschedule": "Cambiar horario",
+        "cancelledByBusiness": "Cancelada por la barbería",
+        "expiredUnconfirmed": "No se confirmó a tiempo",
+        "bookAgain": "Reservar otra hora",
+        "contactBusiness": "Escribir a la barbería"
     },
     "AvailableSlots": {
         "title": "Horarios disponibles",
@@ -408,8 +428,7 @@
             "loadFailed": "No se pudieron cargar los servicios",
             "bookFailed": "No se pudo reservar la cita",
             "network": "Error de red, por favor intenta de nuevo",
-            "loginRequired": "Inicia sesión para reservar esta cita",
-            "ownBusiness": "No puedes reservar en tu propia barbería. Usa \"Agregar cita\" en tu agenda."
+            "loginRequired": "Inicia sesión para reservar esta cita"
         },
         "success": {
             "booked": "¡{name} reservado exitosamente!"
@@ -1181,5 +1200,37 @@
             "text": "Hay un problema momentáneo de nuestro lado. Tu información está segura.",
             "hint": "Recarga la página en unos minutos."
         }
+    },
+    "ApiErrors": {
+        "EMAIL_TAKEN": "Ya existe una cuenta con este correo. Inicia sesión.",
+        "PHONE_TAKEN": "Ya existe una cuenta con este teléfono.",
+        "SLUG_REQUIRED": "Pega el enlace de tu barbería.",
+        "BUSINESS_NOT_FOUND": "No encontramos esa barbería. Revisa el enlace.",
+        "BARBER_CANNOT_CREATE": "Tu cuenta pertenece al equipo de otra barbería; no puede crear una nueva.",
+        "BUSINESS_ACCOUNT_DELETE": "Para eliminar una cuenta con barbería, contáctanos.",
+        "SLOT_TAKEN": "Ese horario ya no está disponible. Elige otro.",
+        "TIME_UNAVAILABLE": "Ese horario no está disponible: ya hay una cita o es un día libre.",
+        "SERVICE_DOES_NOT_FIT": "Ese servicio no cabe en este horario. Elige otra hora.",
+        "PAST_DATE": "Elige una fecha que no haya pasado.",
+        "BARBER_UNAVAILABLE": "Este barbero no está disponible.",
+        "SERVICE_UNAVAILABLE": "Este servicio ya no está disponible.",
+        "BUSINESS_CLOSED": "La barbería está cerrada temporalmente.",
+        "BOOKINGS_PAUSED": "Esta barbería no está recibiendo reservas por ahora.",
+        "BLOCKED_HERE": "No puedes reservar en esta barbería.",
+        "ACCOUNT_SUSPENDED": "Tu cuenta está suspendida y no puede reservar.",
+        "TOO_MANY_ACTIVE": "Solo puedes tener 2 citas activas a la vez.",
+        "OWN_BUSINESS": "No puedes reservar en tu propia barbería. Usa \"Agregar cita\" en tu agenda.",
+        "TOO_LATE_TO_CANCEL": "Ya no se puede cancelar: faltan menos de 2 horas.",
+        "TOO_LATE_TO_RESCHEDULE": "Ya no se puede cambiar: faltan menos de 2 horas.",
+        "CANNOT_RESCHEDULE": "Esta cita ya no se puede cambiar.",
+        "NO_SHOW_TOO_EARLY": "La inasistencia se registra después de la hora de la cita.",
+        "SERVICE_EXISTS": "Ya tienes un servicio con este nombre.",
+        "ALREADY_EXISTS": "Ese registro ya existe.",
+        "WRONG_PASSWORD": "La contraseña no es correcta.",
+        "TOO_MANY_ATTEMPTS": "Demasiados intentos. Espera unos minutos.",
+        "NOT_ALLOWED": "No tienes permiso para hacer esto.",
+        "NOT_FOUND": "No encontramos lo que buscas. Puede que ya no exista.",
+        "VALIDATION": "Revisa los datos e inténtalo de nuevo.",
+        "INVALID_PHONE": "Escribe un teléfono de México de 10 dígitos."
     }
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useApiError } from "@/[locale]/components/useApiError";
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -43,6 +44,7 @@ type Business = {
 export default function MyBusinessPage() {
     const pathname = usePathname();
 
+    const apiError = useApiError();
     const [business, setBusiness] = useState<Business | null>(null);
     const [form, setForm] = useState<BusinessForm>({
         name: "",
@@ -88,7 +90,7 @@ export default function MyBusinessPage() {
                 const data = await res.json();
 
                 if (!res.ok) {
-                    toast.error(data.error || "No se pudo cargar tu negocio");
+                    toast.error(apiError(data, "No se pudo cargar tu negocio"));
                     return;
                 }
 
@@ -112,7 +114,7 @@ export default function MyBusinessPage() {
         };
 
         loadBusiness();
-    }, []);
+    }, [apiError]);
 
     const updateField = <K extends keyof BusinessForm>(
         key: K,
@@ -170,7 +172,7 @@ export default function MyBusinessPage() {
             const data = await res.json();
 
             if (!res.ok) {
-                toast.error(data.error || "No se pudo guardar");
+                toast.error(apiError(data, "No se pudo guardar"));
                 return;
             }
 

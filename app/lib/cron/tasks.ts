@@ -32,6 +32,7 @@ export async function expireUnconfirmedAppointments(now = new Date()) {
         },
         data: {
             status: "CANCELLED",
+            cancelledBy: "SYSTEM",
         },
     });
 

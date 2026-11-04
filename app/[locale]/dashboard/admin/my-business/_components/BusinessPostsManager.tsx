@@ -1,5 +1,6 @@
 "use client";
 
+import { useApiError } from "@/[locale]/components/useApiError";
 import type { ChangeEvent, FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -24,6 +25,7 @@ type BusinessPost = {
 };
 
 export default function BusinessPostsManager() {
+    const apiError = useApiError();
     const [posts, setPosts] = useState<BusinessPost[]>([]);
     const [content, setContent] = useState("");
     const [imageUrl, setImageUrl] = useState("");
@@ -60,7 +62,7 @@ export default function BusinessPostsManager() {
             const data = await res.json();
 
             if (!res.ok) {
-                toast.error(data.error || "No se pudieron cargar las publicaciones");
+                toast.error(apiError(data, "No se pudieron cargar las publicaciones"));
                 return;
             }
 
@@ -158,7 +160,7 @@ export default function BusinessPostsManager() {
             const data = await res.json();
 
             if (!res.ok) {
-                toast.error(data.error || "No se pudo crear la publicación");
+                toast.error(apiError(data, "No se pudo crear la publicación"));
                 return;
             }
 
@@ -188,7 +190,7 @@ export default function BusinessPostsManager() {
             const data = await res.json().catch(() => null);
 
             if (!res.ok) {
-                toast.error(data?.error || "No se pudo eliminar");
+                toast.error(apiError(data, "No se pudo eliminar"));
                 return;
             }
 

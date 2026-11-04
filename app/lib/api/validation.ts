@@ -16,7 +16,7 @@ export async function parseJsonBody<T extends z.ZodType>(request: Request, schem
     if (!result.success) {
         const issue = result.error.issues[0];
         const path = issue.path.join(".");
-        throw new AppError(path ? `${path}: ${issue.message}` : issue.message);
+        throw new AppError(path ? `${path}: ${issue.message}` : issue.message, 400, path === "phone" ? "INVALID_PHONE" : "VALIDATION");
     }
 
     return result.data;

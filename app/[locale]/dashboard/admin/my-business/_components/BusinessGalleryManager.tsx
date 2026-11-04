@@ -1,5 +1,6 @@
 "use client";
 
+import { useApiError } from "@/[locale]/components/useApiError";
 import type { ChangeEvent, FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -23,6 +24,7 @@ type GalleryItem = {
 };
 
 export default function BusinessGalleryManager() {
+    const apiError = useApiError();
     const [gallery, setGallery] = useState<GalleryItem[]>([]);
     const [imageUrl, setImageUrl] = useState("");
     const [caption, setCaption] = useState("");
@@ -59,7 +61,7 @@ export default function BusinessGalleryManager() {
             const data = await res.json();
 
             if (!res.ok) {
-                toast.error(data.error || "No se pudo cargar la galería");
+                toast.error(apiError(data, "No se pudo cargar la galería"));
                 return;
             }
 
@@ -156,7 +158,7 @@ export default function BusinessGalleryManager() {
             const data = await res.json();
 
             if (!res.ok) {
-                toast.error(data.error || "No se pudo agregar la imagen");
+                toast.error(apiError(data, "No se pudo agregar la imagen"));
                 return;
             }
 
@@ -187,7 +189,7 @@ export default function BusinessGalleryManager() {
             const data = await res.json().catch(() => null);
 
             if (!res.ok) {
-                toast.error(data?.error || "No se pudo eliminar la imagen");
+                toast.error(apiError(data, "No se pudo eliminar la imagen"));
                 return;
             }
 

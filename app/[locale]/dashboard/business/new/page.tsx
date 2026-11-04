@@ -1,11 +1,11 @@
 "use client";
 
+import { useApiError } from "@/[locale]/components/useApiError";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import {
     Building2,
-    ImageIcon,
     Loader2,
     MapPin,
     Phone,
@@ -25,13 +25,12 @@ type BusinessForm = {
     description: string;
     phone: string;
     address: string;
-    logoUrl: string;
-    coverUrl: string;
 };
 
 export default function CreateBusinessPage() {
     const pathname = usePathname();
 
+    const apiError = useApiError();
     const [existingBusinesses, setExistingBusinesses] = useState<Business[]>([]);
     const [checking, setChecking] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -41,8 +40,6 @@ export default function CreateBusinessPage() {
         description: "",
         phone: "",
         address: "",
-        logoUrl: "",
-        coverUrl: "",
     });
 
     const localePrefix = useMemo(() => {
@@ -104,15 +101,13 @@ export default function CreateBusinessPage() {
                     description: form.description,
                     phone: form.phone,
                     address: form.address,
-                    logoUrl: form.logoUrl,
-                    coverUrl: form.coverUrl,
                 }),
             });
 
             const data = await res.json();
 
             if (!res.ok) {
-                toast.error(data.error || "No se pudo crear el negocio");
+                toast.error(apiError(data, "No se pudo crear el negocio"));
                 return;
             }
 
@@ -300,54 +295,6 @@ export default function CreateBusinessPage() {
                     </motion.section>
 
                     <div className="space-y-6">
-                        <motion.section
-                            initial={{ opacity: 0, y: 14 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                                    <ImageIcon size={20} />
-                                </div>
-
-                                <div>
-                                    <h2 className="font-black text-gray-900">
-                                        Imágenes
-                                    </h2>
-                                    <p className="text-xs text-gray-500">
-                                        Por ahora puedes usar links de imagen.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="text-xs font-black text-gray-500  ">
-                                    Logo URL
-                                </label>
-
-                                <input
-                                    value={form.logoUrl}
-                                    onChange={(e) => updateField("logoUrl", e.target.value)}
-                                    className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                                    placeholder="https://..."
-                                />
-                            </div>
-
-                            <div>
-                                <label className="text-xs font-black text-gray-500  ">
-                                    Portada URL
-                                </label>
-
-                                <input
-                                    value={form.coverUrl}
-                                    onChange={(e) => updateField("coverUrl", e.target.value)}
-                                    className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                                    placeholder="https://..."
-                                />
-                            </div>
-                        </motion.section>
-
                         <button
                             type="submit"
                             disabled={saving}
@@ -368,7 +315,7 @@ export default function CreateBusinessPage() {
 
                         <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4">
                             <p className="text-xs text-amber-800 font-bold leading-relaxed">
-                                Después de crear el negocio, deberás iniciar sesión otra vez para actualizar tu rol como dueño.
+                                Empiezas con 30 días gratis. Después podrás agregar tu logo, portada, servicios y horario.
                             </p>
                         </div>
                     </div>

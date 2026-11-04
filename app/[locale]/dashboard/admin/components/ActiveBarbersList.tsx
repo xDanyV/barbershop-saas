@@ -1,5 +1,6 @@
 "use client";
 
+import { useApiError } from "@/[locale]/components/useApiError";
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
     Ban,
@@ -47,6 +48,7 @@ function getInitials(name: string) {
 export default function ActiveBarbersList() {
     const t = useTranslations("ActiveBarbersList");
 
+    const apiError = useApiError();
     const [barbers, setBarbers] = useState<Barber[]>([]);
     const [loading, setLoading] = useState(true);
     const [savingImageId, setSavingImageId] = useState<string | null>(null);
@@ -72,7 +74,7 @@ export default function ActiveBarbersList() {
             const data = await res.json();
 
             if (!res.ok) {
-                toast.error(data.error ?? "No se pudo guardar la foto");
+                toast.error(apiError(data, "No se pudo guardar la foto"));
                 return false;
             }
 

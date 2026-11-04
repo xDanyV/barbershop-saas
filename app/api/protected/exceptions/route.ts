@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
                     status: { in: ["PENDING", "CONFIRMED"] },
                     date: { gte: start, lte: end },
                 },
-                data: { status: "CANCELLED" },
+                data: { status: "CANCELLED", cancelledBy: "BUSINESS" },
             });
 
             return {
