@@ -131,7 +131,7 @@ export default function SlotCard({
       }
 
       if (!res.ok) {
-        toast.error(data?.error ?? t("errors.bookFailed"));
+        toast.error(data?.code === "OWN_BUSINESS" ? t("errors.ownBusiness") : data?.error ?? t("errors.bookFailed"));
         return;
       }
 

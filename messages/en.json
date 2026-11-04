@@ -81,7 +81,8 @@
             "book": "Book",
             "myBusiness": "My business",
             "createBusiness": "Create business",
-            "account": "My account"
+            "account": "My account",
+            "myBookings": "My bookings"
         },
         "logout": "Sign out",
         "errors": {
@@ -407,7 +408,8 @@
             "loadFailed": "Could not load services",
             "bookFailed": "Could not book appointment",
             "network": "Network error, please try again",
-            "loginRequired": "Sign in to book this appointment"
+            "loginRequired": "Sign in to book this appointment",
+            "ownBusiness": "You cannot book at your own barbershop. Use \"Add appointment\" in your schedule."
         },
         "success": {
             "booked": "{name} booked successfully!"
@@ -638,7 +640,12 @@
         },
         "paused": "Bookings for this business are temporarily paused.",
         "pausedHint": "Please try again later or contact the barbershop directly.",
-        "inactive": "The service is temporarily unavailable."
+        "inactive": "The service is temporarily unavailable.",
+        "ownBusiness": {
+            "title": "This is your barbershop",
+            "text": "To hold a time or record a customer, use \"Add appointment\" in your schedule.",
+            "action": "Go to my schedule"
+        }
     },
     "BusinessDirectory": {
         "eyebrow": "Available businesses",

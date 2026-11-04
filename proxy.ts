@@ -109,10 +109,6 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  if (pathnameWithoutLocale.startsWith("/dashboard/customer") && session.role !== "CUSTOMER") {
-    return redirectTo(getHomePathForRole(session.role));
-  }
-
   if (pathnameWithoutLocale.startsWith("/dashboard/admin")) {
     const canAccess = session.role === "ADMIN" || session.role === "OWNER";
 

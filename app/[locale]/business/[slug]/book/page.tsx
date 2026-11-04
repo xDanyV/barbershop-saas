@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { getBookingBusiness } from "@/lib/cache/business-pages";
 import { canBusinessAcceptBookings, getBillingStatus } from "@/lib/billing/status";
+import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { SESSION_COOKIE, getSessionFromToken } from "@/lib/auth/session";
+import { isBusinessStaff } from "@/lib/services/appointment.service";
 import { getTranslations } from "next-intl/server";
 import BusinessBookingClient from "./BusinessBookingClient";
 
@@ -46,6 +50,27 @@ export default async function BusinessBookPage({ params }: BookPageProps) {
                     <p className="text-gray-500 text-sm mt-3">
                         {t("pausedHint")}
                     </p>
+                </div>
+            </main>
+        );
+    }
+
+    // El equipo no reserva en su propia barbería: se le evita recorrer el flujo para acabar en un error
+    const cookieStore = await cookies();
+    const session = await getSessionFromToken(cookieStore.get(SESSION_COOKIE)?.value).catch(() => null);
+
+    if (session && (await isBusinessStaff(session.userId, business.id))) {
+        return (
+            <main className="theme-field min-h-screen bg-[#0f2733] text-white flex items-center justify-center px-4">
+                <div className="max-w-md bg-white/5 border border-white/10 rounded-3xl p-8 text-center">
+                    <h1 className="text-2xl font-black">{t("ownBusiness.title")}</h1>
+                    <p className="text-gray-400 mt-4">{t("ownBusiness.text")}</p>
+                    <Link
+                        href={`/${locale}/dashboard/barber`}
+                        className="mt-6 inline-flex min-h-12 items-center justify-center bg-indigo-600 px-6 font-semibold text-white transition-opacity hover:opacity-90"
+                    >
+                        {t("ownBusiness.action")}
+                    </Link>
                 </div>
             </main>
         );
