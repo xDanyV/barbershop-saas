@@ -19,6 +19,22 @@ type Actor = {
     businessId?: string | null;
 };
 
+// Dueño del negocio, o barbero activo de su equipo (uno rechazado ya es solo un cliente)
+export async function isBusinessStaff(userId: string, businessId: string) {
+    const business = await prisma.business.findFirst({
+        where: {
+            id: businessId,
+            OR: [
+                { ownerId: userId },
+                { barbers: { some: { userId, active: true, status: { not: "REJECTED" } } } },
+            ],
+        },
+        select: { id: true },
+    });
+
+    return business !== null;
+}
+
 export async function createAppointment(data: {
     userId: string;
     barberId: string;
@@ -77,6 +93,11 @@ export async function createAppointment(data: {
 
     if (!canBusinessAcceptBookings(getBillingStatus(barber.business.subscription))) {
         throw new AppError("Business is not accepting bookings at this time");
+    }
+
+    // El equipo usa "Agregar cita": una reserva propia inflaría las métricas y se confirmaría sola
+    if (await isBusinessStaff(userId, barber.businessId)) {
+        throw new AppError("Staff cannot book at their own business", 403, "OWN_BUSINESS");
     }
 
     const service = await prisma.service.findFirst({
@@ -232,7 +253,9 @@ type ReschedulableAppointment = {
 };
 
 function assertCanReschedule(appointment: ReschedulableAppointment, actor: Actor) {
-    if (actor.role === "CUSTOMER") {
+    const asCustomer = actsAsCustomer(appointment, actor);
+
+    if (asCustomer) {
         if (appointment.userId !== actor.userId) {
             throw new AppError("Not authorized", 403);
         }
@@ -250,7 +273,7 @@ function assertCanReschedule(appointment: ReschedulableAppointment, actor: Actor
         throw new AppError("This appointment can no longer be rescheduled");
     }
 
-    if (actor.role === "CUSTOMER" && msUntil < CUSTOMER_CHANGE_LIMIT_MS) {
+    if (asCustomer && msUntil < CUSTOMER_CHANGE_LIMIT_MS) {
         throw new AppError("Appointments cannot be rescheduled less than 2 hours before the scheduled time");
     }
 }
@@ -346,7 +369,7 @@ export async function rescheduleAppointment(appointmentId: string, date: string,
             throw new AppError("Business is not accepting bookings at this time");
         }
 
-        const isCustomer = actor.role === "CUSTOMER";
+        const isCustomer = actsAsCustomer(appointment, actor);
 
         if (isCustomer) {
             if (appointment.business.settings && !appointment.business.settings.isServiceActive) {
@@ -466,21 +489,25 @@ export async function getBarberAppointments(barberId: string, range?: { from?: s
 }
 
 // Barbero dueño de la cita, owner de su negocio o administrador
-function assertTeamAccess(
-    appointment: { barberId: string; businessId: string },
-    actor: Actor
-) {
-    if (actor.role === "BARBER") {
-        if (!actor.barberId || appointment.barberId !== actor.barberId) {
-            throw new AppError("Not authorized", 403);
-        }
-    } else if (actor.role === "OWNER") {
-        if (!actor.businessId || appointment.businessId !== actor.businessId) {
-            throw new AppError("Not authorized", 403);
-        }
-    } else if (actor.role !== "ADMIN") {
+function hasTeamAccess(appointment: { barberId: string; businessId: string }, actor: Actor) {
+    if (actor.role === "BARBER") return Boolean(actor.barberId) && appointment.barberId === actor.barberId;
+    if (actor.role === "OWNER") return Boolean(actor.businessId) && appointment.businessId === actor.businessId;
+
+    return actor.role === "ADMIN";
+}
+
+function assertTeamAccess(appointment: { barberId: string; businessId: string }, actor: Actor) {
+    if (!hasTeamAccess(appointment, actor)) {
         throw new AppError("Not authorized", 403);
     }
+}
+
+// Un dueño o barbero que reservó en otra barbería es ahí un cliente más, con sus mismas reglas
+function actsAsCustomer(
+    appointment: { userId: string | null; barberId: string; businessId: string },
+    actor: Actor
+) {
+    return actor.role === "CUSTOMER" || (appointment.userId === actor.userId && !hasTeamAccess(appointment, actor));
 }
 
 const allowedTransitions: Record<AppointmentStatus, AppointmentStatus[]> = {
@@ -536,7 +563,7 @@ export async function updateAppointmentStatus(
         throw new AppError("A no-show can only be recorded after the appointment time");
     }
 
-    if (role === "CUSTOMER") {
+    if (actsAsCustomer(appointment, { userId, role, ...context })) {
         if (newStatus !== "CANCELLED") {
             throw new AppError("Customers can only cancel appointments");
         }

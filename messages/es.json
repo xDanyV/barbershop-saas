@@ -81,7 +81,8 @@
             "book": "Reservar",
             "myBusiness": "Mi negocio",
             "createBusiness": "Crear negocio",
-            "account": "Mi cuenta"
+            "account": "Mi cuenta",
+            "myBookings": "Mis reservas"
         },
         "logout": "Cerrar sesión",
         "errors": {
@@ -407,7 +408,8 @@
             "loadFailed": "No se pudieron cargar los servicios",
             "bookFailed": "No se pudo reservar la cita",
             "network": "Error de red, por favor intenta de nuevo",
-            "loginRequired": "Inicia sesión para reservar esta cita"
+            "loginRequired": "Inicia sesión para reservar esta cita",
+            "ownBusiness": "No puedes reservar en tu propia barbería. Usa \"Agregar cita\" en tu agenda."
         },
         "success": {
             "booked": "¡{name} reservado exitosamente!"
@@ -638,7 +640,12 @@
         },
         "paused": "Las reservas de este negocio están pausadas temporalmente.",
         "pausedHint": "Por favor, intenta más tarde o contacta directamente a la barbería.",
-        "inactive": "El servicio está temporalmente inactivo."
+        "inactive": "El servicio está temporalmente inactivo.",
+        "ownBusiness": {
+            "title": "Esta es tu barbería",
+            "text": "Para apartar un espacio o registrar a un cliente, usa \"Agregar cita\" en tu agenda.",
+            "action": "Ir a mi agenda"
+        }
     },
     "BusinessDirectory": {
         "eyebrow": "Barberías disponibles",

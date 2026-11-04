@@ -36,6 +36,8 @@ export default function DashboardNavbar({ role }: { role: string }) {
     const business: NavItem = { label: t("menu.myBusiness"), path: "/dashboard/admin/my-business", icon: Store };
     const catalog: NavItem = { label: t("menu.catalog"), path: "/dashboard/barber/catalog", icon: Scissors };
     const agenda: NavItem = { label: t("menu.myAppointments"), path: "/dashboard/barber", icon: CalendarDays };
+    // Las citas que esta persona reservó como cliente en otra barbería
+    const bookings: NavItem = { label: t("menu.myBookings"), path: "/dashboard/customer/home", icon: BookOpen };
 
     // primary: barra principal en computadora. mobile: barra inferior (el resto va en "Más").
     let primary: NavItem[];
@@ -46,17 +48,17 @@ export default function DashboardNavbar({ role }: { role: string }) {
     if (role === "ADMIN") {
         primary = [panel];
         mobile = [panel];
-        menu = [account];
+        menu = [bookings, account];
         home = panel.path;
     } else if (role === "OWNER") {
         primary = [panel, agenda, business, catalog];
         mobile = [panel, agenda, business];
-        menu = [account];
+        menu = [bookings, account];
         home = panel.path;
     } else if (role === "BARBER") {
         primary = [agenda, catalog];
         mobile = [agenda, catalog];
-        menu = [account];
+        menu = [bookings, account];
         home = agenda.path;
     } else {
         const myAppointments: NavItem = { ...agenda, path: "/dashboard/customer/home" };
