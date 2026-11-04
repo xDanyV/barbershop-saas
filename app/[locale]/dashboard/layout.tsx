@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -5,6 +6,10 @@ import { getLocale, getTranslations } from "next-intl/server";
 import DashboardNavbar from "@/[locale]/components/DashboardNavbar";
 import TermsPrompt from "@/[locale]/components/legal/TermsPrompt";
 import BillingBanner from "@/[locale]/components/BillingBanner";
+
+export const metadata: Metadata = {
+    robots: { index: false, follow: false },
+};
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   // El proxy valida la sesión y define el rol actual (leído de la base) en cada petición

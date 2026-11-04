@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import { getBookingBusiness } from "@/lib/cache/business-pages";
 import { canBusinessAcceptBookings, getBillingStatus } from "@/lib/billing/status";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import BusinessBookingClient from "./BusinessBookingClient";
+
+// La página que se indexa es el perfil del negocio
+export const metadata: Metadata = {
+    robots: { index: false, follow: false },
+};
 
 type BookPageProps = {
     params: Promise<{

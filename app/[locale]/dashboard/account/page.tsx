@@ -6,6 +6,7 @@ import { LEGAL_INFO } from "@/lib/legal";
 import { DEFAULT_TIMEZONE } from "@/lib/time/zoned";
 import { brandFontClasses } from "../../brand";
 import AccountForms from "./AccountForms";
+import InstallAppPanel from "./InstallAppPanel";
 
 export default async function AccountPage({ params }: { params: Promise<{ locale: string }> }) {
     const { locale } = await params;
@@ -26,10 +27,12 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
         : null;
 
     return (
-        <div className={`brand ${brandFontClasses} -mx-4 -mt-4 min-h-[calc(100svh-4rem)] px-5 pb-32 pt-10 sm:-mx-8 sm:px-8 md:pb-16 lg:pt-16`}>
+        <div className={`brand ${brandFontClasses} -mx-4 min-h-[calc(100svh-4rem)] px-5 pb-10 pt-10 sm:-mx-8 sm:px-8 lg:pt-16`}>
             <div className="mx-auto max-w-3xl">
                 <h1 className="brand-display text-[length:clamp(2rem,1.5rem+2vw,3rem)]">{t("title")}</h1>
                 <p className="mt-3 text-[var(--brand-muted)]">{t("subtitle")}</p>
+
+                <InstallAppPanel className="mt-8 bg-[var(--brand-paper)] p-6 sm:p-8" />
 
                 <AccountForms
                     initial={{ name: user.name ?? "", email: user.email, phone: user.phone }}
