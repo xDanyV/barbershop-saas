@@ -521,7 +521,8 @@
             "settings": "Configuración Global",
             "billing": "Membresías",
             "businesses": "Negocios",
-            "audit": "Actividad"
+            "audit": "Actividad",
+            "summary": "Resumen"
         }
     },
     "BannedCustomerScreen": {
@@ -1067,5 +1068,59 @@
                 "admin_created": "Administrador creado"
             }
         }
+    },
+    "OwnerOverview": {
+        "loading": "Cargando...",
+        "error": "No se pudo cargar el resumen.",
+        "linkCopied": "Enlace copiado",
+        "linkFailed": "No se pudo copiar el enlace",
+        "title": "Tu agenda",
+        "monthTitle": "Este mes",
+        "setup": {
+            "title": "Prepara tu barbería",
+            "subtitle": "Completa estos pasos para empezar a recibir reservas.",
+            "progress": "{done} de {total}",
+            "done": "completado",
+            "copyLink": "Copiar enlace",
+            "steps": {
+                "profile": {
+                    "title": "Completa tus datos",
+                    "text": "Agrega teléfono y dirección para que tus clientes te encuentren.",
+                    "action": "Ir a Mi negocio"
+                },
+                "services": {
+                    "title": "Agrega tus servicios",
+                    "text": "Sin servicios tus clientes no pueden reservar.",
+                    "action": "Ir al catálogo"
+                },
+                "hours": {
+                    "title": "Configura tu horario",
+                    "text": "En Mis citas usa el botón Disponibilidad para elegir días y horas.",
+                    "action": "Ir a Mis citas"
+                },
+                "firstBooking": {
+                    "title": "Recibe tu primera reserva",
+                    "text": "Comparte tu enlace por WhatsApp, Instagram o en el mostrador."
+                }
+            }
+        },
+        "stats": {
+            "today": "Citas de hoy",
+            "pending": "{count, plural, =0 {Ninguna por confirmar} one {# por confirmar} other {# por confirmar}}",
+            "nextSeven": "Próximos 7 días",
+            "nextSevenNote": "Sin contar hoy",
+            "attended": "Citas atendidas",
+            "income": "Ingresos estimados",
+            "lastMonth": "Mes pasado a esta fecha: {value}",
+            "customers": "Clientes atendidos",
+            "customersNote": "Sin repetir",
+            "noShows": "Inasistencias",
+            "noShowsNote": "{count, plural, =0 {Ninguna en 30 días} one {# en 30 días} other {# en 30 días}}"
+        },
+        "incomeNote": "Los ingresos se estiman con el precio actual de cada servicio. La plataforma no procesa los cobros a tus clientes.",
+        "topServices": "Servicios más pedidos este mes",
+        "byBarber": "Citas por barbero este mes",
+        "noData": "Todavía no hay citas atendidas este mes.",
+        "barberFallback": "Barbero"
     }
 }

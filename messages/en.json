@@ -521,7 +521,8 @@
             "settings": "Global Settings",
             "billing": "Memberships",
             "businesses": "Businesses",
-            "audit": "Activity"
+            "audit": "Activity",
+            "summary": "Summary"
         }
     },
     "BannedCustomerScreen": {
@@ -1067,5 +1068,59 @@
                 "admin_created": "Administrator created"
             }
         }
+    },
+    "OwnerOverview": {
+        "loading": "Loading...",
+        "error": "Could not load the summary.",
+        "linkCopied": "Link copied",
+        "linkFailed": "Could not copy the link",
+        "title": "Your schedule",
+        "monthTitle": "This month",
+        "setup": {
+            "title": "Set up your barbershop",
+            "subtitle": "Complete these steps to start taking bookings.",
+            "progress": "{done} of {total}",
+            "done": "completed",
+            "copyLink": "Copy link",
+            "steps": {
+                "profile": {
+                    "title": "Complete your details",
+                    "text": "Add a phone number and address so customers can find you.",
+                    "action": "Go to My business"
+                },
+                "services": {
+                    "title": "Add your services",
+                    "text": "Customers cannot book without services.",
+                    "action": "Go to catalog"
+                },
+                "hours": {
+                    "title": "Set your hours",
+                    "text": "In My appointments, use the Availability button to choose days and hours.",
+                    "action": "Go to My appointments"
+                },
+                "firstBooking": {
+                    "title": "Get your first booking",
+                    "text": "Share your link on WhatsApp, Instagram or at the counter."
+                }
+            }
+        },
+        "stats": {
+            "today": "Today's appointments",
+            "pending": "{count, plural, =0 {None to confirm} one {# to confirm} other {# to confirm}}",
+            "nextSeven": "Next 7 days",
+            "nextSevenNote": "Not counting today",
+            "attended": "Appointments attended",
+            "income": "Estimated income",
+            "lastMonth": "Last month at this point: {value}",
+            "customers": "Customers served",
+            "customersNote": "Unique",
+            "noShows": "No-shows",
+            "noShowsNote": "{count, plural, =0 {None in 30 days} one {# in 30 days} other {# in 30 days}}"
+        },
+        "incomeNote": "Income is estimated from each service's current price. The platform does not process payments from your customers.",
+        "topServices": "Top services this month",
+        "byBarber": "Appointments by barber this month",
+        "noData": "No appointments attended this month yet.",
+        "barberFallback": "Barber"
     }
 }
