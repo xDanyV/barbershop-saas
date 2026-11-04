@@ -7,6 +7,8 @@ import { requireAuth } from "@/lib/api/auth";
 import { parseJsonBody } from "@/lib/api/validation";
 import { createBusinessSchema } from "@/lib/validations/schemas";
 import { generateUniqueBusinessSlug } from "@/lib/slug";
+import { trialEndsAt } from "@/lib/billing/periods";
+import { resolveTimezone } from "@/lib/time/zoned";
 
 export async function GET(req: NextRequest) {
     try {
@@ -55,10 +57,12 @@ export async function POST(req: NextRequest) {
                     ...data,
                     slug,
                     ownerId: user.id,
-                    // Toda suscripción nace con los valores por defecto (plan BASIC, estado ACTIVE)
+                    // Todo negocio empieza con el periodo de prueba del plan BASIC
                     subscription: {
                         create: {
+                            billingStatus: "TRIALING",
                             currentPeriodStart: new Date(),
+                            currentPeriodEnd: trialEndsAt(new Date(), resolveTimezone()),
                         },
                     },
                     settings: {

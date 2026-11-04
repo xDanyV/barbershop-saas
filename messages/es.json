@@ -504,6 +504,11 @@
         "button": {
             "saving": "Guardando...",
             "save": "Guardar Configuración"
+        },
+        "payment": {
+            "label": "Instrucciones de pago",
+            "help": "Las ven los dueños de barberías en \"Mi negocio\". No se muestran en páginas públicas.",
+            "placeholder": "Ej: Transferencia a la cuenta... y envía tu comprobante a..."
         }
     },
     "AdminDashboard": {
@@ -776,7 +781,7 @@
                 },
                 "pay": {
                     "q": "¿Cómo se paga?",
-                    "a": "La membresía es mensual. Por ahora el pago se coordina directamente con nosotros al dar de alta tu barbería."
+                    "a": "Los primeros 30 días son gratis. Después la membresía es mensual y, por ahora, el pago se coordina directamente con nosotros."
                 }
             }
         },
@@ -905,6 +910,104 @@
             "phone": "Escribe un teléfono de México de 10 dígitos.",
             "conflict": "Ese horario no está disponible: ya hay una cita o lo marcaste como día libre.",
             "failed": "No se pudo guardar la cita. Revisa los datos."
+        }
+    },
+    "Billing": {
+        "status": {
+            "TRIALING": "En prueba",
+            "PENDING_PAYMENT": "Pago pendiente",
+            "ACTIVE": "Activa",
+            "PAST_DUE": "Pago atrasado",
+            "SUSPENDED": "Suspendida",
+            "CANCELED": "Cancelada"
+        },
+        "descriptions": {
+            "TRIALING": "Estás en tu periodo de prueba gratis. Tu barbería funciona con todas las funciones.",
+            "PENDING_PAYMENT": "Tu barbería todavía no recibe reservas: falta registrar tu primer pago.",
+            "ACTIVE": "Tu membresía está al corriente y tu barbería recibe reservas.",
+            "PAST_DUE": "Tu pago venció. Tu barbería sigue recibiendo reservas durante 7 días; después se suspende.",
+            "SUSPENDED": "Tu página pública está oculta y no recibes reservas hasta regularizar tu pago.",
+            "CANCELED": "Tu membresía está cancelada. Tu página pública está oculta y no recibes reservas."
+        },
+        "plans": {
+            "FOUNDER": "Plan Fundador",
+            "BASIC": "Plan Básico"
+        },
+        "methods": {
+            "CASH": "Efectivo",
+            "TRANSFER": "Transferencia",
+            "CARD": "Tarjeta",
+            "OTHER": "Otro"
+        },
+        "alerts": {
+            "trialEnding": "{days, plural, =0 {Tu prueba termina hoy.} one {Tu prueba termina en # día.} other {Tu prueba termina en # días.}}",
+            "dueSoon": "{days, plural, =0 {Tu membresía vence hoy.} one {Tu membresía vence en # día.} other {Tu membresía vence en # días.}}",
+            "pastDue": "{days, plural, =0 {Tu pago está atrasado. Tu barbería se suspende hoy.} one {Tu pago está atrasado. Tu barbería se suspende en # día.} other {Tu pago está atrasado. Tu barbería se suspende en # días.}}",
+            "suspended": "Tu barbería está suspendida: tu página está oculta y no recibes reservas.",
+            "canceled": "Tu membresía está cancelada: tu página está oculta y no recibes reservas.",
+            "pending": "Tu barbería no recibe reservas hasta registrar tu primer pago.",
+            "action": "Ver cómo pagar"
+        },
+        "card": {
+            "title": "Membresía",
+            "plan": "Plan",
+            "price": "Precio",
+            "perMonth": "/mes",
+            "trialEnds": "Tu prueba termina",
+            "validUntil": "Vigente hasta",
+            "howToPay": "Cómo pagar",
+            "history": "Historial de pagos",
+            "loading": "Cargando...",
+            "noPayments": "Todavía no hay pagos registrados.",
+            "paidOn": "Pagado el {date}"
+        },
+        "admin": {
+            "title": "Membresías",
+            "subtitle": "Registra los pagos que recibes. Cada pago extiende la membresía y reactiva el negocio.",
+            "stats": {
+                "attention": "Requieren atención",
+                "dueSoon": "Vencen en 7 días",
+                "trial": "En prueba",
+                "collected": "Cobrado este mes"
+            },
+            "empty": "Todavía no hay negocios registrados.",
+            "until": "hasta {date}",
+            "alerts": {
+                "trialEnding": "{days, plural, =0 {La prueba termina hoy} one {La prueba termina en # día} other {La prueba termina en # días}}",
+                "dueSoon": "{days, plural, =0 {Vence hoy} one {Vence en # día} other {Vence en # días}}",
+                "pastDue": "{days, plural, =0 {Atrasado: se suspende hoy} one {Atrasado: se suspende en # día} other {Atrasado: se suspende en # días}}",
+                "suspended": "Suspendido",
+                "canceled": "Cancelado",
+                "pending": "Sin primer pago"
+            },
+            "recordPayment": "Registrar pago",
+            "history": "Historial",
+            "adjust": "Ajustar",
+            "close": "Cerrar",
+            "months": "Meses",
+            "amount": "Importe (MXN)",
+            "method": "Forma de pago",
+            "paidAt": "Fecha de pago",
+            "note": "Nota (opcional)",
+            "savePayment": "Guardar pago",
+            "saving": "Guardando...",
+            "paymentSaved": "Pago registrado",
+            "monthsCount": "{months, plural, one {# mes} other {# meses}}",
+            "void": "Anular este pago",
+            "voidConfirm": "¿Anular este pago? La membresía regresa a como estaba antes de registrarlo.",
+            "voided": "Pago anulado",
+            "voidedLabel": "Anulado",
+            "adjustHint": "Para corregir casos especiales. Para un pago normal usa \"Registrar pago\".",
+            "statusLabel": "Estado",
+            "saveAdjust": "Guardar cambios",
+            "adjusted": "Membresía actualizada",
+            "errors": {
+                "load": "No se pudieron cargar las membresías.",
+                "payment": "No se pudo registrar el pago. Revisa los datos.",
+                "void": "No se pudo anular el pago.",
+                "voidChanged": "La membresía cambió después de este pago. Corrígela con \"Ajustar\".",
+                "adjust": "No se pudo actualizar la membresía."
+            }
         }
     }
 }

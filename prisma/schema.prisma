@@ -26,6 +26,8 @@ model User {
   ownedBusinesses Business[]            @relation("BusinessOwner")
   businessBans    BusinessCustomerBan[]
   createdAt       DateTime              @default(now())
+
+  paymentsRecorded BusinessPayment[]
 }
 
 enum Role {
@@ -57,6 +59,7 @@ model Business {
   gallery      BusinessGallery[]
   posts        BusinessPost[]
   customerBans BusinessCustomerBan[]
+  payments     BusinessPayment[]
 
   // Única fuente de verdad de plan, estado y vigencia de la suscripción
   subscription BusinessSubscription?
@@ -227,6 +230,8 @@ model SystemSettings {
   id                 String   @id @default("global")
   isServiceActive    Boolean  @default(true)
   maintenanceMessage String   @default("El servicio está temporalmente inactivo. Por favor, vuelve más tarde.")
+  // Cómo pagar la membresía; solo lo ven los dueños con sesión iniciada
+  paymentInstructions String?
   updatedAt          DateTime @updatedAt
 }
 
@@ -266,6 +271,43 @@ enum BusinessBillingStatus {
   PAST_DUE
   SUSPENDED
   CANCELED
+  TRIALING
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  CARD
+  OTHER
+}
+
+// Pago recibido por fuera de la plataforma y registrado por el administrador.
+// Guarda cómo estaba la membresía para poder anular una captura equivocada.
+model BusinessPayment {
+  id         String   @id @default(uuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  amountCents Int
+  currency    String        @default("MXN")
+  method      PaymentMethod
+  months      Int
+  paidAt      DateTime
+  periodStart DateTime
+  periodEnd   DateTime
+  note        String?
+
+  previousPeriodEnd DateTime?
+  previousStatus    BusinessBillingStatus
+
+  recordedById String
+  recordedBy   User   @relation(fields: [recordedById], references: [id])
+
+  voidedAt  DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([businessId, createdAt])
+  @@index([paidAt])
 }
 
 enum BusinessPlanType {

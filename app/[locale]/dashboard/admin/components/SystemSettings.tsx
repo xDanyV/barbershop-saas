@@ -9,6 +9,7 @@ export default function SystemSettings() {
     const t = useTranslations("SystemSettings");
     const [isActive, setIsActive] = useState(true);
     const [message, setMessage] = useState("");
+    const [paymentInstructions, setPaymentInstructions] = useState("");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
@@ -20,6 +21,7 @@ export default function SystemSettings() {
                 const data = await res.json();
                 setIsActive(data.isServiceActive);
                 setMessage(data.maintenanceMessage || "");
+                setPaymentInstructions(data.paymentInstructions || "");
             } else {
                 toast.error(t("errors.fetch"));
             }
@@ -48,7 +50,8 @@ export default function SystemSettings() {
                 method: "PATCH",
                 body: JSON.stringify({
                     isServiceActive: isActive,
-                    maintenanceMessage: message
+                    maintenanceMessage: message,
+                    paymentInstructions
                 }),
             });
 
@@ -112,6 +115,22 @@ export default function SystemSettings() {
                             }`}
                     />
                 </div>
+            </div>
+
+            <div className="bg-white border-2 border-gray-100 p-6 md:p-8 rounded-4xl shadow-sm space-y-3">
+                <label htmlFor="payment-instructions" className="block text-xl font-black text-gray-900">
+                    {t("payment.label")}
+                </label>
+                <p className="text-sm text-gray-500">{t("payment.help")}</p>
+                <textarea
+                    id="payment-instructions"
+                    value={paymentInstructions}
+                    onChange={(e) => setPaymentInstructions(e.target.value)}
+                    placeholder={t("payment.placeholder")}
+                    maxLength={1000}
+                    rows={4}
+                    className="w-full p-4 border rounded-2xl text-sm font-medium bg-gray-50 border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
+                />
             </div>
 
             <div className="flex justify-end">

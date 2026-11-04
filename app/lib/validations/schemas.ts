@@ -189,11 +189,20 @@ export const updateCustomerBanSchema = z.object({
 export const systemSettingsSchema = z.object({
     isServiceActive: z.boolean().optional(),
     maintenanceMessage: z.string().trim().max(300).optional(),
+    paymentInstructions: z.string().trim().max(1000).nullish(),
+});
+
+export const recordPaymentSchema = z.object({
+    amountCents: z.number().int().min(0).max(100_000_00),
+    method: z.enum(["CASH", "TRANSFER", "CARD", "OTHER"]),
+    months: z.number().int().min(1).max(24),
+    paidAt: dateKey,
+    note: z.string().trim().max(200).nullish(),
 });
 
 export const updateBillingSchema = z.object({
     businessId: z.string().min(1),
-    billingStatus: z.enum(["PENDING_PAYMENT", "ACTIVE", "PAST_DUE", "SUSPENDED", "CANCELED"]),
+    billingStatus: z.enum(["TRIALING", "PENDING_PAYMENT", "ACTIVE", "PAST_DUE", "SUSPENDED", "CANCELED"]),
     billingPlan: z.enum(["FOUNDER", "BASIC"]),
     subscriptionEndsAt: z.union([dateKey, z.literal(""), z.null()]).optional(),
 });

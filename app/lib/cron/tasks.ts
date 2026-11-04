@@ -39,7 +39,7 @@ export async function expireUnconfirmedAppointments(now = new Date()) {
 }
 
 // Vencimiento de suscripciones manuales (las de Stripe / Mercado Pago las actualizará su webhook):
-// ACTIVE con periodo vencido -> PAST_DUE; PAST_DUE vencido hace más de la gracia -> SUSPENDED
+// ACTIVE o en prueba con periodo vencido -> PAST_DUE; PAST_DUE vencido hace más de la gracia -> SUSPENDED
 export async function updateExpiredSubscriptions(now = new Date()) {
     const graceLimit = new Date(now.getTime() - PAST_DUE_GRACE_DAYS * DAY_MS);
 
@@ -58,7 +58,7 @@ export async function updateExpiredSubscriptions(now = new Date()) {
     const pastDue = await prisma.businessSubscription.updateMany({
         where: {
             provider: "MANUAL",
-            billingStatus: "ACTIVE",
+            billingStatus: { in: ["ACTIVE", "TRIALING"] },
             currentPeriodEnd: { lt: now },
         },
         data: {

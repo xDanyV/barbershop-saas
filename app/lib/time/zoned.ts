@@ -111,6 +111,22 @@ export function addDaysToKey(dateKey: string, days: number) {
     return date.toISOString().slice(0, 10);
 }
 
+// Suma meses sin desbordar: 31 de enero + 1 mes = último día de febrero
+export function addMonthsToKey(dateKey: string, months: number) {
+    const [y, m, d] = dateKey.split("-").map(Number);
+    const firstOfTarget = new Date(Date.UTC(y, m - 1 + months, 1));
+    const lastDay = new Date(Date.UTC(firstOfTarget.getUTCFullYear(), firstOfTarget.getUTCMonth() + 1, 0)).getUTCDate();
+
+    firstOfTarget.setUTCDate(Math.min(d, lastDay));
+
+    return firstOfTarget.toISOString().slice(0, 10);
+}
+
+// Último instante de ese día en la zona horaria dada
+export function endOfDayUtc(dateKey: string, timezone: string) {
+    return new Date(zonedToUtc(addDaysToKey(dateKey, 1), "00:00", timezone).getTime() - 1);
+}
+
 export function formatMinutes12h(totalMinutes: number) {
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;

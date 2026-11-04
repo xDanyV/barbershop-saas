@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { getBillingPlan } from "@/lib/billing/pricing";
+import { getBillingAlert } from "@/lib/billing/periods";
 import { toBillingSummary } from "@/lib/billing/status";
 import { AppError, errorResponse } from "@/lib/errors";
 import { revalidateBusinessPages } from "@/lib/cache/business-pages";
-import { addDaysToKey, resolveTimezone, zonedToUtc } from "@/lib/time/zoned";
+import { endOfDayUtc, resolveTimezone, toDateKey, zonedToUtc } from "@/lib/time/zoned";
 import { requireAuth } from "@/lib/api/auth";
 import { parseJsonBody } from "@/lib/api/validation";
 import { updateBillingSchema } from "@/lib/validations/schemas";
@@ -13,20 +14,12 @@ import {
 } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
-// "YYYY-MM-DD" -> final de ese día en la zona horaria del negocio
-function parseNullableEndDate(value: string | null | undefined, timezone: string) {
-    if (!value) {
-        return null;
-    }
-
-    return new Date(zonedToUtc(addDaysToKey(value, 1), "00:00", timezone).getTime() - 1);
-}
-
 const businessSelect = {
     id: true,
     name: true,
     slug: true,
     active: true,
+    timezone: true,
     owner: {
         select: {
             id: true,
@@ -51,9 +44,21 @@ type BillingBusiness = Prisma.BusinessGetPayload<{ select: typeof businessSelect
 
 // Mantiene la forma que consume el panel (billingStatus, billingPlan, subscriptionEndsAt)
 function withBillingSummary(business: BillingBusiness) {
+    const timezone = resolveTimezone(business.timezone);
+    const end = business.subscription?.currentPeriodEnd ?? null;
+
     return {
         ...business,
         ...toBillingSummary(business.subscription),
+        // La fecha en la zona del negocio: en UTC el fin de día ya cae en el día siguiente
+        subscriptionEndKey: end ? toDateKey(end, timezone) : null,
+        alert: business.subscription
+            ? getBillingAlert({
+                status: business.subscription.billingStatus,
+                currentPeriodEnd: end,
+                now: new Date(),
+            })
+            : null,
     };
 }
 
@@ -61,14 +66,26 @@ export async function GET(req: NextRequest) {
     try {
         requireAuth(req, ["ADMIN"]);
 
-        const businesses = await prisma.business.findMany({
-            select: businessSelect,
-            orderBy: {
-                createdAt: "desc",
-            },
-        });
+        const timezone = resolveTimezone();
+        const monthStart = zonedToUtc(`${toDateKey(new Date(), timezone).slice(0, 7)}-01`, "00:00", timezone);
 
-        return NextResponse.json(businesses.map(withBillingSummary));
+        const [businesses, collected] = await Promise.all([
+            prisma.business.findMany({
+                select: businessSelect,
+                orderBy: {
+                    createdAt: "desc",
+                },
+            }),
+            prisma.businessPayment.aggregate({
+                where: { voidedAt: null, paidAt: { gte: monthStart } },
+                _sum: { amountCents: true },
+            }),
+        ]);
+
+        return NextResponse.json({
+            businesses: businesses.map(withBillingSummary),
+            collectedThisMonthCents: collected._sum.amountCents ?? 0,
+        });
     } catch (error) {
         return errorResponse(error, "Get businesses billing error");
     }
@@ -97,10 +114,9 @@ export async function PATCH(req: NextRequest) {
         }
 
         const plan = getBillingPlan(billingPlan);
-        const currentPeriodEnd = parseNullableEndDate(
-            subscriptionEndsAt,
-            resolveTimezone(existingBusiness.timezone)
-        );
+        const currentPeriodEnd = subscriptionEndsAt
+            ? endOfDayUtc(subscriptionEndsAt, resolveTimezone(existingBusiness.timezone))
+            : null;
         const canceledAt = billingStatus === "CANCELED" ? new Date() : null;
 
         await prisma.businessSubscription.upsert({
