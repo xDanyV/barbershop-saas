@@ -305,7 +305,7 @@ export default function BusinessPostsManager() {
                                             )}
 
                                             <div className="p-5 flex flex-col">
-                                                <div className="flex items-center gap-2 text-[11px] text-gray-400 font-bold mb-3">
+                                                <div className="flex items-center gap-2 text-xs text-gray-400 font-bold mb-3">
                                                     <CalendarDays size={13} />
                                                     {new Date(post.createdAt).toLocaleDateString("es-MX")}
                                                 </div>
@@ -387,7 +387,7 @@ export default function BusinessPostsManager() {
 
                             <form onSubmit={handleCreatePost} className="p-5 space-y-4">
                                 <div>
-                                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                                    <label className="text-xs font-black text-gray-500  ">
                                         Texto
                                     </label>
 
@@ -441,7 +441,7 @@ export default function BusinessPostsManager() {
                                 {imageUrl.trim() && (
                                     <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3">
                                         <div className="flex items-center justify-between gap-3 mb-2">
-                                            <p className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                                            <p className="text-xs font-black text-gray-500  ">
                                                 Vista previa
                                             </p>
 

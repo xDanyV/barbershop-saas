@@ -190,7 +190,7 @@ export default function CreateBusinessPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="mb-6"
                 >
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-black uppercase tracking-widest mb-3">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-black   mb-3">
                         <Store size={14} />
                         Nuevo negocio
                     </div>
@@ -230,7 +230,7 @@ export default function CreateBusinessPage() {
                         </div>
 
                         <div>
-                            <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                            <label className="text-xs font-black text-gray-500  ">
                                 Nombre del negocio
                             </label>
 
@@ -244,7 +244,7 @@ export default function CreateBusinessPage() {
                         </div>
 
                         <div>
-                            <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                            <label className="text-xs font-black text-gray-500  ">
                                 Descripción
                             </label>
 
@@ -258,7 +258,7 @@ export default function CreateBusinessPage() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                                <label className="text-xs font-black text-gray-500  ">
                                     Teléfono
                                 </label>
 
@@ -278,7 +278,7 @@ export default function CreateBusinessPage() {
                             </div>
 
                             <div>
-                                <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                                <label className="text-xs font-black text-gray-500  ">
                                     Dirección
                                 </label>
 
@@ -322,7 +322,7 @@ export default function CreateBusinessPage() {
                             </div>
 
                             <div>
-                                <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                                <label className="text-xs font-black text-gray-500  ">
                                     Logo URL
                                 </label>
 
@@ -335,7 +335,7 @@ export default function CreateBusinessPage() {
                             </div>
 
                             <div>
-                                <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                                <label className="text-xs font-black text-gray-500  ">
                                     Portada URL
                                 </label>
 

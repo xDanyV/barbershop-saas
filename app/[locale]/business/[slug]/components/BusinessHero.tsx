@@ -43,7 +43,7 @@ export default function BusinessHero({
 
     return (
         <section className="relative">
-            <div className="absolute inset-0 bg-linear-to-b from-indigo-950/40 via-[#08080d] to-[#08080d]" />
+            <div className="absolute inset-0 bg-linear-to-b from-indigo-950/40 via-[#0f2733] to-[#0f2733]" />
 
             <div className="relative h-90 md:h-110 bg-linear-to-br from-indigo-700 via-indigo-950 to-black overflow-hidden">
                 {business.coverUrl ? (
@@ -61,7 +61,7 @@ export default function BusinessHero({
                     </div>
                 )}
 
-                <div className="absolute inset-0 bg-linear-to-t from-[#08080d] via-[#08080d]/45 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-[#0f2733] via-[#0f2733]/45 to-transparent" />
             </div>
 
             <div className="relative max-w-6xl mx-auto px-4 -mt-36 md:-mt-44 z-10">
@@ -81,7 +81,7 @@ export default function BusinessHero({
                             </div>
 
                             <div className="flex-1">
-                                <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-400/20 text-indigo-200 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] mb-4">
+                                <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-400/20 text-indigo-200 rounded-full px-3 py-1 text-xs font-black   mb-4">
                                     <Sparkles size={13} />
                                     {t("profile")}
                                 </div>
@@ -151,21 +151,21 @@ export default function BusinessHero({
                     <div className="grid grid-cols-3 gap-3 mt-8">
                         <div className="bg-black/20 border border-white/10 rounded-2xl p-4">
                             <p className="text-2xl font-black">{serviceCount}</p>
-                            <p className="text-[10px] md:text-xs text-gray-400 font-black uppercase tracking-widest mt-1">
+                            <p className="text-xs text-gray-400 font-black   mt-1">
                                 {t("services")}
                             </p>
                         </div>
 
                         <div className="bg-black/20 border border-white/10 rounded-2xl p-4">
                             <p className="text-2xl font-black">{barberCount}</p>
-                            <p className="text-[10px] md:text-xs text-gray-400 font-black uppercase tracking-widest mt-1">
+                            <p className="text-xs text-gray-400 font-black   mt-1">
                                 {t("barbers")}
                             </p>
                         </div>
 
                         <div className="bg-black/20 border border-white/10 rounded-2xl p-4">
                             <p className="text-2xl font-black">{galleryCount}</p>
-                            <p className="text-[10px] md:text-xs text-gray-400 font-black uppercase tracking-widest mt-1">
+                            <p className="text-xs text-gray-400 font-black   mt-1">
                                 {t("photos")}
                             </p>
                         </div>

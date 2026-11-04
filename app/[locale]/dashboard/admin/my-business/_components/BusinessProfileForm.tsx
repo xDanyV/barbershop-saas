@@ -157,7 +157,7 @@ export default function BusinessProfileForm({
                 </div>
 
                 <div>
-                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                    <label className="text-xs font-black text-gray-500  ">
                         Nombre del negocio
                     </label>
 
@@ -171,7 +171,7 @@ export default function BusinessProfileForm({
                 </div>
 
                 <div>
-                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                    <label className="text-xs font-black text-gray-500  ">
                         Descripción
                     </label>
 
@@ -185,7 +185,7 @@ export default function BusinessProfileForm({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                        <label className="text-xs font-black text-gray-500  ">
                             Teléfono
                         </label>
 
@@ -205,7 +205,7 @@ export default function BusinessProfileForm({
                     </div>
 
                     <div>
-                        <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                        <label className="text-xs font-black text-gray-500  ">
                             Dirección
                         </label>
 
@@ -252,7 +252,7 @@ export default function BusinessProfileForm({
                                 <p className="text-xs font-black text-gray-900">
                                     Logo
                                 </p>
-                                <p className="text-[11px] font-bold text-gray-400">
+                                <p className="text-xs font-bold text-gray-400">
                                     Imagen cuadrada recomendada. Máximo 2MB.
                                 </p>
                             </div>
@@ -323,7 +323,7 @@ export default function BusinessProfileForm({
                                 <p className="text-xs font-black text-gray-900">
                                     Portada
                                 </p>
-                                <p className="text-[11px] font-bold text-gray-400">
+                                <p className="text-xs font-bold text-gray-400">
                                     Imagen horizontal recomendada. Máximo 8MB.
                                 </p>
                             </div>
@@ -423,7 +423,7 @@ export default function BusinessProfileForm({
                     </button>
 
                     <div>
-                        <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                        <label className="text-xs font-black text-gray-500  ">
                             Mensaje de mantenimiento
                         </label>
 

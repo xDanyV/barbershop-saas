@@ -41,7 +41,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
     }));
 
     return (
-        <main className="min-h-screen bg-[#08080d] text-white overflow-hidden">
+        <main className="theme-field min-h-screen bg-[#0f2733] text-white overflow-hidden">
 
             <BusinessPublicNavbar locale={locale} slug={business.slug} />
 

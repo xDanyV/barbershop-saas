@@ -87,7 +87,7 @@ export default function BusinessBookingClient({ locale, business }: Props) {
 
     if (business.barbers.length === 0) {
         return (
-            <main className="min-h-screen bg-[#F8FAFC] text-gray-900">
+            <main className="min-h-screen bg-gray-50 text-gray-900">
                 <BookingNavbar locale={locale} slug={business.slug} />
 
                 <div className="max-w-5xl mx-auto px-4 py-10">
@@ -107,7 +107,7 @@ export default function BusinessBookingClient({ locale, business }: Props) {
     if (!selectedBarberId || !selectedBarber) return null;
 
     return (
-        <main className="min-h-screen bg-[#F8FAFC] text-gray-900">
+        <main className="min-h-screen bg-gray-50 text-gray-900">
             <BookingNavbar locale={locale} slug={business.slug} />
 
             <div className="max-w-6xl mx-auto px-4 pt-6 pb-32 md:px-8 md:py-10">
@@ -127,7 +127,7 @@ export default function BusinessBookingClient({ locale, business }: Props) {
                         >
                             <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 lg:gap-8 items-start">
                                 <section className="bg-white border border-gray-100 rounded-4xl p-5 md:p-6 shadow-xl shadow-gray-100/50">
-                                    <div className="flex items-center gap-2 text-indigo-600 font-black text-[10px] md:text-xs uppercase tracking-[0.2em] mb-4">
+                                    <div className="flex items-center gap-2 text-indigo-600 font-black text-xs   mb-4">
                                         <UserRound size={14} />
                                     </div>
 
@@ -193,7 +193,7 @@ export default function BusinessBookingClient({ locale, business }: Props) {
                                     <div className="bg-white border border-gray-100 rounded-4xl p-5 md:p-6 shadow-xl shadow-gray-100/50">
                                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-5">
                                             <div>
-                                                <div className="flex items-center gap-2 text-indigo-600 font-black text-[10px] md:text-xs uppercase tracking-[0.2em] mb-2">
+                                                <div className="flex items-center gap-2 text-indigo-600 font-black text-xs   mb-2">
                                                     <CalendarIcon size={14} />
                                                 </div>
 
@@ -256,7 +256,7 @@ export default function BusinessBookingClient({ locale, business }: Props) {
                                 <button
                                     type="button"
                                     onClick={handleBackToDetails}
-                                    className="inline-flex items-center gap-2 text-gray-400 hover:text-indigo-600 font-black text-xs uppercase tracking-widest transition-colors"
+                                    className="inline-flex items-center gap-2 text-gray-400 hover:text-indigo-600 font-black text-xs   transition-colors"
                                 >
                                     <ChevronLeft size={16} />
                                     {t("changeBarberOrDate")}
@@ -306,7 +306,7 @@ function BookingNavbar({
                     className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition-colors"
                 >
                     <ChevronLeft size={17} />
-                    <span className="hidden sm:inline text-xs font-black uppercase tracking-widest">
+                    <span className="hidden sm:inline text-xs font-black  ">
                         {t("backToProfile")}
                     </span>
                 </Link>
@@ -343,7 +343,7 @@ function BookingHero({
 
     return (
         <section className="mb-6 md:mb-8 bg-white border border-gray-100 rounded-4xl p-5 md:p-7 shadow-xl shadow-gray-100/50">
-            <p className="text-indigo-600 font-black text-[10px] md:text-xs uppercase tracking-[0.2em] mb-2">
+            <p className="text-indigo-600 font-black text-xs   mb-2">
                 {t("title")}
             </p>
 
@@ -423,7 +423,7 @@ function BookingSteps({ currentStep }: { currentStep: BookingStep }) {
                                 )}
                             </div>
 
-                            <p className="text-[11px] md:text-sm font-black text-center sm:text-left leading-tight">
+                            <p className="text-xs font-black text-center sm:text-left leading-tight">
                                 {step.label}
                             </p>
                         </div>

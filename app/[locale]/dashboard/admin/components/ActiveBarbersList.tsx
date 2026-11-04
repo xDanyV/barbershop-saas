@@ -288,7 +288,7 @@ export default function ActiveBarbersList() {
     return (
         <div className="space-y-6">
             <div className="max-h-150 md:max-h-175 overflow-y-auto pr-1 custom-scrollbar">
-                <div className="grid gap-4 pb-24 md:pb-0">
+                <div className="grid gap-4 ">
                     <AnimatePresence mode="popLayout">
                         {barbers.length === 0 ? (
                             <p className="text-center py-10 text-gray-400 font-bold italic">
@@ -421,7 +421,7 @@ export default function ActiveBarbersList() {
                                                         <p className="text-xs font-black text-gray-900">
                                                             Foto pública del barbero
                                                         </p>
-                                                        <p className="text-[11px] text-gray-400 font-bold">
+                                                        <p className="text-xs text-gray-400 font-bold">
                                                             Sube una imagen desde tu computadora. Máximo 4MB.
                                                         </p>
                                                     </div>

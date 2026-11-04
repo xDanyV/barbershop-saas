@@ -55,7 +55,7 @@ export default function BarberCard({ barber }: Props) {
                                 className="w-full h-full object-cover"
                             />
                         ) : (
-                            <span className="text-white font-black text-2xl tracking-tighter">
+                            <span className="text-white font-black text-2xl ">
                                 {initials}
                             </span>
                         )}

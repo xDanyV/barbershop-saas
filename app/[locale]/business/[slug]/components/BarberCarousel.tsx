@@ -186,7 +186,7 @@ export default function BarberCarousel({ barbers, bookUrl }: Props) {
                                 transition={{ duration: 0.3, ease: "easeOut" }}
                                 className="w-full h-full flex items-center justify-center"
                             >
-                                <span className="text-white text-7xl md:text-8xl font-black tracking-tighter">
+                                <span className="text-white text-7xl md:text-8xl font-black ">
                                     {getInitials(activeBarber.name)}
                                 </span>
                             </motion.div>
@@ -199,14 +199,14 @@ export default function BarberCarousel({ barbers, bookUrl }: Props) {
                         <p className="text-white text-2xl font-black leading-tight">
                             {activeBarber.name}
                         </p>
-                        <p className="text-indigo-100 text-xs font-black uppercase tracking-widest mt-1">
+                        <p className="text-indigo-100 text-xs font-black   mt-1">
                             {t("role")}
                         </p>
                     </div>
                 </motion.div>
 
                 <div>
-                    <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-400/20 text-indigo-200 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] mb-4">
+                    <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-400/20 text-indigo-200 rounded-full px-3 py-1 text-xs font-black   mb-4">
                         <Scissors size={13} />
                         {t("featured")}
                     </div>

@@ -76,17 +76,22 @@
     "DashboardNavbar": {
         "menu": {
             "adminControl": "Panel de control",
-            "myAppointments": "Mis Citas",
+            "myAppointments": "Mis citas",
             "catalog": "Catálogo",
             "book": "Reservar",
             "myBusiness": "Mi negocio",
             "createBusiness": "Crear negocio",
             "account": "Mi cuenta"
         },
-        "logout": "Cerrar Sesión",
+        "logout": "Cerrar sesión",
         "errors": {
             "appointmentLimit": "Máximo 2 citas activas permitidas."
-        }
+        },
+        "home": "Inicio",
+        "mainNav": "Navegación principal",
+        "accountMenu": "Cuenta",
+        "more": "Más",
+        "close": "Cerrar"
     },
     "PendingApproval": {
         "title": "Cuenta en revisión",
@@ -133,30 +138,36 @@
         },
         "legend": {
             "selected": "Seleccionado",
-            "blocked": "Bloqueado",
-            "busy": "Ocupado",
-            "nonWorking": "Día libre"
-        }
+            "blocked": "Día libre",
+            "busy": "Con citas",
+            "nonWorking": "Día libre",
+            "today": "Hoy"
+        },
+        "previousMonth": "Mes anterior",
+        "nextMonth": "Mes siguiente"
     },
     "DashboardHeader": {
         "badge": "Gestión de Barbería",
         "buttons": {
-            "exceptions": "Excepciones",
+            "exceptions": "Días libres",
             "services": "Servicios",
-            "availability": "Disponibilidad"
-        }
+            "availability": "Horario"
+        },
+        "title": "Mi agenda"
     },
     "AppointmentList": {
         "title": "Citas",
         "scheduleFor": "Agenda para",
         "exceptionDay": {
-            "title": "Día bloqueado",
-            "subtitle": "Este día tiene una excepción activa"
+            "title": "Día libre",
+            "subtitle": "Este día no se reciben reservas."
         },
         "empty": {
-            "title": "Sin citas programadas",
+            "title": "No hay citas este día.",
             "subtitle": "¡Disfruta tu tiempo libre!"
-        }
+        },
+        "count": "{count, plural, =0 {Sin citas} one {# cita} other {# citas}}",
+        "loading": "Cargando citas"
     },
     "AppointmentCard": {
         "customerDetails": "Detalles del Cliente",
@@ -170,24 +181,33 @@
             "PENDING": "Pendiente",
             "CONFIRMED": "Confirmada",
             "COMPLETED": "Completada",
-            "NO_SHOW": "No asistió"
+            "NO_SHOW": "No asistió",
+            "CANCELLED": "Cancelada"
         },
         "confirm": "Confirmar",
         "errors": {
             "confirmFailed": "No se pudo confirmar la cita",
             "network": "Error de red",
-            "noShowFailed": "No se pudo registrar la inasistencia"
+            "noShowFailed": "No se pudo registrar la inasistencia",
+            "cancelFailed": "No se pudo cancelar la cita"
         },
         "success": {
             "confirmed": "Cita de {name} confirmada",
-            "noShow": "Inasistencia de {name} registrada"
+            "noShow": "Inasistencia de {name} registrada",
+            "cancelled": "Cita de {name} cancelada"
         },
         "markNoShow": "No asistió",
         "reschedule": "Cambiar horario",
-        "walkIn": "Sin cuenta"
+        "walkIn": "Sin cuenta",
+        "actions": "Acciones de la cita de {name}",
+        "whatsapp": "Escribir por WhatsApp",
+        "cancelAppointment": "Cancelar cita",
+        "keep": "Conservar la cita",
+        "cancelText": "Se cancelará la cita de {name} para {service} a las {time}.",
+        "noActions": "No hay acciones disponibles"
     },
     "AvailabilityModal": {
-        "triggerButton": "Disponibilidad",
+        "triggerButton": "Horario",
         "title": "Horario Laboral",
         "days": {
             "mon": "Lun",
@@ -494,8 +514,8 @@
         },
         "systemState": {
             "title": "Estado del Sistema",
-            "active": "🟢 Servicio Abierto y Operativo",
-            "inactive": "🔴 Servicio Cerrado (Mantenimiento)"
+            "active": "Servicio abierto y operativo",
+            "inactive": "Servicio cerrado por mantenimiento"
         },
         "message": {
             "label": "Mensaje para los clientes (Visible si está apagado)",
@@ -1122,5 +1142,26 @@
         "byBarber": "Citas por barbero este mes",
         "noData": "Todavía no hay citas atendidas este mes.",
         "barberFallback": "Barbero"
+    },
+    "States": {
+        "error": {
+            "title": "Algo salió mal",
+            "text": "No pudimos cargar esta pantalla. Inténtalo de nuevo.",
+            "retry": "Volver a intentar"
+        },
+        "notFound": {
+            "title": "Esta página no existe",
+            "text": "Revisa el enlace o vuelve al inicio.",
+            "home": "Ir al inicio"
+        },
+        "footer": {
+            "privacy": "Aviso de Privacidad",
+            "terms": "Términos y Condiciones"
+        },
+        "unavailable": {
+            "title": "No pudimos conectarnos",
+            "text": "Hay un problema momentáneo de nuestro lado. Tu información está segura.",
+            "hint": "Recarga la página en unos minutos."
+        }
     }
 }

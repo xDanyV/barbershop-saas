@@ -198,27 +198,27 @@ export default function CalendarPicker({ selectedDate, setSelectedDate, barberId
 
       {/* Legend */}
       <div className="mt-4 md:mt-6 grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-y-3 gap-x-4 px-2 md:px-4 py-3 border-t border-gray-50">
-        <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">
+        <div className="flex items-center gap-2 text-xs font-black   text-gray-400">
           <div className="w-2 h-2 rounded-full bg-indigo-600" />
           <span>{t("legend.selected")}</span>
         </div>
-        <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">
+        <div className="flex items-center gap-2 text-xs font-black   text-gray-400">
           <div className="w-2 h-2 rounded-full bg-red-400" />
           <span>{t("legend.today")}</span>
         </div>
-        <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">
+        <div className="flex items-center gap-2 text-xs font-black   text-gray-400">
           <div className="w-2 h-2 rounded-full bg-gray-200" />
           <span>{t("legend.unavailable")}</span>
         </div>
         {/* New: exception legend item */}
-        <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">
+        <div className="flex items-center gap-2 text-xs font-black   text-gray-400">
           <div className="w-2 h-2 rounded-full bg-purple-400" />
           <span>{t("legend.exception")}</span>
         </div>
 
         <div className="flex items-center gap-1.5 col-span-2 sm:ml-auto text-indigo-400 pt-1 sm:pt-0">
           <Info size={14} className="shrink-0" />
-          <span className="text-[9px] md:text-[10px] lowercase font-bold tracking-normal italic">
+          <span className="text-xs lowercase font-bold tracking-normal italic">
             {t("hint")}
           </span>
         </div>

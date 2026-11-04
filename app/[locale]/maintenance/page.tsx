@@ -39,7 +39,7 @@ export default async function MaintenancePage() {
 
                 <Link
                     href="/"
-                    className="flex items-center justify-center gap-2 w-full py-4 rounded-xl bg-gray-900 text-white text-sm font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl shadow-gray-200 hover:shadow-indigo-200 active:scale-95"
+                    className="flex items-center justify-center gap-2 w-full py-4 rounded-xl bg-gray-900 text-white text-sm font-black   hover:bg-indigo-600 transition-all shadow-xl shadow-gray-200 hover:shadow-indigo-200 active:scale-95"
                 >
                     <ArrowLeft size={18} />
                     {t("backButton")}

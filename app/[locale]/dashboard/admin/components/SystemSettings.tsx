@@ -72,7 +72,7 @@ export default function SystemSettings() {
 
     return (
         // Agregamos pb-24 para móviles y lo removemos en escritorio
-        <div className="space-y-6 max-w-3xl pb-24 md:pb-0">
+        <div className="space-y-6 max-w-3xl ">
             <div className={`border-2 p-6 md:p-8 rounded-4xl transition-all duration-300 ${isActive ? "bg-white border-green-100 shadow-sm" : "bg-red-50/50 border-red-200 shadow-lg shadow-red-100/50"
                 }`}>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">

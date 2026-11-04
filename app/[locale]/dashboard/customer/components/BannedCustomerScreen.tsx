@@ -29,7 +29,7 @@ export default function BannedCustomerScreen() {
                     {t("title")}
                 </h1>
 
-                <div className="inline-block px-3 py-1 bg-red-100 text-red-700 text-[10px] font-black uppercase tracking-widest rounded-full mb-6">
+                <div className="inline-block px-3 py-1 bg-red-100 text-red-700 text-xs font-black   rounded-full mb-6">
                     {t("subtitle")}
                 </div>
 

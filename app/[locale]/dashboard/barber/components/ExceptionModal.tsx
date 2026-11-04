@@ -118,7 +118,7 @@ export default function ExceptionModal({ open, onClose, onSuccess }: Props) {
                             <div className="space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5 block">
+                                        <label className="text-xs font-bold   text-gray-400 mb-1.5 block">
                                             {t("fields.startDate")}
                                         </label>
                                         <input
@@ -130,7 +130,7 @@ export default function ExceptionModal({ open, onClose, onSuccess }: Props) {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5 block">
+                                        <label className="text-xs font-bold   text-gray-400 mb-1.5 block">
                                             {t("fields.endDate")}
                                         </label>
                                         <input
@@ -144,7 +144,7 @@ export default function ExceptionModal({ open, onClose, onSuccess }: Props) {
                                 </div>
 
                                 <div>
-                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5 block">
+                                    <label className="text-xs font-bold   text-gray-400 mb-1.5 block">
                                         {t("fields.reason")}
                                     </label>
                                     <input
@@ -158,7 +158,7 @@ export default function ExceptionModal({ open, onClose, onSuccess }: Props) {
 
                                 <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-xl border border-amber-100/50">
                                     <Info size={16} className="text-amber-500 shrink-0 mt-0.5" />
-                                    <p className="text-[11px] text-amber-700 font-medium leading-relaxed">
+                                    <p className="text-xs text-amber-700 font-medium leading-relaxed">
                                         {t.rich("warning", {
                                             strong: (chunks) => <strong>{chunks}</strong>
                                         })}

@@ -3,9 +3,11 @@ import { AppointmentStatus } from "@prisma/client";
 import { canBusinessAcceptBookings, getBillingStatus } from "@/lib/billing/status";
 import { AppError } from "@/lib/errors";
 import { getBarberDay, hasScheduleConflict, lockKeys } from "@/lib/services/booking.service";
-import { resolveTimezone, toDateKey, zonedToUtc } from "@/lib/time/zoned";
+import { addDaysToKey, resolveTimezone, toDateKey, zonedToUtc } from "@/lib/time/zoned";
 
 const MAX_ACTIVE_APPOINTMENTS = 2;
+const USER_APPOINTMENTS_LIMIT = 100;
+const MAX_RANGE_DAYS = 93;
 
 // El cliente puede cancelar o mover su cita hasta 2 horas antes
 const CUSTOMER_CHANGE_LIMIT_MS = 2 * 60 * 60 * 1000;
@@ -382,15 +384,25 @@ export async function rescheduleAppointment(appointmentId: string, date: string,
     });
 }
 
+export function assertAppointmentRange(from: string, to: string) {
+    const days = (Date.parse(to) - Date.parse(from)) / (24 * 60 * 60 * 1000);
+
+    if (days < 0 || days > MAX_RANGE_DAYS) {
+        throw new AppError("Invalid date range");
+    }
+}
+
 export async function getUserAppointments(userId: string) {
-    return prisma.appointment.findMany({
+    // Las más recientes alcanzan para próximas e historial; la pantalla no necesita años de citas
+    const appointments = await prisma.appointment.findMany({
         where: {
             userId,
             status: { not: "CANCELLED" },
         },
         orderBy: {
-            date: "asc",
+            date: "desc",
         },
+        take: USER_APPOINTMENTS_LIMIT,
         include: {
             barber: {
                 include: {
@@ -405,17 +417,35 @@ export async function getUserAppointments(userId: string) {
             business: { select: { id: true, name: true, slug: true } },
         },
     });
+
+    return appointments.reverse();
 }
 
-export async function getBarberAppointments(barberId: string) {
+// Citas de un barbero entre dos días ("YYYY-MM-DD" en la zona del negocio), ambos incluidos.
+// Sin fechas devuelve el mes anterior y los dos siguientes, nunca todo el historial.
+export async function getBarberAppointments(barberId: string, range?: { from?: string | null; to?: string | null }) {
     if (!barberId) {
         throw new AppError("Barber ID is required");
     }
+
+    const barber = await prisma.barber.findUnique({
+        where: { id: barberId },
+        select: { business: { select: { timezone: true } } },
+    });
+
+    const timezone = resolveTimezone(barber?.business.timezone);
+    const today = toDateKey(new Date(), timezone);
+    const from = range?.from ?? addDaysToKey(today, -31);
+    const to = range?.to ?? addDaysToKey(today, 62);
 
     return await prisma.appointment.findMany({
         where: {
             barberId,
             status: { not: "CANCELLED" },
+            date: {
+                gte: zonedToUtc(from, "00:00", timezone),
+                lt: zonedToUtc(addDaysToKey(to, 1), "00:00", timezone),
+            },
         },
         include: {
             user: {

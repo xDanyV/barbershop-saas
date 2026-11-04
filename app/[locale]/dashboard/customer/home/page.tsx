@@ -93,7 +93,7 @@ export default function CustomerHome() {
               <p className="text-sm font-black text-gray-900 leading-tight">
                 {t("cancelConfirm.title")}
               </p>
-              <p className="text-[11px] text-gray-500 mt-0.5 font-medium">
+              <p className="text-xs text-gray-500 mt-0.5 font-medium">
                 {t("cancelConfirm.description", { service: serviceName })}
               </p>
             </div>
@@ -180,7 +180,7 @@ export default function CustomerHome() {
   const list = showHistory ? history : appointments;
 
   return (
-    <div className="pb-24 md:pb-0 md:p-8 max-w-2xl mx-auto">
+    <div className=" md:p-8 max-w-2xl mx-auto">
 
       {/* Header */}
       <motion.header
@@ -221,7 +221,7 @@ export default function CustomerHome() {
             <CalendarIcon size={14} />
             {t("tabs.upcoming")}
             {appointments.length > 0 && !showHistory && (
-              <span className="bg-indigo-100 text-indigo-600 text-[10px] font-black px-1.5 py-0.5 rounded-full">
+              <span className="bg-indigo-100 text-indigo-600 text-xs font-black px-1.5 py-0.5 rounded-full">
                 {appointments.length}
               </span>
             )}
@@ -288,21 +288,21 @@ export default function CustomerHome() {
                       >
                         <div className="flex items-center gap-3">
                           <div className="text-center min-w-11 bg-gray-50 py-2 px-2 rounded-xl group-hover:bg-white transition-colors border border-gray-100/50">
-                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">
+                            <p className="text-xs font-black text-gray-400  ">
                               {date.toLocaleDateString(dateLocale, { month: "short" })}
                             </p>
                             <p className="text-sm font-black text-gray-800 leading-none">{date.getDate()}</p>
                           </div>
                           <div>
                             <h3 className="font-bold text-gray-900 text-sm tracking-tight">{a.service.name}</h3>
-                            <p className="text-[11px] text-gray-400 font-medium flex items-center gap-1.5 mt-0.5">
+                            <p className="text-xs text-gray-400 font-medium flex items-center gap-1.5 mt-0.5">
                               <span className="text-gray-700 font-semibold">{a.barber.user.name}</span>
                               <span className="text-gray-300">·</span>
                               <span>{formattedTime}</span>
                             </p>
                           </div>
                         </div>
-                        <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold tracking-wide border ${a.status === "COMPLETED"
+                        <span className={`text-xs px-2.5 py-1 rounded-full font-bold  border ${a.status === "COMPLETED"
                           ? "bg-emerald-50 text-emerald-600 border-emerald-100"
                           : "bg-rose-50 text-rose-600 border-rose-100"
                           }`}>
@@ -326,7 +326,7 @@ export default function CustomerHome() {
 
                         {/* Date badge */}
                         <div className="bg-indigo-50/60 border border-indigo-100/80 rounded-2xl px-5 py-3 text-center min-w-20 group-hover:bg-indigo-600 group-hover:border-indigo-600 transition-colors w-full sm:w-auto">
-                          <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest group-hover:text-indigo-200">
+                          <p className="text-xs text-indigo-400 font-black   group-hover:text-indigo-200">
                             {date.toLocaleDateString(dateLocale, { month: "short" })}
                           </p>
                           <p className="text-2xl md:text-3xl font-black text-indigo-600 leading-none group-hover:text-white">
@@ -340,14 +340,14 @@ export default function CustomerHome() {
                             <h3 className="font-black text-gray-900 text-base md:text-lg tracking-tight">
                               {a.service.name}
                             </h3>
-                            <span className={`w-fit mx-auto sm:mx-0 text-[9px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-widest border ${a.status === "CONFIRMED"
+                            <span className={`w-fit mx-auto sm:mx-0 text-xs px-2.5 py-0.5 rounded-full font-black   border ${a.status === "CONFIRMED"
                               ? "bg-emerald-50 text-emerald-600 border-emerald-100"
                               : "bg-amber-50 text-amber-600 border-amber-100"
                               }`}>
                               {t(`status.${a.status}`)}
                             </span>
                           </div>
-                          <div className="flex flex-wrap justify-center sm:justify-start gap-x-4 gap-y-1.5 text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-tight">
+                          <div className="flex flex-wrap justify-center sm:justify-start gap-x-4 gap-y-1.5 text-xs font-bold text-gray-400  tracking-tight">
                             <div className="flex items-center gap-1.5">
                               <Clock size={12} className="text-indigo-400" />
                               {formattedTime} · {a.service.duration}m

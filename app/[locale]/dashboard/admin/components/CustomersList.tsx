@@ -137,7 +137,7 @@ export default function CustomersList() {
             </div>
 
             {/* Contenedor con altura máxima y scroll interno. Incluye el pb-24 para que el navbar no estorbe */}
-            <div className="max-h-150 md:max-h-175 overflow-y-auto pr-1 pb-24 md:pb-0 custom-scrollbar">
+            <div className="max-h-150 md:max-h-175 overflow-y-auto pr-1  custom-scrollbar">
                 <div className="grid gap-4">
                     <AnimatePresence mode="popLayout">
                         {filteredCustomers.length === 0 ? (
@@ -162,7 +162,7 @@ export default function CustomersList() {
                                             <h3 className="font-black text-gray-900 flex flex-wrap items-center gap-2">
                                                 <span className="truncate max-w-37.5 sm:max-w-xs">{customer.name || t("customer.noName")}</span>
                                                 {customer.isBanned && (
-                                                    <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase tracking-widest shrink-0">
+                                                    <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full   shrink-0">
                                                         {t("customer.bannedBadge")}
                                                     </span>
                                                 )}
@@ -187,7 +187,7 @@ export default function CustomersList() {
                                             <CalendarDays size={18} className="text-indigo-500" />
                                             <div className="flex flex-col">
                                                 <span className="text-base font-black leading-none">{customer._count?.appointments || 0}</span>
-                                                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{t("customer.appointments")}</span>
+                                                <span className="text-xs font-bold text-gray-400  ">{t("customer.appointments")}</span>
                                             </div>
                                         </div>
 

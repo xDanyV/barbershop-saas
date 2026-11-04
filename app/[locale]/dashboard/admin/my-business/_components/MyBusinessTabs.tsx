@@ -1,8 +1,8 @@
 "use client";
 
-import { Building2, ImageIcon, Newspaper } from "lucide-react";
+import { Building2, CreditCard, ImageIcon, Newspaper } from "lucide-react";
 
-export type BusinessTab = "profile" | "posts" | "gallery";
+export type BusinessTab = "profile" | "posts" | "gallery" | "membership";
 
 type Props = {
     activeTab: BusinessTab;
@@ -31,12 +31,19 @@ const tabs = [
         description: "Fotos del negocio",
         icon: ImageIcon,
     },
+    {
+        id: "membership" as const,
+        label: "Membresía",
+        mobileLabel: "Pago",
+        description: "Plan y pagos",
+        icon: CreditCard,
+    },
 ];
 
 export default function MyBusinessTabs({ activeTab, onChange }: Props) {
     return (
         <div className="bg-white border border-gray-100 rounded-3xl p-2 shadow-sm overflow-hidden">
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-1 sm:gap-2">
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -61,7 +68,7 @@ export default function MyBusinessTabs({ activeTab, onChange }: Props) {
                             </div>
 
                             <div className="min-w-0">
-                                <p className="text-[11px] sm:text-sm font-black leading-tight truncate">
+                                <p className="text-xs font-black leading-tight truncate">
                                     <span className="sm:hidden">
                                         {tab.mobileLabel}
                                     </span>
@@ -71,7 +78,7 @@ export default function MyBusinessTabs({ activeTab, onChange }: Props) {
                                 </p>
 
                                 <p
-                                    className={`hidden sm:block text-[11px] font-bold mt-0.5 truncate ${isActive ? "text-indigo-100" : "text-gray-400"
+                                    className={`hidden sm:block text-xs font-bold mt-0.5 truncate ${isActive ? "text-indigo-100" : "text-gray-400"
                                         }`}
                                 >
                                     {tab.description}

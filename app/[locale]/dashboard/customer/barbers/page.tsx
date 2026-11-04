@@ -61,12 +61,12 @@ export default function BusinessesPage() {
     };
 
     return (
-        <div className="pb-24 md:pb-0 md:p-8 max-w-6xl mx-auto">
+        <div className=" md:p-8 max-w-6xl mx-auto">
             <header className="mb-8 md:mb-12 text-center md:text-left">
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="flex items-center justify-center md:justify-start gap-2 text-indigo-600 font-bold tracking-widest uppercase text-[10px] md:text-xs mb-3"
+                    className="flex items-center justify-center md:justify-start gap-2 text-indigo-600 font-bold   text-xs mb-3"
                 >
                     <Store size={14} />
                     <span>{t("eyebrow")}</span>
@@ -175,7 +175,7 @@ export default function BusinessesPage() {
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
-                                                <span className="text-white font-black text-lg tracking-tighter">
+                                                <span className="text-white font-black text-lg ">
                                                     {getInitials(business.name)}
                                                 </span>
                                             )}
@@ -185,7 +185,7 @@ export default function BusinessesPage() {
                                             <p className="text-white font-black text-lg leading-tight line-clamp-1">
                                                 {business.name}
                                             </p>
-                                            <p className="text-indigo-100 text-[11px] font-bold uppercase tracking-widest">
+                                            <p className="text-indigo-100 text-xs font-bold  ">
                                                 {t("badge")}
                                             </p>
                                         </div>
@@ -215,7 +215,7 @@ export default function BusinessesPage() {
 
                                     <div className="mt-5 grid grid-cols-2 gap-2">
                                         <div className="rounded-2xl bg-gray-50 border border-gray-100 p-3">
-                                            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-black">
+                                            <p className="text-xs text-gray-400   font-black">
                                                 {t("barbers")}
                                             </p>
                                             <p className="text-lg font-black text-gray-900">
@@ -224,7 +224,7 @@ export default function BusinessesPage() {
                                         </div>
 
                                         <div className="rounded-2xl bg-gray-50 border border-gray-100 p-3">
-                                            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-black">
+                                            <p className="text-xs text-gray-400   font-black">
                                                 {t("services")}
                                             </p>
                                             <p className="text-lg font-black text-gray-900">
@@ -247,7 +247,7 @@ export default function BusinessesPage() {
                                             onClick={() =>
                                                 router.push(`/business/${business.slug}`)
                                             }
-                                            className="w-full py-3 rounded-xl bg-gray-100 text-gray-700 text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
+                                            className="w-full py-3 rounded-xl bg-gray-100 text-gray-700 text-xs font-black   hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
                                         >
                                             {t("view")}
                                             <ArrowRight size={16} />
@@ -261,7 +261,7 @@ export default function BusinessesPage() {
                                                 )
                                             }
                                             disabled={!isServiceActive || business.barberCount === 0}
-                                            className="w-full py-3.5 rounded-xl bg-gray-900 text-white text-xs font-black uppercase tracking-widest hover:bg-indigo-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                                            className="w-full py-3.5 rounded-xl bg-gray-900 text-white text-xs font-black   hover:bg-indigo-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                                         >
                                             <CalendarDays size={16} />
                                             {t("book")}
