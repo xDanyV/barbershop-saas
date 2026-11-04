@@ -1,5 +1,6 @@
 "use client";
 
+import { useApiError } from "@/[locale]/components/useApiError";
 import { useState, useRef, useEffect, Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import toast from "react-hot-toast";
@@ -44,6 +45,7 @@ export default function SlotCard({
 }: Props) {
   const t = useTranslations("SlotCard");
   const locale = useLocale();
+  const apiError = useApiError();
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<string | null>(null);
@@ -131,7 +133,7 @@ export default function SlotCard({
       }
 
       if (!res.ok) {
-        toast.error(data?.code === "OWN_BUSINESS" ? t("errors.ownBusiness") : data?.error ?? t("errors.bookFailed"));
+        toast.error(apiError(data, t("errors.bookFailed")));
         return;
       }
 

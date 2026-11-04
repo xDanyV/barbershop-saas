@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Eye, EyeOff } from "lucide-react";
 import BrandMark from "@/[locale]/components/BrandMark";
 
-export default function LoginPage() {
+export default function LoginPage({ searchParams }: { searchParams: Promise<{ redirectTo?: string }> }) {
+  const redirectFromUrl = safeRedirectPath(use(searchParams).redirectTo);
   const t = useTranslations("Login");
   const locale = useLocale();
   const [form, setForm] = useState({ email: "", password: "" });
@@ -15,19 +17,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
-
-  const getSafeRedirectPath = () => {
-    const params = new URLSearchParams(window.location.search);
-    const redirectTo = params.get("redirectTo");
-
-    if (!redirectTo) return null;
-
-    if (!redirectTo.startsWith("/") || redirectTo.startsWith("//")) {
-      return null;
-    }
-
-    return redirectTo;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,10 +44,8 @@ export default function LoginPage() {
         return;
       }
 
-      const safeRedirectPath = getSafeRedirectPath();
-
-      if (safeRedirectPath) {
-        window.location.href = safeRedirectPath;
+      if (redirectFromUrl) {
+        window.location.href = redirectFromUrl;
         return;
       }
 
@@ -200,7 +187,7 @@ export default function LoginPage() {
         >
           {t("register.question")}{" "}
           <Link
-            href="/register"
+            href={redirectFromUrl ? `/register?redirectTo=${encodeURIComponent(redirectFromUrl)}` : "/register"}
             className="text-indigo-400 hover:text-indigo-300 font-bold transition-colors"
           >
             {t("register.action")}

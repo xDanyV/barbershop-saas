@@ -73,7 +73,7 @@ export async function DELETE(request: NextRequest) {
                     status: { in: ["PENDING", "CONFIRMED"] },
                     date: { gt: new Date() },
                 },
-                data: { status: "CANCELLED" },
+                data: { status: "CANCELLED", cancelledBy: "CUSTOMER" },
             }),
             // Se borran los datos que identifican a la persona; el historial queda anónimo
             prisma.user.update({

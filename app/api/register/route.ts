@@ -8,6 +8,7 @@ import { registerSchema } from "@/lib/validations/schemas";
 import { extractBusinessSlug } from "@/lib/slug";
 import { TERMS_VERSION } from "@/lib/legal";
 import { RATE_LIMITS, consumeRateLimit, getClientIp } from "@/lib/rate-limit";
+import { SESSION_COOKIE, SESSION_MAX_AGE_SECONDS, sessionCookieOptions, signSessionToken } from "@/lib/auth/session";
 
 function getBootstrapAdminEmail() {
     return process.env.ADMIN_BOOTSTRAP_EMAIL?.trim().toLowerCase() || null;
@@ -64,7 +65,8 @@ export async function POST(req: Request) {
         const hashedPassword = await bcrypt.hash(password, 10);
         const finalRole = isBootstrapAdmin ? Role.ADMIN : role;
 
-        await prisma.user.create({
+        const user = await prisma.user.create({
+            select: { id: true, sessionVersion: true },
             data: {
                 name,
                 email,
@@ -86,15 +88,24 @@ export async function POST(req: Request) {
             },
         });
 
-        return NextResponse.json(
+        const response = NextResponse.json(
             {
                 message:
                     finalRole === Role.BARBER
                         ? "Barber account created successfully. Waiting for owner approval."
                         : "User created successfully",
+                role: finalRole,
             },
             { status: 201 }
         );
+
+        // Quien acaba de registrarse sigue directo con lo que venía a hacer
+        response.cookies.set(SESSION_COOKIE, await signSessionToken(user.id, user.sessionVersion), {
+            ...sessionCookieOptions,
+            maxAge: SESSION_MAX_AGE_SECONDS,
+        });
+
+        return response;
     } catch (error) {
         return errorResponse(error, "Registration route error");
     }

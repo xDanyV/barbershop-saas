@@ -1,33 +1,61 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "../../../../i18n/routing";
-import { motion } from "framer-motion";
+import { use, useState } from "react";
+import { Eye, EyeOff, Scissors, Store, UserRound, type LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { toast } from "react-hot-toast";
 import { useLocale, useTranslations } from "next-intl";
-import { Eye, EyeOff } from "lucide-react";
 import BrandMark from "@/[locale]/components/BrandMark";
+import { useApiError } from "@/[locale]/components/useApiError";
 import { normalizeMxPhone } from "@/lib/phone";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 
-export default function RegisterPage() {
+type Path = "owner" | "barber" | "customer";
+
+type SearchParams = { intent?: string; redirectTo?: string; business?: string };
+
+const PATHS: { id: Path; icon: LucideIcon }[] = [
+    { id: "owner", icon: Store },
+    { id: "barber", icon: Scissors },
+    { id: "customer", icon: UserRound },
+];
+
+const inputClass =
+    "mt-2 block min-h-12 w-full rounded-xl border border-white/10 bg-[#16323f] px-4 text-white placeholder:text-gray-600 outline-none transition-colors focus:border-white/50";
+
+// Adónde lleva cada camino al terminar. Un dueño sigue directo a crear su barbería.
+const HOME_BY_PATH: Record<Path, string> = {
+    owner: "/dashboard/business/new",
+    barber: "/dashboard/barber",
+    customer: "/dashboard/customer/home",
+};
+
+export default function RegisterPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+    const params = use(searchParams);
     const t = useTranslations("Register");
     const locale = useLocale();
+    const apiError = useApiError();
+
+    const redirectTo = safeRedirectPath(params.redirectTo);
+    const initialPath: Path | null = redirectTo
+        ? "customer"
+        : params.intent === "owner" || params.intent === "barber" || params.intent === "customer"
+            ? params.intent
+            : params.business
+                ? "barber"
+                : null;
+
+    const [path, setPath] = useState<Path | null>(initialPath);
     const [acceptedTerms, setAcceptedTerms] = useState(false);
-    const router = useRouter();
-    const [role, setRole] = useState<"CUSTOMER" | "BARBER" | null>(null);
     const [form, setForm] = useState({
         name: "",
         phone: "",
         email: "",
         password: "",
         confirmPassword: "",
-        businessSlug: "",
+        businessSlug: params.business ?? "",
     });
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
-
-    // Estado para mostrar/ocultar contraseña
     const [showPassword, setShowPassword] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,331 +65,164 @@ export default function RegisterPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // 1. Validaciones del lado del cliente (Frontend)
-        if (!role) {
-            setError(t("errors.selectType"));
-            return;
-        }
-
-        if (role === "BARBER" && !form.businessSlug.trim()) {
-            setError(t("errors.slugRequired"));
-            return;
-        }
-
-        if (form.password !== form.confirmPassword) {
-            setError(t("errors.passwordMismatch"));
-            return;
-        }
-        if (!normalizeMxPhone(form.phone)) {
-            setError(t("errors.phone"));
-            return;
-        }
-
-        if (form.password.length < 8) {
-            setError(t("errors.passwordLength"));
-            return;
-        }
-
-        if (!acceptedTerms) {
-            setError(t("errors.acceptTerms"));
-            return;
-        }
+        if (!path) return setError(t("errors.selectType"));
+        if (path === "barber" && !form.businessSlug.trim()) return setError(t("errors.slugRequired"));
+        if (!normalizeMxPhone(form.phone)) return setError(t("errors.phone"));
+        if (form.password.length < 8) return setError(t("errors.passwordLength"));
+        if (form.password !== form.confirmPassword) return setError(t("errors.passwordMismatch"));
+        if (!acceptedTerms) return setError(t("errors.acceptTerms"));
 
         setError("");
         setLoading(true);
 
-        const loadingToast = toast.loading(t("toasts.creating"));
-
         try {
-            // confirmPassword solo se valida en el cliente; no se envía a la API
-            const apiData = {
-                name: form.name,
-                email: form.email,
-                phone: form.phone,
-                password: form.password,
-                businessSlug: form.businessSlug,
-                acceptTerms: acceptedTerms,
-            };
-
             const response = await fetch("/api/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...apiData, role }),
+                body: JSON.stringify({
+                    name: form.name,
+                    email: form.email,
+                    phone: form.phone,
+                    password: form.password,
+                    businessSlug: path === "barber" ? form.businessSlug : undefined,
+                    acceptTerms: acceptedTerms,
+                    // Un dueño empieza como cliente y se vuelve dueño al crear su barbería
+                    role: path === "barber" ? "BARBER" : "CUSTOMER",
+                }),
             });
 
-            const data = await response.json();
+            const data = await response.json().catch(() => null);
 
             if (!response.ok) {
-                if (response.status === 429) data.error = t("errors.tooManyAttempts");
-                if (response.status >= 500) data.error = t("errors.generic");
-                setError(data.error || t("errors.generic"));
-                toast.error(data.error || t("toasts.failed"), { id: loadingToast });
+                setError(apiError(data, t("errors.generic")));
                 setLoading(false);
                 return;
             }
 
-            toast.success(t("toasts.success"), {
-                id: loadingToast,
-                duration: 4000
-            });
-
-            setTimeout(() => {
-                router.push("/login");
-            }, 1500);
-
+            // El registro ya deja la sesión iniciada
+            const home = data?.role === "ADMIN" ? "/dashboard/admin" : HOME_BY_PATH[path];
+            window.location.assign(redirectTo ?? `/${locale}${home}`);
         } catch {
             setError(t("errors.connection"));
-            toast.error(t("toasts.connection"), { id: loadingToast });
             setLoading(false);
         }
     };
 
+    const showChooser = !redirectTo;
+
     return (
-        <main className="theme-field min-h-screen bg-[#0f2733] flex items-center justify-center px-4 py-8 md:py-16 relative overflow-hidden">
-            {/* Background glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-72 bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none" />
-
-            {/* Grid background */}
-            <div
-                className="absolute inset-0 opacity-[0.03]"
-                style={{
-                    backgroundImage: `linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px)`,
-                    backgroundSize: "40px 40px",
-                }}
-            />
-
-            <div className="relative z-10 w-full max-w-5xl">
-                {/* Logo */}
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-center mb-10"
-                >
-                    <Link href="/" className="inline-block text-white font-black text-3xl tracking-tight">
-                        <BrandMark iconClassName="h-12 w-12 rounded-2xl bg-indigo-500/15 text-indigo-300" iconSize={22} />
+        <main className="theme-field flex min-h-screen items-center justify-center bg-[#0f2733] px-4 py-8 text-white md:py-16">
+            <div className={`w-full ${showChooser ? "max-w-5xl" : "max-w-xl"}`}>
+                <div className="mb-8 text-center">
+                    <Link href={`/${locale}`} className="inline-block">
+                        <BrandMark iconClassName="h-12 w-12 rounded-xl bg-[#e4dccb] text-[#0f2733]" iconSize={22} />
                     </Link>
-                </motion.div>
+                </div>
 
-                <div className="grid lg:grid-cols-2 gap-8 items-start">
-                    {/* Role selector card */}
-                    <motion.div
-                        initial={{ opacity: 0, x: -30 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-md order-1 lg:order-1"
-                    >
-                        <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">
-                            {t("choosePath")}
-                        </h2>
-                        <p className="text-gray-400 text-sm mb-8">
-                            {t("choosePathDesc")}
-                        </p>
+                <div className={`grid items-start gap-6 ${showChooser ? "lg:grid-cols-2" : ""}`}>
+                    {showChooser && (
+                        <section className="rounded-2xl border border-white/10 bg-white/5 p-5 md:p-8">
+                            <h2 className="text-2xl font-semibold tracking-tight">{t("choosePath")}</h2>
 
-                        <div className="space-y-4">
-                            {/* Customer option */}
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setRole("CUSTOMER");
-                                    setForm((prev) => ({ ...prev, businessSlug: "" }));
-                                }}
-                                className={`w-full p-5 rounded-xl border text-left transition-all duration-300 ${role === "CUSTOMER"
-                                    ? "bg-indigo-600/10 border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.15)]"
-                                    : "bg-white/2 border-white/5 hover:border-white/10 hover:bg-white/4"
-                                    }`}
-                            >
-                                <div className="flex items-start gap-4">
-                                    <div className={`mt-1 w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${role === "CUSTOMER" ? "bg-indigo-500/20 text-indigo-400" : "bg-white/5 text-gray-400"}`}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className={`font-semibold mb-1 ${role === "CUSTOMER" ? "text-white" : "text-gray-300"}`}>{t("customerTitle")}</p>
-                                        <p className="text-gray-500 text-xs leading-relaxed">{t("customerDesc")}</p>
-                                    </div>
-                                    <div className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${role === "CUSTOMER" ? "border-indigo-500" : "border-gray-600"}`}>
-                                        {role === "CUSTOMER" && <motion.div layoutId="roleCheck" className="w-2.5 h-2.5 rounded-full bg-indigo-500" />}
-                                    </div>
-                                </div>
-                            </button>
+                            <div role="radiogroup" aria-label={t("choosePath")} className="mt-5 space-y-3">
+                                {PATHS.map(({ id, icon: Icon }) => {
+                                    const selected = path === id;
 
-                            {/* Barber option */}
-                            <button
-                                type="button"
-                                onClick={() => setRole("BARBER")}
-                                className={`w-full p-5 rounded-xl border text-left transition-all duration-300 ${role === "BARBER"
-                                    ? "bg-indigo-600/10 border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.15)]"
-                                    : "bg-white/2 border-white/5 hover:border-white/10 hover:bg-white/4"
-                                    }`}
-                            >
-                                <div className="flex items-start gap-4">
-                                    <div className={`mt-1 w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${role === "BARBER" ? "bg-indigo-500/20 text-indigo-400" : "bg-white/5 text-gray-400"}`}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><line x1="20" x2="8.12" y1="4" y2="15.88" /><line x1="14.47" x2="20" y1="14.48" y2="20" /><line x1="8.12" x2="12" y1="8.12" y2="12" /></svg>
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className={`font-semibold mb-1 ${role === "BARBER" ? "text-white" : "text-gray-300"}`}>{t("barberTitle")}</p>
-                                        <p className="text-gray-500 text-xs leading-relaxed">{t("barberDesc")}</p>
-                                    </div>
-                                    <div className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${role === "BARBER" ? "border-indigo-500" : "border-gray-600"}`}>
-                                        {role === "BARBER" && <motion.div layoutId="roleCheck" className="w-2.5 h-2.5 rounded-full bg-indigo-500" />}
-                                    </div>
-                                </div>
-                            </button>
-                        </div>
-                    </motion.div>
+                                    return (
+                                        <button
+                                            key={id}
+                                            type="button"
+                                            role="radio"
+                                            aria-checked={selected}
+                                            onClick={() => setPath(id)}
+                                            className={`flex w-full items-start gap-4 rounded-xl border p-4 text-left transition-colors ${selected ? "border-[#e8957c] bg-white/10" : "border-white/10 hover:border-white/30"}`}
+                                        >
+                                            <Icon size={22} aria-hidden="true" className="mt-0.5 shrink-0 text-[#e4dccb]" />
+                                            <span className="min-w-0 flex-1">
+                                                <span className="block font-semibold">{t(`paths.${id}.title`)}</span>
+                                                <span className="mt-1 block text-sm text-gray-400">{t(`paths.${id}.text`)}</span>
+                                            </span>
+                                            <span aria-hidden="true" className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${selected ? "border-[#e8957c]" : "border-gray-600"}`}>
+                                                {selected && <span className="h-2.5 w-2.5 rounded-full bg-[#e8957c]" />}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </section>
+                    )}
 
-                    {/* Form card */}
-                    <motion.div
-                        initial={{ opacity: 0, x: 30 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.5, delay: 0.1 }}
-                        className="bg-white/2 border border-white/5 rounded-2xl p-6 md:p-8 backdrop-blur-sm order-2 lg:order-2"
-                    >
-                        <h1 className="text-2xl font-bold text-white mb-2 tracking-tight">
-                            {t("accountDetails")}
+                    <section className="rounded-2xl border border-white/10 bg-white/5 p-5 md:p-8">
+                        <h1 className="text-2xl font-semibold tracking-tight">
+                            {redirectTo ? t("returning.title") : path ? t(`paths.${path}.formTitle`) : t("accountDetails")}
                         </h1>
-                        <p className="text-gray-400 text-sm mb-8">
-                            {t("accountDetailsDesc")}
-                        </p>
+                        <p className="mt-2 text-sm text-gray-400">{redirectTo ? t("returning.text") : t("accountDetailsDesc")}</p>
 
-                        <form onSubmit={handleSubmit} className="space-y-5">
-                            {/* Inputs Básicos */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div>
-                                    <label className="text-xs font-semibold text-gray-400 mb-2 block  ">{t("form.fullName")}</label>
-                                    <input
-                                        name="name"
-                                        type="text"
-                                        placeholder={t("placeholders.name")}
-                                        value={form.name}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full bg-[#16323f] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-semibold text-gray-400 mb-2 block  ">{t("form.phone")}</label>
-                                    <input
-                                        name="phone"
-                                        type="text"
-                                        placeholder="664 123 4567"
-                                        value={form.phone}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full bg-[#16323f] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
-                                    />
-                                </div>
+                        <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+                            <div className="grid gap-5 md:grid-cols-2">
+                                <label className="block text-sm font-semibold text-gray-300">
+                                    {t("form.fullName")}
+                                    <input name="name" type="text" autoComplete="name" required placeholder={t("placeholders.name")} value={form.name} onChange={handleChange} className={inputClass} />
+                                </label>
+                                <label className="block text-sm font-semibold text-gray-300">
+                                    {t("form.phone")}
+                                    <input name="phone" type="tel" inputMode="tel" autoComplete="tel-national" required placeholder="664 123 4567" value={form.phone} onChange={handleChange} className={inputClass} />
+                                </label>
                             </div>
 
-                            <div>
-                                <label className="text-xs font-semibold text-gray-400 mb-2 block  ">{t("form.email")}</label>
-                                <input
-                                    name="email"
-                                    type="email"
-                                    placeholder={t("placeholders.email")}
-                                    value={form.email}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full bg-[#16323f] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
-                                />
-                            </div>
+                            <label className="block text-sm font-semibold text-gray-300">
+                                {t("form.email")}
+                                <input name="email" type="email" autoComplete="email" required placeholder={t("placeholders.email")} value={form.email} onChange={handleChange} className={inputClass} />
+                            </label>
 
-                            {role === "BARBER" && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: -8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="bg-indigo-500/5 border border-indigo-500/20 rounded-2xl p-4"
-                                >
-                                    <label className="text-xs font-semibold text-indigo-300 mb-2 block  ">
-                                        {t("form.businessSlug")}
-                                    </label>
-
-                                    <input
-                                        name="businessSlug"
-                                        type="text"
-                                        placeholder="barberia-el-nuevo-rey"
-                                        value={form.businessSlug}
-                                        onChange={handleChange}
-                                        required={role === "BARBER"}
-                                        className="w-full bg-[#16323f] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
-                                    />
-
-                                    <p className="text-xs text-gray-500 mt-2 leading-relaxed">
-                                        {t("form.businessSlugHintBefore")}{" "}
-                                        <span className="text-indigo-300 font-bold">
-                                            barberia-el-nuevo-rey
-                                        </span>
-                                        {t("form.businessSlugHintAfter")}
-                                    </p>
-                                </motion.div>
+                            {path === "barber" && (
+                                <label className="block text-sm font-semibold text-gray-300">
+                                    {t("form.businessSlug")}
+                                    <input name="businessSlug" type="text" required placeholder={t("placeholders.businessLink")} value={form.businessSlug} onChange={handleChange} className={inputClass} />
+                                    <span className="mt-2 block text-xs font-normal text-gray-400">{t("form.businessSlugHint")}</span>
+                                </label>
                             )}
 
-                            {/* Contraseñas */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div>
-                                    <label className="text-xs font-semibold text-gray-400 mb-2 block  ">
-                                        {t("form.password")}
-                                    </label>
-
-                                    <div className="relative">
-                                        <input
-                                            name="password"
-                                            type={showPassword ? "text" : "password"}
-                                            placeholder="••••••••"
-                                            value={form.password}
-                                            onChange={handleChange}
-                                            required
-                                            className="w-full bg-[#16323f] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 pr-10 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
-                                        />
-
+                            <div className="grid gap-5 md:grid-cols-2">
+                                <label className="block text-sm font-semibold text-gray-300">
+                                    {t("form.password")}
+                                    <span className="relative block">
+                                        <input name="password" type={showPassword ? "text" : "password"} autoComplete="new-password" required minLength={8} value={form.password} onChange={handleChange} className={`${inputClass} pr-12`} />
                                         <button
                                             type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+                                            onClick={() => setShowPassword((value) => !value)}
+                                            aria-label={showPassword ? t("form.hidePassword") : t("form.showPassword")}
+                                            className="absolute right-0 top-0 flex h-12 w-12 items-center justify-center text-gray-400 hover:text-white"
                                         >
-                                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                            {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
                                         </button>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="text-xs font-semibold text-gray-400 mb-2 block  ">
-                                        {t("form.confirmPassword")}
-                                    </label>
-
-                                    <input
-                                        name="confirmPassword"
-                                        type={showPassword ? "text" : "password"}
-                                        placeholder="••••••••"
-                                        value={form.confirmPassword}
-                                        onChange={handleChange}
-                                        required
-                                        className={`w-full bg-[#16323f] border text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none transition-all ${form.confirmPassword && form.password !== form.confirmPassword
-                                            ? "border-red-500/50 focus:border-red-500 focus:ring-1 focus:ring-red-500/50"
-                                            : "border-white/10 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50"
-                                            }`}
-                                    />
-                                </div>
+                                    </span>
+                                    <span className="mt-2 block text-xs font-normal text-gray-400">{t("form.passwordHint")}</span>
+                                </label>
+                                <label className="block text-sm font-semibold text-gray-300">
+                                    {t("form.confirmPassword")}
+                                    <input name="confirmPassword" type={showPassword ? "text" : "password"} autoComplete="new-password" required value={form.confirmPassword} onChange={handleChange} className={inputClass} />
+                                </label>
                             </div>
 
-                            {/* Aceptación de los Términos y el Aviso de Privacidad (obligatoria) */}
-                            <label className="mt-2 flex items-start gap-3 text-sm leading-relaxed text-gray-400">
+                            <label className="flex items-start gap-3 text-sm leading-relaxed text-gray-400">
                                 <input
                                     type="checkbox"
                                     name="acceptTerms"
                                     checked={acceptedTerms}
                                     onChange={(e) => setAcceptedTerms(e.target.checked)}
                                     required
-                                    className="mt-1 h-4 w-4 shrink-0 accent-indigo-500"
+                                    className="mt-1 h-4 w-4 shrink-0 accent-[#e8603a]"
                                 />
                                 <span>
                                     {t.rich("form.acceptTerms", {
                                         terms: (chunks) => (
-                                            <a href={`/${locale}/terms`} target="_blank" rel="noopener noreferrer" className="text-indigo-300 underline underline-offset-2 hover:text-indigo-200">
+                                            <a href={`/${locale}/terms`} target="_blank" rel="noopener noreferrer" className="text-white underline underline-offset-2">
                                                 {chunks}
                                             </a>
                                         ),
                                         privacy: (chunks) => (
-                                            <a href={`/${locale}/privacy`} target="_blank" rel="noopener noreferrer" className="text-indigo-300 underline underline-offset-2 hover:text-indigo-200">
+                                            <a href={`/${locale}/privacy`} target="_blank" rel="noopener noreferrer" className="text-white underline underline-offset-2">
                                                 {chunks}
                                             </a>
                                         ),
@@ -369,51 +230,32 @@ export default function RegisterPage() {
                                 </span>
                             </label>
 
-                            {/* Error Alert */}
                             {error && (
-                                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 mt-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                                <p role="alert" className="rounded-xl border border-red-300/40 bg-red-500/15 px-4 py-3 text-sm text-white">
                                     {error}
-                                </motion.div>
+                                </p>
                             )}
 
-                            {/* Submit Button */}
                             <button
                                 type="submit"
-                                disabled={loading || !role}
-                                className={`w-full font-bold py-3.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2 mt-6
-                                    ${(!role || loading)
-                                        ? "bg-white/5 text-gray-500 cursor-not-allowed border border-white/5"
-                                        : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] active:scale-[0.98]"
-                                    }`}
+                                disabled={loading || !path}
+                                className="flex min-h-12 w-full items-center justify-center rounded-xl bg-indigo-600 px-4 font-semibold text-white transition-colors hover:bg-indigo-700 disabled:bg-white/10 disabled:text-gray-400"
                             >
-                                {loading ? (
-                                    <>
-                                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        {t("buttons.creating")}
-                                    </>
-                                ) : !role ? (
-                                    t("buttons.selectRole")
-                                ) : (
-                                    t("buttons.create")
-                                )}
+                                {loading ? t("buttons.creating") : !path ? t("buttons.selectRole") : t(`paths.${path}.submit`)}
                             </button>
                         </form>
-                    </motion.div>
+                    </section>
                 </div>
 
-                {/* Login redirect */}
-                <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className="text-center text-gray-500 text-sm mt-12"
-                >
+                <p className="mt-8 text-center text-sm text-gray-400">
                     {t("login.question")}{" "}
-                    <Link href="/login" className="text-white hover:text-indigo-300 font-bold transition-colors">
+                    <Link
+                        href={`/${locale}/login${redirectTo ? `?redirectTo=${encodeURIComponent(redirectTo)}` : ""}`}
+                        className="font-semibold text-white underline underline-offset-4"
+                    >
                         {t("login.action")}
                     </Link>
-                </motion.p>
+                </p>
             </div>
         </main>
     );

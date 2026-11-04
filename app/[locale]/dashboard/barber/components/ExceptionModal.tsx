@@ -1,5 +1,6 @@
 "use client";
 
+import { useApiError } from "@/[locale]/components/useApiError";
 import { useState, Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { toast } from "react-hot-toast";
@@ -12,8 +13,17 @@ type Props = {
     onSuccess: () => void;
 };
 
+// Después de las 4 p. m. en Tijuana, UTC ya va en el día siguiente
+function localToday() {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${now.getFullYear()}-${month}-${day}`;
+}
+
 export default function ExceptionModal({ open, onClose, onSuccess }: Props) {
     const t = useTranslations("ExceptionModal");
+    const apiError = useApiError();
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [reason, setReason] = useState("");
@@ -56,7 +66,7 @@ export default function ExceptionModal({ open, onClose, onSuccess }: Props) {
             const data = await res.json();
 
             if (!res.ok) {
-                toast.error(data.error ?? t("errors.server"), { id: loadingToast });
+                toast.error(apiError(data, t("errors.server")), { id: loadingToast });
                 return;
             }
 
@@ -124,7 +134,7 @@ export default function ExceptionModal({ open, onClose, onSuccess }: Props) {
                                         <input
                                             type="date"
                                             value={startDate}
-                                            min={new Date().toISOString().split("T")[0]}
+                                            min={localToday()}
                                             onChange={(e) => setStartDate(e.target.value)}
                                             className="w-full border border-gray-100 bg-gray-50 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400/50 appearance-none"
                                         />
@@ -136,7 +146,7 @@ export default function ExceptionModal({ open, onClose, onSuccess }: Props) {
                                         <input
                                             type="date"
                                             value={endDate}
-                                            min={startDate || new Date().toISOString().split("T")[0]}
+                                            min={startDate || localToday()}
                                             onChange={(e) => setEndDate(e.target.value)}
                                             className="w-full border border-gray-100 bg-gray-50 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400/50 appearance-none"
                                         />

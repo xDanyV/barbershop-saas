@@ -82,7 +82,7 @@ export default async function LandingPage({ locale }: { locale: string }) {
                                     {t("nav.login")}
                                 </Link>
                                 <Link
-                                    href="/register"
+                                    href="/register?intent=owner"
                                     className="hidden min-h-10 items-center bg-[var(--brand-ink)] px-4 font-semibold text-[var(--brand-paper)] transition-opacity hover:opacity-90 sm:inline-flex"
                                 >
                                     {t("nav.start")}
@@ -99,7 +99,7 @@ export default async function LandingPage({ locale }: { locale: string }) {
                                 </p>
                                 <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
                                     <Link
-                                        href="/register"
+                                        href="/register?intent=owner"
                                         className="inline-flex min-h-12 items-center bg-[var(--brand-ink)] px-6 font-semibold text-[var(--brand-paper)] transition-[opacity,transform] duration-150 hover:opacity-90 active:translate-y-px"
                                     >
                                         {t("hero.primary")}
@@ -241,7 +241,7 @@ export default async function LandingPage({ locale }: { locale: string }) {
                                 </Reveal>
                                 <Reveal delay={80} className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
                                     <Link
-                                        href="/register"
+                                        href="/register?intent=owner"
                                         className="inline-flex min-h-11 items-center bg-[var(--brand-ink)] px-5 font-semibold text-[var(--brand-paper)] transition-[opacity,transform] duration-150 hover:opacity-90 active:translate-y-px"
                                     >
                                         {t("cta.button")}

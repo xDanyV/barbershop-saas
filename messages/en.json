@@ -1,27 +1,24 @@
 {
     "Register": {
-        "choosePath": "Choose your path",
-        "choosePathDesc": "Select how you want to use the platform. You can always change your settings later.",
-        "customerTitle": "Customer",
-        "customerDesc": "Book appointments, manage your schedule, and discover top-rated barbers in your area.",
-        "barberTitle": "Barber Partner",
-        "barberDesc": "Manage your business, setup your catalog, control your availability, and grow your client base.",
+        "choosePath": "How will you use the platform?",
         "accountDetails": "Account details",
-        "accountDetailsDesc": "Enter your information to get started",
+        "accountDetailsDesc": "The barbershop can use these details to contact you about your appointments.",
         "form": {
             "fullName": "Full name",
             "phone": "Phone number",
             "email": "Email address",
             "password": "Password",
             "confirmPassword": "Confirm Password",
-            "businessSlug": "Business slug or public link",
-            "businessSlugHintBefore": "You can enter only the slug, like",
-            "businessSlugHintAfter": ", or paste the full public business link.",
-            "acceptTerms": "I accept the <terms>Terms and Conditions</terms> and the <privacy>Privacy Notice</privacy>."
+            "businessSlug": "Your barbershop's link",
+            "acceptTerms": "I accept the <terms>Terms and Conditions</terms> and the <privacy>Privacy Notice</privacy>.",
+            "businessSlugHint": "Ask the owner for it or copy it from the barbershop's page.",
+            "passwordHint": "At least 8 characters.",
+            "showPassword": "Show password",
+            "hidePassword": "Hide password"
         },
         "buttons": {
             "creating": "Setting up your workspace...",
-            "selectRole": "Select a role to continue",
+            "selectRole": "Choose an option to continue",
             "create": "Create account"
         },
         "login": {
@@ -30,7 +27,7 @@
         },
         "errors": {
             "selectType": "Please select an account type",
-            "slugRequired": "Please enter the business slug or public business link",
+            "slugRequired": "Paste your barbershop's link.",
             "passwordMismatch": "Passwords do not match",
             "passwordLength": "Password must be at least 8 characters long",
             "generic": "Something went wrong",
@@ -39,15 +36,34 @@
             "tooManyAttempts": "Too many sign-ups from this connection. Please try again later.",
             "phone": "Enter a 10-digit Mexican phone number."
         },
-        "toasts": {
-            "creating": "Creating your account...",
-            "failed": "Failed to create account",
-            "success": "Welcome aboard! Redirecting...",
-            "connection": "Connection error. Please try again."
-        },
         "placeholders": {
             "name": "John Doe",
-            "email": "you@example.com"
+            "email": "you@example.com",
+            "businessLink": "Paste the link here"
+        },
+        "paths": {
+            "owner": {
+                "title": "I own a barbershop",
+                "text": "Create your page, take bookings and manage your team. 30 days free.",
+                "formTitle": "Create your owner account",
+                "submit": "Create account and continue"
+            },
+            "barber": {
+                "title": "I work at a barbershop",
+                "text": "Join your barbershop's team. The owner will approve your account.",
+                "formTitle": "Join your barbershop",
+                "submit": "Create account"
+            },
+            "customer": {
+                "title": "I want to book an appointment",
+                "text": "Book with your barbers and check your appointments.",
+                "formTitle": "Create your account",
+                "submit": "Create account"
+            }
+        },
+        "returning": {
+            "title": "Create your account to book",
+            "text": "You only do this once. Then you go back to the barbershop to choose your time."
         }
     },
     "Login": {
@@ -363,7 +379,11 @@
             "confirm": "Yes, cancel",
             "keep": "Keep it"
         },
-        "reschedule": "Change time"
+        "reschedule": "Change time",
+        "cancelledByBusiness": "Canceled by the barbershop",
+        "expiredUnconfirmed": "Not confirmed in time",
+        "bookAgain": "Book another time",
+        "contactBusiness": "Message the barbershop"
     },
     "AvailableSlots": {
         "title": "Available times",
@@ -408,8 +428,7 @@
             "loadFailed": "Could not load services",
             "bookFailed": "Could not book appointment",
             "network": "Network error, please try again",
-            "loginRequired": "Sign in to book this appointment",
-            "ownBusiness": "You cannot book at your own barbershop. Use \"Add appointment\" in your schedule."
+            "loginRequired": "Sign in to book this appointment"
         },
         "success": {
             "booked": "{name} booked successfully!"
@@ -1181,5 +1200,37 @@
             "text": "There is a temporary problem on our side. Your information is safe.",
             "hint": "Reload the page in a few minutes."
         }
+    },
+    "ApiErrors": {
+        "EMAIL_TAKEN": "An account with this email already exists. Sign in.",
+        "PHONE_TAKEN": "An account with this phone number already exists.",
+        "SLUG_REQUIRED": "Paste your barbershop's link.",
+        "BUSINESS_NOT_FOUND": "We could not find that barbershop. Check the link.",
+        "BARBER_CANNOT_CREATE": "Your account belongs to another barbershop's team and cannot create a new one.",
+        "BUSINESS_ACCOUNT_DELETE": "To delete an account with a barbershop, contact us.",
+        "SLOT_TAKEN": "That time is no longer available. Choose another.",
+        "TIME_UNAVAILABLE": "That time is not available: there is another appointment or a day off.",
+        "SERVICE_DOES_NOT_FIT": "That service does not fit at this time. Choose another.",
+        "PAST_DATE": "Choose a date that has not passed.",
+        "BARBER_UNAVAILABLE": "This barber is not available.",
+        "SERVICE_UNAVAILABLE": "This service is no longer available.",
+        "BUSINESS_CLOSED": "The barbershop is temporarily closed.",
+        "BOOKINGS_PAUSED": "This barbershop is not taking bookings right now.",
+        "BLOCKED_HERE": "You cannot book at this barbershop.",
+        "ACCOUNT_SUSPENDED": "Your account is suspended and cannot book.",
+        "TOO_MANY_ACTIVE": "You can only have 2 active appointments at a time.",
+        "OWN_BUSINESS": "You cannot book at your own barbershop. Use \"Add appointment\" in your schedule.",
+        "TOO_LATE_TO_CANCEL": "It can no longer be canceled: less than 2 hours remain.",
+        "TOO_LATE_TO_RESCHEDULE": "It can no longer be changed: less than 2 hours remain.",
+        "CANNOT_RESCHEDULE": "This appointment can no longer be changed.",
+        "NO_SHOW_TOO_EARLY": "A no-show is recorded after the appointment time.",
+        "SERVICE_EXISTS": "You already have a service with this name.",
+        "ALREADY_EXISTS": "That record already exists.",
+        "WRONG_PASSWORD": "The password is not correct.",
+        "TOO_MANY_ATTEMPTS": "Too many attempts. Wait a few minutes.",
+        "NOT_ALLOWED": "You do not have permission to do this.",
+        "NOT_FOUND": "We could not find that. It may no longer exist.",
+        "VALIDATION": "Check the details and try again.",
+        "INVALID_PHONE": "Enter a 10-digit Mexican phone number."
     }
 }
