@@ -616,6 +616,10 @@
             "title": "Opening hours",
             "today": "Today",
             "closed": "Closed"
+        },
+        "meta": {
+            "title": "{name}: book your appointment",
+            "description": "Book your appointment at {name} from your phone. Choose your barber, service and time."
         }
     },
     "BookingPage": {
@@ -895,6 +899,13 @@
             "button": "Sign out of other devices",
             "working": "Signing out...",
             "done": "We signed you out on your other devices."
+        },
+        "install": {
+            "title": "Install the app",
+            "text": "Open it from your phone's home screen, with no app store download.",
+            "button": "Install",
+            "ios": "On iPhone: open this site in Safari, tap Share and choose \"Add to Home Screen\".",
+            "manual": "In your browser menu, choose \"Install app\" or \"Add to Home Screen\"."
         }
     },
     "Reschedule": {

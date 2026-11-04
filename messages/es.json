@@ -616,6 +616,10 @@
             "title": "Horario",
             "today": "Hoy",
             "closed": "Cerrado"
+        },
+        "meta": {
+            "title": "{name}: reserva tu cita",
+            "description": "Reserva tu cita en {name} desde tu teléfono. Elige barbero, servicio y hora."
         }
     },
     "BookingPage": {
@@ -895,6 +899,13 @@
             "button": "Cerrar sesión en los demás dispositivos",
             "working": "Cerrando...",
             "done": "Cerramos tu sesión en los demás dispositivos."
+        },
+        "install": {
+            "title": "Instala la app",
+            "text": "Ábrela desde la pantalla de inicio de tu teléfono, sin descargar nada de una tienda.",
+            "button": "Instalar",
+            "ios": "En iPhone: abre este sitio en Safari, toca Compartir y elige \"Agregar a inicio\".",
+            "manual": "En el menú de tu navegador, elige \"Instalar app\" o \"Agregar a la pantalla de inicio\"."
         }
     },
     "Reschedule": {
