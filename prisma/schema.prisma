@@ -115,8 +115,12 @@ model Appointment {
   serviceId String
   service   Service @relation(fields: [serviceId], references: [id])
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  // Sin usuario cuando la barbería registra a un cliente sin cuenta
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  walkInName  String?
+  walkInPhone String?
 
   barberId String
   barber   Barber @relation(fields: [barberId], references: [id])

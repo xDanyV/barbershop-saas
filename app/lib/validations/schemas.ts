@@ -80,6 +80,18 @@ export const createAppointmentSchema = z.object({
     userId: z.string().optional(),
 });
 
+export const createManualAppointmentSchema = z.object({
+    serviceId: z.string().min(1),
+    date: dateKey,
+    time: timeString,
+    name: z.string().trim().min(1, "Name is required").max(100),
+    phone: optionalMxPhone,
+});
+
+export const rescheduleAppointmentSchema = z.object({
+    date: z.string().datetime({ offset: true }),
+});
+
 export const updateAppointmentStatusSchema = z.object({
     status: z.enum(["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED", "NO_SHOW"]),
 });

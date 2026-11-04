@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import BusinessHero from "./components/BusinessHero";
 import BarberCarousel from "./components/BarberCarousel";
 import BusinessGallery from "./components/BusinessGallery";
+import BusinessHours from "./components/BusinessHours";
 import BusinessPosts from "./components/BusinessPosts";
 import FloatingContactCard from "./components/FloatingContactCard";
 import BusinessCTA from "./components/BusinessCTA";
@@ -62,6 +63,11 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                 </div>
 
                 <aside className="space-y-6">
+                    <BusinessHours
+                        rows={business.barbers.flatMap((barber) => barber.availability)}
+                        timezone={business.timezone}
+                    />
+
                     <BusinessGallery gallery={business.gallery} />
 
                     <FloatingContactCard

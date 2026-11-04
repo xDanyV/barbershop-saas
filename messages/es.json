@@ -181,7 +181,9 @@
             "confirmed": "Cita de {name} confirmada",
             "noShow": "Inasistencia de {name} registrada"
         },
-        "markNoShow": "No asistió"
+        "markNoShow": "No asistió",
+        "reschedule": "Cambiar horario",
+        "walkIn": "Sin cuenta"
     },
     "AvailabilityModal": {
         "triggerButton": "Disponibilidad",
@@ -327,7 +329,8 @@
             "tooLate": "No se pueden cancelar citas con menos de 2 horas de anticipación",
             "cancelFailed": "No se pudo cancelar la cita",
             "network": "Error de red, por favor intenta de nuevo",
-            "maxAppointments": "Solo puedes tener un máximo de 2 citas activas."
+            "maxAppointments": "Solo puedes tener un máximo de 2 citas activas.",
+            "tooLateReschedule": "No se pueden cambiar citas con menos de 2 horas de anticipación"
         },
         "success": {
             "cancelled": "Cita cancelada correctamente"
@@ -337,7 +340,8 @@
             "description": "Esto cancelará tu cita de {service}.",
             "confirm": "Sí, cancelar",
             "keep": "Mantener"
-        }
+        },
+        "reschedule": "Cambiar horario"
     },
     "AvailableSlots": {
         "title": "Horarios disponibles",
@@ -578,6 +582,11 @@
             "description": "Selecciona tu servicio y horario disponible para reservar una cita con el equipo de este negocio.",
             "book": "Reservar cita",
             "fallbackName": "Barbero"
+        },
+        "hours": {
+            "title": "Horario",
+            "today": "Hoy",
+            "closed": "Cerrado"
         }
     },
     "BookingPage": {
@@ -857,6 +866,44 @@
             "button": "Cerrar sesión en los demás dispositivos",
             "working": "Cerrando...",
             "done": "Cerramos tu sesión en los demás dispositivos."
+        }
+    },
+    "Reschedule": {
+        "title": "Cambiar horario",
+        "subtitle": "Elige otro día y hora para {service}.",
+        "date": "Fecha",
+        "times": "Horarios libres",
+        "loading": "Buscando horarios...",
+        "empty": "No hay horarios libres este día. Prueba otra fecha.",
+        "needsConfirmation": "La barbería deberá confirmar el nuevo horario.",
+        "confirm": "Guardar nuevo horario",
+        "saving": "Guardando...",
+        "close": "Cerrar",
+        "success": "Cambiamos la cita al nuevo horario.",
+        "errors": {
+            "load": "No se pudieron cargar los horarios.",
+            "taken": "Ese horario ya no está disponible. Elige otro.",
+            "failed": "No se pudo cambiar el horario."
+        }
+    },
+    "WalkIn": {
+        "button": "Agregar cita",
+        "title": "Agregar cita",
+        "subtitle": "Para clientes que llegan sin reservar o que agendan por teléfono.",
+        "name": "Nombre del cliente",
+        "phone": "Teléfono (opcional)",
+        "service": "Servicio",
+        "date": "Fecha",
+        "time": "Hora",
+        "save": "Guardar cita",
+        "saving": "Guardando...",
+        "close": "Cerrar",
+        "noServices": "Primero agrega un servicio a tu catálogo.",
+        "success": "Cita de {name} agregada",
+        "errors": {
+            "phone": "Escribe un teléfono de México de 10 dígitos.",
+            "conflict": "Ese horario no está disponible: ya hay una cita o lo marcaste como día libre.",
+            "failed": "No se pudo guardar la cita. Revisa los datos."
         }
     }
 }

@@ -21,6 +21,7 @@ async function queryPublicBusinessPage(slug: string) {
             logoUrl: true,
             coverUrl: true,
             active: true,
+            timezone: true,
             settings: {
                 select: {
                     isServiceActive: true,
@@ -35,6 +36,9 @@ async function queryPublicBusinessPage(slug: string) {
                 select: {
                     id: true,
                     profileImageUrl: true,
+                    availability: {
+                        select: { dayOfWeek: true, startTime: true, endTime: true },
+                    },
                     user: {
                         select: {
                             name: true,

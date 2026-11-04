@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Clock, User, Calendar as CalendarIcon, History, AlertTriangle } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { formatPriceFromCents } from "@/lib/billing/pricing";
+import RescheduleDialog from "@/[locale]/components/RescheduleDialog";
 
 type Appointment = {
   id: string;
@@ -25,6 +26,7 @@ export default function CustomerHome() {
   const [showHistory, setShowHistory] = useState(false);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState<string | null>(null);
+  const [rescheduling, setRescheduling] = useState<Appointment | null>(null);
 
   useEffect(() => {
     fetch("/api/protected/appointments/user")
@@ -162,6 +164,17 @@ export default function CustomerHome() {
     } finally {
       setCancelling(null);
     }
+  };
+
+  const openReschedule = (appointment: Appointment) => {
+    const hoursUntil = (new Date(appointment.date).getTime() - Date.now()) / (1000 * 60 * 60);
+
+    if (hoursUntil < 2) {
+      toast.error(t("errors.tooLateReschedule"));
+      return;
+    }
+
+    setRescheduling(appointment);
   };
 
   const list = showHistory ? history : appointments;
@@ -350,7 +363,16 @@ export default function CustomerHome() {
                         </div>
 
                         {/* Cancel button */}
-                        <div className="shrink-0 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-50">
+                        <div className="shrink-0 flex flex-col gap-1 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-50">
+                          {(a.status === "PENDING" || a.status === "CONFIRMED") && date.getTime() > Date.now() && (
+                            <button
+                              type="button"
+                              onClick={() => openReschedule(a)}
+                              className="w-full sm:w-auto min-h-11 px-4 py-2 font-bold text-xs text-[#0f2733] rounded-xl hover:bg-[#0f2733] hover:text-white transition-colors"
+                            >
+                              {t("reschedule")}
+                            </button>
+                          )}
                           <motion.button
                             whileTap={{ scale: 0.95 }}
                             onClick={() => confirmCancel(a.id, a.date, a.service.name)}
@@ -376,6 +398,24 @@ export default function CustomerHome() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {rescheduling && (
+        <RescheduleDialog
+          appointmentId={rescheduling.id}
+          currentDate={rescheduling.date}
+          serviceName={rescheduling.service.name}
+          needsConfirmation
+          onClose={() => setRescheduling(null)}
+          onDone={({ date, status }) => {
+            setAppointments((prev) =>
+              prev
+                .map((a) => (a.id === rescheduling.id ? { ...a, date, status: status as Appointment["status"] } : a))
+                .sort((x, y) => new Date(x.date).getTime() - new Date(y.date).getTime())
+            );
+            setRescheduling(null);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -23,6 +23,7 @@ import {
 } from "@headlessui/react";
 import { useTranslations } from "next-intl";
 import { getWhatsAppUrl } from "@/[locale]/business/[slug]/lib/business-page.utils";
+import RescheduleDialog from "@/[locale]/components/RescheduleDialog";
 
 type AppointmentStatus = "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
 
@@ -33,6 +34,8 @@ type Appointment = {
   customerPhone: string;
   service: string;
   time: string;
+  date: string;
+  isWalkIn: boolean;
   status: AppointmentStatus;
 };
 
@@ -40,18 +43,21 @@ type Props = {
   appointment: Appointment;
   onConfirm?: (id: string) => void;
   onCancel?: (id: string) => void;
+  onChanged?: () => void;
 };
 
 export default function AppointmentCard({
   appointment,
   onConfirm,
   onCancel,
+  onChanged,
 }: Props) {
   const t = useTranslations("AppointmentCard");
   const [status, setStatus] = useState<AppointmentStatus>(appointment.status);
   const [loadingConfirm, setLoadingConfirm] = useState(false);
   const [loadingCancel, setLoadingCancel] = useState(false);
   const [loadingNoShow, setLoadingNoShow] = useState(false);
+  const [rescheduling, setRescheduling] = useState(false);
 
   const handleConfirm = async () => {
     setLoadingConfirm(true);
@@ -209,6 +215,7 @@ export default function AppointmentCard({
   };
 
   const canCancel = status === "PENDING" || status === "CONFIRMED";
+  const canReschedule = canCancel && new Date(appointment.date).getTime() > Date.now();
 
   return (
     <Popover className="relative">
@@ -240,6 +247,11 @@ export default function AppointmentCard({
               <div className="min-w-0">
                 <p className="font-bold text-gray-900 group-hover/btn:text-indigo-600 transition-colors flex items-center gap-1 text-sm md:text-base">
                   <span className="truncate">{appointment.customerName}</span>
+                  {appointment.isWalkIn && (
+                    <span className="shrink-0 bg-[#e4dccb] px-1.5 py-0.5 text-[10px] font-semibold text-[#0f2733]">
+                      {t("walkIn")}
+                    </span>
+                  )}
                   <ExternalLink
                     size={12}
                     className="opacity-0 group-hover/btn:opacity-100 transition-opacity text-gray-400 shrink-0"
@@ -320,7 +332,7 @@ export default function AppointmentCard({
           </div>
 
           <div className="text-left sm:text-right flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center w-full sm:w-auto gap-2 border-t sm:border-t-0 pt-3 sm:pt-0 border-gray-50">
-            <div className="flex items-center gap-1.5 text-xs md:text-sm font-bold text-gray-700 bg-gray-50 px-2 py-1 rounded-lg">
+            <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs md:text-sm font-bold text-gray-700 bg-gray-50 px-2 py-1 rounded-lg">
               <Clock size={14} className="text-indigo-500" />
               {appointment.time}
             </div>
@@ -339,6 +351,15 @@ export default function AppointmentCard({
                   className="text-[11px] md:text-xs px-3 md:px-4 py-1.5 rounded-full bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all cursor-pointer whitespace-nowrap disabled:opacity-50"
                 >
                   {loadingConfirm ? "..." : t("confirm")}
+                </button>
+              )}
+
+              {canReschedule && (
+                <button
+                  onClick={() => setRescheduling(true)}
+                  className="text-[11px] md:text-xs px-3 md:px-4 py-1.5 rounded-full border border-[#0f2733]/25 text-[#0f2733] font-bold hover:bg-[#0f2733] hover:text-white transition-all cursor-pointer whitespace-nowrap"
+                >
+                  {t("reschedule")}
                 </button>
               )}
 
@@ -363,6 +384,19 @@ export default function AppointmentCard({
               )}
             </div>
           </div>
+
+          {rescheduling && (
+            <RescheduleDialog
+              appointmentId={appointment.id}
+              currentDate={appointment.date}
+              serviceName={appointment.service}
+              onClose={() => setRescheduling(false)}
+              onDone={() => {
+                setRescheduling(false);
+                onChanged?.();
+              }}
+            />
+          )}
         </motion.div>
       )}
     </Popover>

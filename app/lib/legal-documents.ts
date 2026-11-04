@@ -23,6 +23,7 @@ const es: Record<LegalKind, LegalDocument> = {
                 heading: "Qué datos tratamos",
                 paragraphs: [
                     "Datos de identificación y contacto: nombre, correo electrónico y número de teléfono.",
+                    "Si la barbería registra tu cita sin que tengas cuenta: el nombre, el teléfono (opcional) y el servicio que te agende.",
                     "Datos de tu cuenta: contraseña (guardada cifrada, nunca en texto), tipo de cuenta y la fecha en que aceptaste este aviso.",
                     "Datos de tus citas: barbería, barbero, servicio, fecha, hora y estado de la cita, incluidas cancelaciones e inasistencias.",
                     "Si administras una barbería: nombre comercial, dirección, teléfono, horarios, servicios, precios, imágenes y publicaciones que subas.",
@@ -164,6 +165,7 @@ const en: Record<LegalKind, LegalDocument> = {
                 heading: "What data we process",
                 paragraphs: [
                     "Identification and contact data: name, email address and phone number.",
+                    "If a barbershop records your appointment and you have no account: the name, the phone number (optional) and the service it books for you.",
                     "Account data: password (stored encrypted, never in plain text), account type and the date you accepted this notice.",
                     "Booking data: barbershop, barber, service, date, time and status, including cancellations and no-shows.",
                     "If you run a barbershop: business name, address, phone, opening hours, services, prices, and the images and posts you upload.",

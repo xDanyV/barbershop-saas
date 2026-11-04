@@ -1,6 +1,6 @@
 import AppointmentCard from "./AppointmentCard";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, Inbox, Ban } from "lucide-react";
+import { Calendar, Inbox, Ban, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 type Appointment = {
@@ -10,6 +10,8 @@ type Appointment = {
     customerPhone: string;
     service: string;
     time: string;
+    date: string;
+    isWalkIn: boolean;
     status: "PENDING" | "CONFIRMED" | "COMPLETED" | "NO_SHOW";
 };
 
@@ -21,12 +23,15 @@ type Exception = {
 type Props = {
     appointments: Appointment[];
     onConfirm?: (id: string) => void;
+    onChanged?: () => void;
+    onAddWalkIn?: () => void;
     selectedDate: string;
     exceptions?: Exception[];
 };
 
-export default function AppointmentList({ appointments, onConfirm, selectedDate, exceptions = [] }: Props) {
+export default function AppointmentList({ appointments, onConfirm, onChanged, onAddWalkIn, selectedDate, exceptions = [] }: Props) {
     const t = useTranslations("AppointmentList");
+    const tWalkIn = useTranslations("WalkIn");
 
     const dateToProcess = selectedDate || new Date().toISOString().split("T")[0];
     const [year, month, day] = dateToProcess.split("-").map(Number);
@@ -75,6 +80,17 @@ export default function AppointmentList({ appointments, onConfirm, selectedDate,
                         {t("scheduleFor")} <span className="text-gray-700 font-bold">{formattedDate}</span>
                     </span>
                 </div>
+
+                {onAddWalkIn && (
+                    <button
+                        type="button"
+                        onClick={onAddWalkIn}
+                        className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 bg-[#0f2733] px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90 sm:w-fit"
+                    >
+                        <Plus size={16} />
+                        {tWalkIn("button")}
+                    </button>
+                )}
             </div>
 
             <div className="flex-1 overflow-y-auto max-h-104 pr-2">
@@ -127,6 +143,7 @@ export default function AppointmentList({ appointments, onConfirm, selectedDate,
                                     <AppointmentCard
                                         appointment={appointment}
                                         onConfirm={onConfirm}
+                                        onChanged={onChanged}
                                     />
                                 </motion.div>
                             ))}
