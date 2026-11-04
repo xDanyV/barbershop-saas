@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { UserPlus, Users, Settings, ShieldAlert, CreditCard } from "lucide-react";
+import { UserPlus, Users, Settings, ShieldAlert, CreditCard, Store, History } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
 
@@ -11,15 +11,19 @@ import CustomersList from "./CustomersList";
 import SystemSettings from "./SystemSettings";
 
 import BusinessBillingManager from "./BusinessBillingManager";
+import PlatformBusinesses from "./PlatformBusinesses";
+import AuditLogList from "./AuditLogList";
 
 
 // Definimos las pestañas solo con sus identificadores e iconos
 const TABS: { id: string; icon: typeof UserPlus; adminOnly?: boolean }[] = [
+    { id: "businesses", icon: Store, adminOnly: true },
+    { id: "billing", icon: CreditCard, adminOnly: true },
     { id: "pending", icon: UserPlus },
     { id: "barbers", icon: Users },
     { id: "customers", icon: ShieldAlert },
     { id: "settings", icon: Settings, adminOnly: true },
-    { id: "billing", icon: CreditCard, adminOnly: true },
+    { id: "audit", icon: History, adminOnly: true },
 ];
 
 type Props = {
@@ -28,7 +32,7 @@ type Props = {
 
 export default function AdminDashboardClient({ role }: Props) {
     const t = useTranslations("AdminDashboard");
-    const [activeTab, setActiveTab] = useState("pending");
+    const [activeTab, setActiveTab] = useState(role === "ADMIN" ? "businesses" : "pending");
 
     // Facturación y mantenimiento global son de la plataforma: solo los ve el ADMIN
     const tabs = TABS.filter((tab) => !tab.adminOnly || role === "ADMIN");
@@ -96,6 +100,8 @@ export default function AdminDashboardClient({ role }: Props) {
                         {activeTab === "customers" && <CustomersList />}
                         {activeTab === "settings" && role === "ADMIN" && <SystemSettings />}
                         {activeTab === "billing" && role === "ADMIN" && <BusinessBillingManager />}
+                        {activeTab === "businesses" && role === "ADMIN" && <PlatformBusinesses />}
+                        {activeTab === "audit" && role === "ADMIN" && <AuditLogList />}
                     </motion.div>
                 </AnimatePresence>
             </div>

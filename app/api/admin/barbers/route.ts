@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { AppError, errorResponse } from "@/lib/errors";
 import { revalidateBusinessPages } from "@/lib/cache/business-pages";
 import { requireAuth } from "@/lib/api/auth";
+import { recordAudit } from "@/lib/services/audit.service";
 import { parseJsonBody } from "@/lib/api/validation";
 import { updateBarberAdminSchema } from "@/lib/validations/schemas";
 
@@ -60,7 +61,7 @@ export async function PATCH(request: NextRequest) {
 
         const existingBarber = await prisma.barber.findUnique({
             where: { id: barberId },
-            select: { businessId: true },
+            select: { businessId: true, userId: true },
         });
 
         if (!existingBarber) {
@@ -71,18 +72,32 @@ export async function PATCH(request: NextRequest) {
             throw new AppError("Forbidden", 403);
         }
 
-        const updatedBarber = await prisma.barber.update({
-            where: { id: barberId },
-            data: {
-                status,
-                // undefined = no tocar; "" o null = quitar la foto
-                ...(profileImageUrl !== undefined ? { profileImageUrl: profileImageUrl || null } : {}),
-            },
-            select: {
-                id: true,
-                status: true,
-                profileImageUrl: true,
-            },
+        const updatedBarber = await prisma.$transaction(async (tx) => {
+            const updated = await tx.barber.update({
+                where: { id: barberId },
+                data: {
+                    status,
+                    // undefined = no tocar; "" o null = quitar la foto
+                    ...(profileImageUrl !== undefined ? { profileImageUrl: profileImageUrl || null } : {}),
+                },
+                select: {
+                    id: true,
+                    status: true,
+                    profileImageUrl: true,
+                },
+            });
+
+            // El registro cubre a la plataforma; lo que hace un dueño en su equipo no entra
+            if (auth.role === "ADMIN") {
+                await recordAudit(tx, {
+                    actorId: auth.userId,
+                    action: "barber_updated",
+                    targetType: "user",
+                    targetId: existingBarber.userId,
+                });
+            }
+
+            return updated;
         });
 
         await revalidateBusinessPages(existingBarber.businessId);

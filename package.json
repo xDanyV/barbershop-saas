@@ -9,6 +9,7 @@
     "lint": "eslint",
     "postinstall": "prisma generate",
     "typecheck": "tsc --noEmit",
+    "admin:create": "node --env-file-if-exists=.env scripts/create-admin.mjs",
     "test": "vitest run"
   },
   "dependencies": {

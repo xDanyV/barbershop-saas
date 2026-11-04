@@ -6,22 +6,41 @@ import { prisma } from "@/lib/prisma";
 
 // Aviso para el dueño cuando su membresía necesita atención. Sin nada que avisar no muestra nada.
 export default async function BillingBanner({ businessId }: { businessId: string }) {
-    const subscription = await prisma.businessSubscription.findUnique({
-        where: { businessId },
-        select: { billingStatus: true, currentPeriodEnd: true },
+    const business = await prisma.business.findUnique({
+        where: { id: businessId },
+        select: {
+            active: true,
+            subscription: { select: { billingStatus: true, currentPeriodEnd: true } },
+        },
     });
 
-    if (!subscription) return null;
+    if (!business) return null;
+
+    const t = await getTranslations("Billing");
+
+    // Lo decidió la plataforma: pagar no lo resuelve, así que no lleva enlace a la membresía
+    if (!business.active) {
+        return (
+            <aside
+                role="status"
+                className={`brand ${brandFontClasses} px-4 py-3 sm:px-8`}
+                style={{ background: "var(--brand-accent)", color: "var(--brand-ink)" }}
+            >
+                <p className="mx-auto max-w-7xl text-[length:var(--step-small)] font-semibold">{t("alerts.deactivated")}</p>
+            </aside>
+        );
+    }
+
+    if (!business.subscription) return null;
 
     const alert = getBillingAlert({
-        status: subscription.billingStatus,
-        currentPeriodEnd: subscription.currentPeriodEnd,
+        status: business.subscription.billingStatus,
+        currentPeriodEnd: business.subscription.currentPeriodEnd,
         now: new Date(),
     });
 
     if (!alert) return null;
 
-    const t = await getTranslations("Billing");
     const locale = await getLocale();
     const blocked = alert.kind === "suspended" || alert.kind === "canceled" || alert.kind === "pending";
 

@@ -519,7 +519,9 @@
             "barbers": "Manage Barbers",
             "customers": "Manage Customers",
             "settings": "Global Settings",
-            "billing": "Subscriptions"
+            "billing": "Memberships",
+            "businesses": "Businesses",
+            "audit": "Activity"
         }
     },
     "BannedCustomerScreen": {
@@ -946,7 +948,8 @@
             "suspended": "Your barbershop is suspended: your page is hidden and you are not taking bookings.",
             "canceled": "Your membership is canceled: your page is hidden and you are not taking bookings.",
             "pending": "Your barbershop is not taking bookings until your first payment is recorded.",
-            "action": "See how to pay"
+            "action": "See how to pay",
+            "deactivated": "Your barbershop was deactivated by the platform: your page is hidden and you are not taking bookings. Contact us for more information."
         },
         "card": {
             "title": "Membership",
@@ -1007,6 +1010,61 @@
                 "void": "Could not void the payment.",
                 "voidChanged": "The membership changed after this payment. Fix it with \"Adjust\".",
                 "adjust": "Could not update the membership."
+            }
+        }
+    },
+    "Platform": {
+        "title": "Businesses",
+        "subtitle": "Every barbershop on the platform, with its owner and activity.",
+        "stats": {
+            "businesses": "Businesses",
+            "active": "Active",
+            "customers": "Customers",
+            "appointments": "Bookings in 30 days"
+        },
+        "search": "Search",
+        "searchPlaceholder": "Name, owner, email or phone",
+        "noResults": "No business matches your search.",
+        "empty": "No businesses yet.",
+        "deactivated": "Deactivated",
+        "since": "since {date}",
+        "counts": "{barbers, plural, one {# barber} other {# barbers}} · {services, plural, one {# service} other {# services}} · {appointments, plural, one {# booking} other {# bookings}} in 30 days",
+        "viewPage": "View page",
+        "whatsapp": "WhatsApp",
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "close": "Close",
+        "saving": "Saving...",
+        "activateTitle": "Activate {name}",
+        "deactivateTitle": "Deactivate {name}",
+        "activateHint": "Its page is shown again and it can take bookings, if its membership allows it.",
+        "deactivateHint": "Its page is hidden and it stops taking bookings. Existing appointments are not canceled and its membership does not change.",
+        "reason": "Reason (optional)",
+        "activatedToast": "Business activated",
+        "deactivatedToast": "Business deactivated",
+        "errors": {
+            "load": "Could not load businesses.",
+            "toggle": "Could not update the business."
+        },
+        "audit": {
+            "title": "Activity",
+            "subtitle": "What administrators have done on the platform, newest first.",
+            "empty": "No activity recorded yet.",
+            "error": "Could not load the activity.",
+            "more": "Show more",
+            "system": "System",
+            "removedAccount": "Deleted account",
+            "actions": {
+                "payment_recorded": "Payment recorded",
+                "payment_voided": "Payment voided",
+                "membership_adjusted": "Membership adjusted",
+                "settings_updated": "Settings updated",
+                "customer_banned": "Customer blocked",
+                "customer_unbanned": "Customer unblocked",
+                "barber_updated": "Barber updated",
+                "business_activated": "Business activated",
+                "business_deactivated": "Business deactivated",
+                "admin_created": "Administrator created"
             }
         }
     }

@@ -2,6 +2,7 @@ import type { PaymentMethod } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { computePaidPeriod } from "@/lib/billing/periods";
 import { AppError } from "@/lib/errors";
+import { recordAudit } from "@/lib/services/audit.service";
 import { lockKeys } from "@/lib/services/booking.service";
 import { resolveTimezone, toDateKey, zonedToUtc } from "@/lib/time/zoned";
 
@@ -36,7 +37,7 @@ export async function recordPayment(data: {
 
         const business = await tx.business.findUnique({
             where: { id: businessId },
-            select: { timezone: true, subscription: { select: { billingStatus: true, currentPeriodEnd: true } } },
+            select: { name: true, timezone: true, subscription: { select: { billingStatus: true, currentPeriodEnd: true } } },
         });
 
         if (!business) {
@@ -73,6 +74,15 @@ export async function recordPayment(data: {
             create: { businessId, ...renewal },
         });
 
+        await recordAudit(tx, {
+            actorId: recordedById,
+            action: "payment_recorded",
+            targetType: "business",
+            targetId: businessId,
+            targetLabel: business.name,
+            metadata: { amountCents, months },
+        });
+
         return tx.businessPayment.create({
             data: {
                 businessId,
@@ -95,7 +105,7 @@ export async function recordPayment(data: {
 }
 
 // Corrige un pago capturado por error. Solo el último, para poder dejar la membresía como estaba.
-export async function voidLatestPayment(businessId: string) {
+export async function voidLatestPayment(businessId: string, actorId: string) {
     return prisma.$transaction(async (tx) => {
         await lockKeys(tx, `billing:${businessId}`);
 
@@ -125,6 +135,17 @@ export async function voidLatestPayment(businessId: string) {
                 currentPeriodEnd: latest.previousPeriodEnd,
                 canceledAt: latest.previousStatus === "CANCELED" ? new Date() : null,
             },
+        });
+
+        const business = await tx.business.findUnique({ where: { id: businessId }, select: { name: true } });
+
+        await recordAudit(tx, {
+            actorId,
+            action: "payment_voided",
+            targetType: "business",
+            targetId: businessId,
+            targetLabel: business?.name,
+            metadata: { amountCents: latest.amountCents, months: latest.months },
         });
 
         return tx.businessPayment.update({

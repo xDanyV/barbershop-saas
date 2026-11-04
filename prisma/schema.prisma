@@ -28,6 +28,7 @@ model User {
   createdAt       DateTime              @default(now())
 
   paymentsRecorded BusinessPayment[]
+  auditEntries     AuditLog[]
 }
 
 enum Role {
@@ -343,4 +344,21 @@ model RateLimit {
   windowStart DateTime
 
   @@index([windowStart])
+}
+
+// Acciones de administración de la plataforma
+model AuditLog {
+  id      String  @id @default(uuid())
+  actorId String?
+  actor   User?   @relation(fields: [actorId], references: [id])
+
+  action      String
+  targetType  String
+  targetId    String?
+  targetLabel String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([targetType, targetId])
 }
