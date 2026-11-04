@@ -62,15 +62,17 @@ export default function TeamBarberSelector({ currentBarberId }: Props) {
     };
 
     return (
-        <div className="mx-auto mt-4 flex max-w-7xl flex-col gap-2 rounded-2xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2 text-indigo-700">
-                <Users size={16} />
-                <span className="text-xs font-black uppercase tracking-widest">{t("label")}</span>
+        <div className="mt-4 bg-white p-4">
+            <label className="flex flex-col gap-2 text-sm font-semibold sm:flex-row sm:items-center sm:gap-3">
+                <span className="flex items-center gap-2">
+                    <Users size={18} aria-hidden="true" />
+                    {t("label")}
+                </span>
                 <select
                     value={currentBarberId ?? ""}
                     disabled={saving}
                     onChange={(e) => handleChange(e.target.value)}
-                    className="rounded-xl border border-indigo-200 bg-white px-3 py-1.5 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-300 disabled:opacity-60"
+                    className="min-h-11 border border-gray-200 bg-white px-3 font-normal text-gray-900 outline-none focus:border-gray-900 disabled:opacity-60"
                 >
                     {team.map((barber) => (
                         <option key={barber.id} value={barber.id}>
@@ -78,9 +80,8 @@ export default function TeamBarberSelector({ currentBarberId }: Props) {
                         </option>
                     ))}
                 </select>
-            </div>
-
-            <p className="text-[11px] font-medium text-indigo-500">{t("hint")}</p>
+            </label>
+            <p className="mt-2 text-xs text-gray-500">{t("hint")}</p>
         </div>
     );
 }

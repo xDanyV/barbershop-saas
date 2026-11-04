@@ -58,7 +58,7 @@ export default async function BillingBanner({ businessId }: { businessId: string
                     {t(`alerts.${alert.kind}`, { days: alert.days })}
                 </p>
                 <Link
-                    href={`/${locale}/dashboard/admin/my-business`}
+                    href={`/${locale}/dashboard/admin/my-business?tab=membership`}
                     className="shrink-0 text-[length:var(--step-small)] font-semibold underline underline-offset-4"
                 >
                     {t("alerts.action")}

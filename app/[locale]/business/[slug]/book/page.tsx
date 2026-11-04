@@ -25,7 +25,7 @@ export default async function BusinessBookPage({ params }: BookPageProps) {
 
     if (!canAcceptBookings) {
         return (
-            <main className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center px-4">
+            <main className="theme-field min-h-screen bg-[#0f2733] text-white flex items-center justify-center px-4">
                 <div className="max-w-md bg-white/5 border border-white/10 rounded-3xl p-8 text-center">
                     <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-300 flex items-center justify-center mx-auto mb-5">
                         <span className="text-2xl">!</span>
@@ -47,7 +47,7 @@ export default async function BusinessBookPage({ params }: BookPageProps) {
 
     if (business.settings && !business.settings.isServiceActive) {
         return (
-            <main className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center px-4">
+            <main className="theme-field min-h-screen bg-[#0f2733] text-white flex items-center justify-center px-4">
                 <div className="max-w-md bg-white/5 border border-white/10 rounded-3xl p-8 text-center">
                     <h1 className="text-2xl font-black">{business.name}</h1>
                     <p className="text-gray-400 mt-4">

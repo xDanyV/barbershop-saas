@@ -86,7 +86,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4 relative overflow-hidden">
+    <main className="theme-field min-h-screen bg-[#0f2733] flex items-center justify-center px-4 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-xl h-75 bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-64 h-64 bg-indigo-900/15 blur-[100px] rounded-full pointer-events-none" />
 
@@ -169,7 +169,7 @@ export default function LoginPage() {
               <motion.p
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="text-red-400 text-[11px] sm:text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"
+                className="text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"
               >
                 {error}
               </motion.p>

@@ -76,7 +76,7 @@ export default function PlatformBusinesses() {
         : [];
 
     return (
-        <section className={`brand ${brandFontClasses} p-5 pb-24 sm:p-8 md:pb-8`}>
+        <section className={`brand ${brandFontClasses} p-5 sm:p-8`}>
             <h2 className="brand-display text-[length:var(--step-head)]">{t("title")}</h2>
             <p className="mt-2 max-w-[60ch] text-[var(--brand-muted)]">{t("subtitle")}</p>
 

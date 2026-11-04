@@ -76,17 +76,22 @@
     "DashboardNavbar": {
         "menu": {
             "adminControl": "Admin Control",
-            "myAppointments": "My Appointments",
+            "myAppointments": "My appointments",
             "catalog": "Catalog",
             "book": "Book",
             "myBusiness": "My business",
             "createBusiness": "Create business",
             "account": "My account"
         },
-        "logout": "Log out",
+        "logout": "Sign out",
         "errors": {
             "appointmentLimit": "Maximum 2 active appointments allowed."
-        }
+        },
+        "home": "Home",
+        "mainNav": "Main navigation",
+        "accountMenu": "Account",
+        "more": "More",
+        "close": "Close"
     },
     "PendingApproval": {
         "title": "Account Under Review",
@@ -133,30 +138,36 @@
         },
         "legend": {
             "selected": "Selected",
-            "blocked": "Blocked",
-            "busy": "Busy",
-            "nonWorking": "Day off"
-        }
+            "blocked": "Day off",
+            "busy": "Has appointments",
+            "nonWorking": "Day off",
+            "today": "Today"
+        },
+        "previousMonth": "Previous month",
+        "nextMonth": "Next month"
     },
     "DashboardHeader": {
         "badge": "Barber Management",
         "buttons": {
-            "exceptions": "Exceptions",
+            "exceptions": "Days off",
             "services": "Services",
-            "availability": "Availability"
-        }
+            "availability": "Hours"
+        },
+        "title": "My schedule"
     },
     "AppointmentList": {
         "title": "Appointments",
         "scheduleFor": "Schedule for",
         "exceptionDay": {
-            "title": "Day blocked",
-            "subtitle": "This day has an active exception"
+            "title": "Day off",
+            "subtitle": "No bookings are taken on this day."
         },
         "empty": {
-            "title": "No appointments scheduled",
+            "title": "No appointments on this day.",
             "subtitle": "Enjoy your free time!"
-        }
+        },
+        "count": "{count, plural, =0 {No appointments} one {# appointment} other {# appointments}}",
+        "loading": "Loading appointments"
     },
     "AppointmentCard": {
         "customerDetails": "Customer Details",
@@ -170,24 +181,33 @@
             "PENDING": "Pending",
             "CONFIRMED": "Confirmed",
             "COMPLETED": "Completed",
-            "NO_SHOW": "No-show"
+            "NO_SHOW": "No-show",
+            "CANCELLED": "Canceled"
         },
         "confirm": "Confirm",
         "errors": {
             "confirmFailed": "Could not confirm appointment",
             "network": "Network error",
-            "noShowFailed": "Could not record the no-show"
+            "noShowFailed": "Could not record the no-show",
+            "cancelFailed": "Could not cancel the appointment"
         },
         "success": {
             "confirmed": "{name} appointment confirmed",
-            "noShow": "No-show recorded for {name}"
+            "noShow": "No-show recorded for {name}",
+            "cancelled": "{name}'s appointment canceled"
         },
         "markNoShow": "No-show",
         "reschedule": "Change time",
-        "walkIn": "No account"
+        "walkIn": "No account",
+        "actions": "Actions for {name}'s appointment",
+        "whatsapp": "Message on WhatsApp",
+        "cancelAppointment": "Cancel appointment",
+        "keep": "Keep the appointment",
+        "cancelText": "{name}'s appointment for {service} at {time} will be canceled.",
+        "noActions": "No actions available"
     },
     "AvailabilityModal": {
-        "triggerButton": "Availability",
+        "triggerButton": "Hours",
         "title": "Working Hours",
         "days": {
             "mon": "Mon",
@@ -494,8 +514,8 @@
         },
         "systemState": {
             "title": "System Status",
-            "active": "🟢 Service Open and Operational",
-            "inactive": "🔴 Service Closed (Maintenance)"
+            "active": "Service open and running",
+            "inactive": "Service closed for maintenance"
         },
         "message": {
             "label": "Message for customers (Visible if turned off)",
@@ -1122,5 +1142,26 @@
         "byBarber": "Appointments by barber this month",
         "noData": "No appointments attended this month yet.",
         "barberFallback": "Barber"
+    },
+    "States": {
+        "error": {
+            "title": "Something went wrong",
+            "text": "We could not load this screen. Please try again.",
+            "retry": "Try again"
+        },
+        "notFound": {
+            "title": "This page does not exist",
+            "text": "Check the link or go back to the home page.",
+            "home": "Go home"
+        },
+        "footer": {
+            "privacy": "Privacy Notice",
+            "terms": "Terms and Conditions"
+        },
+        "unavailable": {
+            "title": "We could not connect",
+            "text": "There is a temporary problem on our side. Your information is safe.",
+            "hint": "Reload the page in a few minutes."
+        }
     }
 }

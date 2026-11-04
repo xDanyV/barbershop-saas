@@ -1,234 +1,230 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
-import { Toaster, toast } from "react-hot-toast";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import { toast } from "react-hot-toast";
 import {
-    LogOut,
-    CalendarDays,
-    Scissors,
     BookOpen,
+    CalendarDays,
+    ChevronDown,
+    LogOut,
+    Menu as MenuIcon,
+    Scissors,
     ShieldCheck,
     Store,
     UserRound,
+    type LucideIcon,
 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import BrandMark from "@/[locale]/components/BrandMark";
-import { useTranslations } from "next-intl";
+import BrandDialog from "@/[locale]/components/BrandDialog";
+
+type NavItem = { label: string; path: string; icon: LucideIcon };
+
+const BRAND_ICON = "h-9 w-9 bg-[#e4dccb] text-[#0f2733]";
 
 export default function DashboardNavbar({ role }: { role: string }) {
     const t = useTranslations("DashboardNavbar");
-    const router = useRouter();
+    const locale = useLocale();
     const pathname = usePathname();
+    const [moreOpen, setMoreOpen] = useState(false);
 
-    let menuItems = [];
+    const account: NavItem = { label: t("menu.account"), path: "/dashboard/account", icon: UserRound };
+    const panel: NavItem = { label: t("menu.adminControl"), path: "/dashboard/admin", icon: ShieldCheck };
+    const business: NavItem = { label: t("menu.myBusiness"), path: "/dashboard/admin/my-business", icon: Store };
+    const catalog: NavItem = { label: t("menu.catalog"), path: "/dashboard/barber/catalog", icon: Scissors };
+    const agenda: NavItem = { label: t("menu.myAppointments"), path: "/dashboard/barber", icon: CalendarDays };
+
+    // primary: barra principal en computadora. mobile: barra inferior (el resto va en "Más").
+    let primary: NavItem[];
+    let mobile: NavItem[];
+    let menu: NavItem[];
+    let home: string;
 
     if (role === "ADMIN") {
-        menuItems = [
-            { name: t("menu.adminControl"), path: "/dashboard/admin", icon: ShieldCheck },
-        ];
+        primary = [panel];
+        mobile = [panel];
+        menu = [account];
+        home = panel.path;
     } else if (role === "OWNER") {
-        menuItems = [
-            { name: t("menu.adminControl"), path: "/dashboard/admin", icon: ShieldCheck },
-            { name: t("menu.myBusiness"), path: "/dashboard/admin/my-business", icon: Store },
-            { name: t("menu.myAppointments"), path: "/dashboard/barber", icon: CalendarDays },
-            { name: t("menu.catalog"), path: "/dashboard/barber/catalog", icon: Scissors },
-        ];
+        primary = [panel, agenda, business, catalog];
+        mobile = [panel, agenda, business];
+        menu = [account];
+        home = panel.path;
     } else if (role === "BARBER") {
-        menuItems = [
-            { name: t("menu.myAppointments"), path: "/dashboard/barber", icon: CalendarDays },
-            { name: t("menu.catalog"), path: "/dashboard/barber/catalog", icon: Scissors },
-        ];
+        primary = [agenda, catalog];
+        mobile = [agenda, catalog];
+        menu = [account];
+        home = agenda.path;
     } else {
-        menuItems = [
-            { name: t("menu.myAppointments"), path: "/dashboard/customer/home", icon: CalendarDays },
-            { name: t("menu.book"), path: "/dashboard/customer/barbers", icon: BookOpen },
-            { name: t("menu.createBusiness"), path: "/dashboard/business/new", icon: Store },
-        ];
+        const myAppointments: NavItem = { ...agenda, path: "/dashboard/customer/home" };
+        const book: NavItem = { label: t("menu.book"), path: "/dashboard/customer/barbers", icon: BookOpen };
+
+        primary = [myAppointments, book];
+        mobile = [myAppointments, book];
+        menu = [{ label: t("menu.createBusiness"), path: "/dashboard/business/new", icon: Store }, account];
+        home = myAppointments.path;
     }
 
-    // Todos los roles pueden editar sus datos, cambiar la contraseña o eliminar su cuenta
-    menuItems.push({ name: t("menu.account"), path: "/dashboard/account", icon: UserRound });
-
-    const getHomePath = () => {
-        if (role === "ADMIN" || role === "OWNER") {
-            return "/dashboard/admin";
-        }
-
-        if (role === "BARBER") {
-            return "/dashboard/barber";
-        }
-
-        return "/dashboard/customer/home";
-    };
+    const href = (path: string) => `/${locale}${path}`;
+    const isActive = (path: string) => pathname === href(path) || pathname === path;
+    const moreItems = [...primary.filter((item) => !mobile.includes(item)), ...menu];
+    const moreActive = moreItems.some((item) => isActive(item.path));
 
     const handleLogout = async () => {
-        await fetch("/api/logout", { method: "POST" });
-        router.push("/login");
+        await fetch("/api/logout", { method: "POST" }).catch(() => null);
+        window.location.assign(href("/login"));
     };
 
-    const handleNavigation = async (path: string) => {
-        if (role === "CUSTOMER" && path === "/dashboard/customer/barbers") {
-            try {
-                const response = await fetch("/api/protected/appointments/user");
-                const data = await response.json();
+    // Un cliente con 2 citas activas no puede reservar otra: se le avisa antes de llevarlo al listado
+    const guardBooking = async (path: string, event: React.MouseEvent) => {
+        if (path !== "/dashboard/customer/barbers") return;
 
-                if (Array.isArray(data)) {
-                    const activeCount = data.filter(
-                        (a: { status: string }) => a.status === "PENDING" || a.status === "CONFIRMED"
-                    ).length;
+        event.preventDefault();
 
-                    if (activeCount >= 2) {
-                        toast.error(t("errors.appointmentLimit"), {
-                            id: "limit",
-                            icon: "🚫",
-                            style: {
-                                borderRadius: "8px",
-                                background: "#FFFFFF",
-                                color: "#1e293b",
-                                border: "1px solid #e2e8f0",
-                                fontSize: "14px",
-                            },
-                        });
-                        return;
-                    }
-                }
-            } catch (error) {
-                console.error("Error checking appointments:", error);
+        try {
+            const response = await fetch("/api/protected/appointments/user");
+            const data = await response.json();
+            const activeCount = Array.isArray(data)
+                ? data.filter((a: { status: string }) => a.status === "PENDING" || a.status === "CONFIRMED").length
+                : 0;
+
+            if (activeCount >= 2) {
+                toast.error(t("errors.appointmentLimit"), { id: "limit" });
+                return;
             }
+        } catch (error) {
+            console.error("Error checking appointments:", error);
         }
 
-        router.push(path);
+        window.location.assign(href(path));
     };
 
     return (
         <>
-            <motion.header
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.4 }}
-                className="hidden md:flex bg-indigo-950 text-white px-8 py-3 justify-between items-center shadow-lg border-b border-indigo-800/50 sticky top-0 z-50"
-            >
-                <div className="flex items-center gap-10">
-                    <div
-                        className="flex items-center gap-2 cursor-pointer"
-                        onClick={() => router.push(getHomePath())}
-                    >
-                        <BrandMark />
+            <header className="sticky top-0 z-50 bg-[#0f2733] text-[#f1f3f2]">
+                <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-6 px-4 sm:px-8 md:h-16">
+                    <div className="flex min-w-0 items-center gap-8">
+                        <Link href={href(home)} aria-label={t("home")} className="shrink-0">
+                            <BrandMark iconClassName={BRAND_ICON} iconSize={18} />
+                        </Link>
+
+                        <nav aria-label={t("mainNav")} className="hidden items-center gap-1 md:flex">
+                            {primary.map((item) => {
+                                const active = isActive(item.path);
+
+                                return (
+                                    <Link
+                                        key={item.path}
+                                        href={href(item.path)}
+                                        aria-current={active ? "page" : undefined}
+                                        onClick={(event) => guardBooking(item.path, event)}
+                                        className={`relative flex h-16 items-center px-3 text-sm transition-colors ${active ? "font-semibold text-white" : "text-[#a9b7bc] hover:text-white"}`}
+                                    >
+                                        {item.label}
+                                        {active && <span aria-hidden="true" className="absolute inset-x-3 bottom-0 h-0.5 bg-[#e8603a]" />}
+                                    </Link>
+                                );
+                            })}
+                        </nav>
                     </div>
 
-                    <nav className="flex gap-1">
-                        {menuItems.map((item) => {
-                            const isActive = pathname === item.path || pathname.endsWith(item.path);
+                    <Menu as="div" className="relative hidden md:block">
+                        <MenuButton className="flex min-h-11 items-center gap-2 px-3 text-sm text-[#a9b7bc] transition-colors hover:text-white data-[open]:text-white">
+                            <UserRound size={18} aria-hidden="true" />
+                            {t("accountMenu")}
+                            <ChevronDown size={16} aria-hidden="true" />
+                        </MenuButton>
 
-                            return (
+                        <MenuItems
+                            anchor="bottom end"
+                            className="z-[60] mt-1 w-56 border border-[#dbe0de] bg-white py-1 text-sm text-[#0f2733] outline-none"
+                        >
+                            {menu.map((item) => (
+                                <MenuItem key={item.path}>
+                                    <Link href={href(item.path)} className="flex min-h-11 items-center gap-3 px-4 data-[focus]:bg-[#f1f3f2]">
+                                        <item.icon size={18} aria-hidden="true" />
+                                        {item.label}
+                                    </Link>
+                                </MenuItem>
+                            ))}
+                            <MenuItem>
                                 <button
-                                    key={item.path}
-                                    onClick={() => handleNavigation(item.path)}
-                                    className={`relative px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md
-                                        ${isActive ? "text-white" : "text-indigo-300 hover:text-white hover:bg-white/5"}`}
+                                    type="button"
+                                    onClick={handleLogout}
+                                    className="flex min-h-11 w-full items-center gap-3 border-t border-[#dbe0de] px-4 text-left data-[focus]:bg-[#f1f3f2]"
                                 >
-                                    {item.name}
-                                    {isActive && (
-                                        <motion.div
-                                            layoutId="activeTabDesktop"
-                                            className="absolute bottom-0 left-2 right-2 h-0.5 bg-indigo-400 rounded-full"
-                                        />
-                                    )}
+                                    <LogOut size={18} aria-hidden="true" />
+                                    {t("logout")}
                                 </button>
-                            );
-                        })}
-                    </nav>
+                            </MenuItem>
+                        </MenuItems>
+                    </Menu>
                 </div>
+            </header>
 
-                <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 text-xs font-semibold bg-white/10 hover:bg-red-500/20 hover:text-red-300 border border-white/10 hover:border-red-500/50 px-4 py-2 rounded-lg transition-all"
-                >
-                    <LogOut size={14} />
-                    {t("logout")}
-                </motion.button>
-            </motion.header>
-
-            <motion.header
-                initial={{ y: -10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.4 }}
-                className="md:hidden bg-indigo-950 text-white px-5 py-3 flex justify-between items-center border-b border-indigo-800/50 sticky top-0 z-50"
+            <nav
+                aria-label={t("mainNav")}
+                className="fixed inset-x-0 bottom-0 z-50 bg-[#0f2733] pb-[env(safe-area-inset-bottom)] md:hidden"
             >
-                <div
-                    className="flex items-center gap-2 cursor-pointer"
-                    onClick={() => router.push(getHomePath())}
-                >
-                    <BrandMark iconClassName="h-7 w-7 rounded-md bg-indigo-500 text-white" iconSize={14} />
-                </div>
-
-                <motion.button
-                    whileTap={{ scale: 0.92 }}
-                    onClick={handleLogout}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-indigo-300 hover:text-red-300 transition-colors"
-                >
-                    <LogOut size={15} />
-                </motion.button>
-            </motion.header>
-
-            <motion.nav
-                initial={{ y: 80, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.1, type: "spring", stiffness: 200, damping: 25 }}
-                className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-indigo-950/95 backdrop-blur-xl border-t border-indigo-800/50 px-6 pb-safe"
-            >
-                <div className="flex items-center justify-around py-2">
-                    {menuItems.map((item) => {
-                        const isActive = pathname === item.path || pathname.endsWith(item.path);
-                        const Icon = item.icon;
+                <div className="flex items-stretch">
+                    {mobile.map((item) => {
+                        const active = isActive(item.path);
 
                         return (
-                            <button
+                            <Link
                                 key={item.path}
-                                onClick={() => handleNavigation(item.path)}
-                                className="flex flex-col items-center gap-1 px-5 py-2 relative"
+                                href={href(item.path)}
+                                aria-current={active ? "page" : undefined}
+                                onClick={(event) => guardBooking(item.path, event)}
+                                className={`relative flex min-h-16 min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 text-xs ${active ? "font-semibold text-white" : "text-[#a9b7bc]"}`}
                             >
-                                <AnimatePresence>
-                                    {isActive && (
-                                        <motion.div
-                                            layoutId="activePill"
-                                            className="absolute inset-0 bg-indigo-500/20 rounded-2xl"
-                                            initial={{ opacity: 0, scale: 0.8 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0, scale: 0.8 }}
-                                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                        />
-                                    )}
-                                </AnimatePresence>
-
-                                <motion.div
-                                    animate={{
-                                        scale: isActive ? 1.1 : 1,
-                                        y: isActive ? -1 : 0,
-                                    }}
-                                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                                >
-                                    <Icon
-                                        size={22}
-                                        className={`transition-colors duration-200 ${isActive ? "text-indigo-300" : "text-indigo-500"}`}
-                                        strokeWidth={isActive ? 2.5 : 1.8}
-                                    />
-                                </motion.div>
-
-                                <span className={`text-[10px] font-bold transition-colors duration-200 ${isActive ? "text-indigo-300" : "text-indigo-500/70"}`}>
-                                    {item.name}
-                                </span>
-                            </button>
+                                {active && <span aria-hidden="true" className="absolute inset-x-4 top-0 h-0.5 bg-[#e8603a]" />}
+                                <item.icon size={22} aria-hidden="true" />
+                                <span className="max-w-full truncate">{item.label}</span>
+                            </Link>
                         );
                     })}
+
+                    <button
+                        type="button"
+                        onClick={() => setMoreOpen(true)}
+                        aria-haspopup="dialog"
+                        className={`relative flex min-h-16 min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 text-xs ${moreActive ? "font-semibold text-white" : "text-[#a9b7bc]"}`}
+                    >
+                        {moreActive && <span aria-hidden="true" className="absolute inset-x-4 top-0 h-0.5 bg-[#e8603a]" />}
+                        <MenuIcon size={22} aria-hidden="true" />
+                        {t("more")}
+                    </button>
                 </div>
-            </motion.nav>
+            </nav>
 
-            <div className="md:hidden h-20" />
-
-            <Toaster position="top-right" />
+            {moreOpen && (
+                <BrandDialog title={t("more")} closeLabel={t("close")} onClose={() => setMoreOpen(false)}>
+                    <ul className="divide-y divide-[var(--brand-surface)]">
+                        {moreItems.map((item) => (
+                            <li key={item.path}>
+                                <Link
+                                    href={href(item.path)}
+                                    onClick={() => setMoreOpen(false)}
+                                    className="flex min-h-14 items-center gap-3 font-semibold"
+                                >
+                                    <item.icon size={20} aria-hidden="true" />
+                                    {item.label}
+                                </Link>
+                            </li>
+                        ))}
+                        <li>
+                            <button type="button" onClick={handleLogout} className="flex min-h-14 w-full items-center gap-3 text-left font-semibold">
+                                <LogOut size={20} aria-hidden="true" />
+                                {t("logout")}
+                            </button>
+                        </li>
+                    </ul>
+                </BrandDialog>
+            )}
         </>
     );
 }

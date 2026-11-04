@@ -242,12 +242,12 @@ export default function SlotCard({
               >
                 <div className="border-t border-gray-100 px-4 pb-4 pt-4">
                   <div className="mb-3 flex items-center justify-between gap-3">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">
+                    <p className="text-xs font-black   text-indigo-500">
                       {t("availableServices")}
                     </p>
 
                     {!loading && services.length > 0 && (
-                      <span className="rounded-full bg-gray-50 px-2.5 py-1 text-[10px] font-black text-gray-400">
+                      <span className="rounded-full bg-gray-50 px-2.5 py-1 text-xs font-black text-gray-400">
                         {services.length}
                       </span>
                     )}
@@ -257,7 +257,7 @@ export default function SlotCard({
                     {loading ? (
                       <div className="py-7 text-center">
                         <div className="mx-auto mb-3 h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600" />
-                        <p className="text-[11px] font-bold text-gray-400">
+                        <p className="text-xs font-bold text-gray-400">
                           {t("loading")}
                         </p>
                       </div>
@@ -293,11 +293,11 @@ export default function SlotCard({
                                 </p>
 
                                 <div className="mt-1 flex flex-wrap items-center gap-2">
-                                  <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-black text-gray-400">
+                                  <span className="rounded-full bg-white px-2 py-0.5 text-xs font-black text-gray-400">
                                     {s.duration} MIN
                                   </span>
 
-                                  <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-600">
+                                  <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-black text-emerald-600">
                                     {formatPriceFromCents(s.priceCents)}
                                   </span>
                                 </div>
@@ -326,7 +326,7 @@ export default function SlotCard({
                     type="button"
                     onClick={handleConfirmClick}
                     disabled={!selectedService}
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-4 py-3.5 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-100 transition-all hover:bg-indigo-700 disabled:bg-gray-300 disabled:opacity-60 disabled:shadow-none"
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-4 py-3.5 text-xs font-black   text-white shadow-lg shadow-indigo-100 transition-all hover:bg-indigo-700 disabled:bg-gray-300 disabled:opacity-60 disabled:shadow-none"
                   >
                     {t("buttons.continue")}
                     <ArrowRight size={15} />
@@ -403,7 +403,7 @@ export default function SlotCard({
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        <p className="text-xs font-black   text-gray-400">
                           {item.label}
                         </p>
 
@@ -424,7 +424,7 @@ export default function SlotCard({
                   type="button"
                   onClick={handleFinalConfirm}
                   disabled={booking}
-                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-gray-900 px-4 py-4 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-indigo-600 disabled:opacity-50"
+                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-gray-900 px-4 py-4 text-xs font-black   text-white transition-all hover:bg-indigo-600 disabled:opacity-50"
                 >
                   {booking ? (
                     <>

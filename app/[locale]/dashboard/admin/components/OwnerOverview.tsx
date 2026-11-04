@@ -95,7 +95,7 @@ export default function OwnerOverview() {
     ];
 
     return (
-        <section className={`brand ${brandFontClasses} p-5 pb-24 sm:p-8 md:pb-8`}>
+        <section className={`brand ${brandFontClasses} p-5 sm:p-8`}>
             {completed < steps.length && (
                 <div className="mb-8 p-5 sm:p-6" style={{ background: "var(--brand-paper)" }}>
                     <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">

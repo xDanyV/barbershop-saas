@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import DashboardHeader from "./components/DashboardHeader";
 import CalendarPicker from "./components/CalendarPicker";
 import AppointmentList from "./components/AppointmentList";
 import WalkInDialog from "./components/WalkInDialog";
-import { motion } from "framer-motion";
+
 
 type RawAppointment = {
   id: string;
@@ -41,47 +41,67 @@ export default function BarberDashboard() {
   const [exceptions, setExceptions] = useState<Exception[]>([]);
   const [barberId, setBarberId] = useState<string | null>(null);
   const [workingDays, setWorkingDays] = useState<number[]>([]);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [syncing, setSyncing] = useState(false);
+  const [visibleMonth, setVisibleMonth] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() };
+  });
+  const latestRequest = useRef(0);
   const [walkInOpen, setWalkInOpen] = useState(false);
   const POLL_INTERVAL_MS = 30_000; // 30 seconds
 
   useEffect(() => {
     fetch("/api/protected/barbers/me")
       .then((res) => res.json())
-      .then((data) => setBarberId(data.barberId))
-      .catch(() => console.error("Could not load barber profile"));
+      .then((data) => {
+        setBarberId(data.barberId);
+        if (!data.barberId) setLoading(false);
+      })
+      .catch(() => {
+        console.error("Could not load barber profile");
+        setLoading(false);
+      });
   }, []);
 
-  // Extracted fetch so it can be called both on mount and on the polling interval.
-  // availability and exceptions only fetched on mount — they rarely change mid-session.
+  // Solo las citas del mes que se está viendo. Una respuesta vieja nunca pisa a una más reciente.
   const fetchAppointments = useCallback(async (isInitial = false) => {
     if (!barberId) return;
     if (isInitial) setLoading(true);
-    else setSyncing(true);
+
+    const requestId = ++latestRequest.current;
+    const pad = (value: number) => String(value).padStart(2, "0");
+    const { year, month } = visibleMonth;
+    const from = `${year}-${pad(month + 1)}-01`;
+    const to = `${year}-${pad(month + 1)}-${pad(new Date(year, month + 1, 0).getDate())}`;
 
     try {
-      const res = await fetch("/api/protected/appointments/barber");
+      const res = await fetch(`/api/protected/appointments/barber?from=${from}&to=${to}`);
       const data = await res.json();
-      setRaw(Array.isArray(data) ? data : []);
-      setLastUpdated(new Date());
+      if (requestId === latestRequest.current) setRaw(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Could not load appointments", err);
-      if (isInitial) setRaw([]);
+      if (isInitial && requestId === latestRequest.current) setRaw([]);
     } finally {
-      if (isInitial) setLoading(false);
-      else setSyncing(false);
+      if (isInitial && requestId === latestRequest.current) setLoading(false);
     }
-  }, [barberId]);
+  }, [barberId, visibleMonth]);
 
   useEffect(() => {
-    if (!barberId) {
-      setLoading(false);
-      return;
-    }
+    // Sigue en carga hasta conocer al barbero: así no parece un día sin citas
+    if (!barberId) return;
 
-    // Initial load — fetch everything
     fetchAppointments(true);
+
+    // Solo mientras la pestaña está a la vista: en segundo plano no gasta datos ni base
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") fetchAppointments(false);
+    }, POLL_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [barberId, fetchAppointments]);
+
+  // Horario y días libres casi no cambian: se cargan una vez
+  useEffect(() => {
+    if (!barberId) return;
 
     fetch(`/api/exceptions/${barberId}`)
       .then((res) => res.json())
@@ -96,12 +116,7 @@ export default function BarberDashboard() {
         }
       })
       .catch(() => console.error("Could not load availability"));
-
-    // Polling — refetch appointments every 30s silently
-    const interval = setInterval(() => fetchAppointments(false), POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
-
-  }, [barberId, fetchAppointments]);
+  }, [barberId]);
 
   const handleConfirm = (id: string) => {
     setRaw((prev) =>
@@ -176,41 +191,15 @@ export default function BarberDashboard() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="w-full pb-24 md:pb-0"
-    >
+    <div className="w-full">
       <DashboardHeader onExceptionAdded={refreshExceptions} />
 
-      {/* Sync indicator */}
-      <div className="flex items-center justify-end gap-2 mb-2 h-5">
-        {syncing ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex items-center gap-1.5 text-[10px] font-bold text-indigo-400 uppercase tracking-widest"
-          >
-            <span className="w-2.5 h-2.5 border-2 border-indigo-200 border-t-indigo-500 rounded-full animate-spin" />
-            Syncing...
-          </motion.div>
-        ) : lastUpdated ? (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-[10px] font-medium text-gray-300 tabular-nums"
-          >
-            Updated {lastUpdated.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-          </motion.p>
-        ) : null}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start mt-2">
-        <div className="lg:col-span-5 w-full flex justify-center lg:justify-start overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+        <div className="w-full lg:col-span-5">
           <CalendarPicker
             selectedDate={date}
             onChange={setDate}
+            onMonthChange={(year, month) => setVisibleMonth({ year, month })}
             appointmentCounts={appointmentCounts}
             exceptions={exceptions}
             workingDays={workingDays}
@@ -219,7 +208,8 @@ export default function BarberDashboard() {
 
         <div className="lg:col-span-7 w-full">
           <AppointmentList
-            appointments={loading ? [] : appointments}
+            appointments={appointments}
+            loading={loading}
             onConfirm={handleConfirm}
             onChanged={() => fetchAppointments(false)}
             onAddWalkIn={barberId ? () => setWalkInOpen(true) : undefined}
@@ -240,6 +230,6 @@ export default function BarberDashboard() {
           }}
         />
       )}
-    </motion.div>
+    </div>
   );
 }

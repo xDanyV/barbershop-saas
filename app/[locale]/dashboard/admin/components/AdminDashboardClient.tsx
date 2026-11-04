@@ -40,7 +40,7 @@ export default function AdminDashboardClient({ role }: Props) {
     const tabs = TABS.filter((tab) => (!tab.adminOnly || role === "ADMIN") && (!tab.ownerOnly || role === "OWNER"));
 
     return (
-        <div className="space-y-6 md:space-y-8 px-4 py-6 md:p-8 max-w-6xl mx-auto">
+        <div className="space-y-5 py-6">
             {/* Header del Dashboard */}
             <div>
                 <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
@@ -52,8 +52,8 @@ export default function AdminDashboardClient({ role }: Props) {
             </div>
 
             {/* Contenedor de Pestañas (Scroll horizontal oculto en móviles) */}
-            <div className="relative border-b border-gray-100">
-                <div className="flex overflow-x-auto gap-2 pb-1 custom-scrollbar">
+            <div className="relative border-b border-gray-200">
+                <div className="scroll-strip -mx-4 flex gap-1 overflow-x-auto px-4 md:mx-0 md:px-0">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.id;
@@ -62,7 +62,7 @@ export default function AdminDashboardClient({ role }: Props) {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`relative flex items-center gap-2 px-4 md:px-5 py-3 font-bold text-sm transition-colors whitespace-nowrap rounded-t-xl hover:bg-gray-50/50 ${isActive ? "text-indigo-600" : "text-gray-400 hover:text-gray-700"
+                                className={`relative flex items-center gap-2 min-h-11 px-3 md:px-4 font-semibold text-sm transition-colors whitespace-nowrap ${isActive ? "text-indigo-600" : "text-gray-400 hover:text-gray-700"
                                     }`}
                             >
                                 <Icon size={18} className={isActive ? "text-indigo-600" : "text-gray-400"} />
@@ -72,7 +72,7 @@ export default function AdminDashboardClient({ role }: Props) {
                                 {isActive && (
                                     <motion.div
                                         layoutId="activeTabIndicator"
-                                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
+                                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#e8603a]"
                                         initial={false}
                                         transition={{
                                             type: "spring",

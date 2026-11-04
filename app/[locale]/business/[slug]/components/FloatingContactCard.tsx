@@ -34,7 +34,7 @@ export default function FloatingContactCard({ phone, address }: Props) {
 
             <aside className="hidden sm:block fixed right-6 bottom-6 z-40 w-80">
                 <div className="bg-white/10 border border-white/10 backdrop-blur-xl rounded-3xl p-5 text-white shadow-2xl shadow-black/30">
-                    <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-200 mb-4">
+                    <p className="text-xs font-black   text-indigo-200 mb-4">
                         {t("title")}
                     </p>
 

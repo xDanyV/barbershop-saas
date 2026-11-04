@@ -1,28 +1,12 @@
 "use client";
 
-import { useState, Fragment } from "react";
+import { useState } from "react";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import { CalendarClock, MessageCircle, MoreVertical, UserX, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
-import {
-  CheckCircle2,
-  Clock,
-  User,
-  Scissors,
-  Mail,
-  Phone,
-  ExternalLink,
-  MessageCircle,
-  XCircle,
-  AlertTriangle,
-} from "lucide-react";
-import { motion } from "framer-motion";
-import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition,
-} from "@headlessui/react";
 import { useTranslations } from "next-intl";
 import { getWhatsAppUrl } from "@/[locale]/business/[slug]/lib/business-page.utils";
+import BrandDialog, { brandPrimaryButton } from "@/[locale]/components/BrandDialog";
 import RescheduleDialog from "@/[locale]/components/RescheduleDialog";
 
 type AppointmentStatus = "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
@@ -42,363 +26,184 @@ type Appointment = {
 type Props = {
   appointment: Appointment;
   onConfirm?: (id: string) => void;
-  onCancel?: (id: string) => void;
   onChanged?: () => void;
 };
 
-export default function AppointmentCard({
-  appointment,
-  onConfirm,
-  onCancel,
-  onChanged,
-}: Props) {
+const STATUS_STYLE: Record<AppointmentStatus, string> = {
+  PENDING: "bg-amber-100 text-amber-800",
+  CONFIRMED: "bg-emerald-100 text-emerald-700",
+  COMPLETED: "bg-gray-100 text-gray-600",
+  CANCELLED: "bg-red-100 text-red-700",
+  NO_SHOW: "bg-red-100 text-red-700",
+};
+
+const menuItemClass = "flex min-h-11 w-full items-center gap-3 px-4 text-left data-[focus]:bg-[#f1f3f2]";
+
+export default function AppointmentCard({ appointment, onConfirm, onChanged }: Props) {
   const t = useTranslations("AppointmentCard");
   const [status, setStatus] = useState<AppointmentStatus>(appointment.status);
-  const [loadingConfirm, setLoadingConfirm] = useState(false);
-  const [loadingCancel, setLoadingCancel] = useState(false);
-  const [loadingNoShow, setLoadingNoShow] = useState(false);
+  const [working, setWorking] = useState(false);
   const [rescheduling, setRescheduling] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
-  const handleConfirm = async () => {
-    setLoadingConfirm(true);
-
-    try {
-      const res = await fetch(
-        `/api/protected/appointments/${appointment.id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "CONFIRMED" }),
-        }
-      );
-
-      if (!res.ok) {
-        toast.error(t("errors.confirmFailed"));
-        return;
-      }
-
-      setStatus("CONFIRMED");
-      onConfirm?.(appointment.id);
-      toast.success(t("success.confirmed", { name: appointment.customerName }));
-    } catch {
-      toast.error(t("errors.network"));
-    } finally {
-      setLoadingConfirm(false);
-    }
-  };
-
-  // Solo para citas ya pasadas (se muestran como COMPLETED): el cliente no se presentó
-  const handleNoShow = async () => {
-    setLoadingNoShow(true);
+  const changeStatus = async (next: AppointmentStatus, failedMessage: string) => {
+    setWorking(true);
 
     try {
       const res = await fetch(`/api/protected/appointments/${appointment.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "NO_SHOW" }),
+        body: JSON.stringify({ status: next }),
       });
 
-      if (!res.ok) {
-        toast.error(t("errors.noShowFailed"));
-        return;
-      }
+      if (!res.ok) toast.error(failedMessage);
 
-      setStatus("NO_SHOW");
-      toast.success(t("success.noShow", { name: appointment.customerName }));
+      return res.ok;
     } catch {
       toast.error(t("errors.network"));
+      return false;
     } finally {
-      setLoadingNoShow(false);
+      setWorking(false);
     }
   };
 
-  const executeCancel = async () => {
-    setLoadingCancel(true);
+  const confirm = async () => {
+    if (!(await changeStatus("CONFIRMED", t("errors.confirmFailed")))) return;
 
-    try {
-      const res = await fetch(`/api/protected/appointments/${appointment.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "CANCELLED" }),
-      });
-
-      const data = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        toast.error(data?.error || "No se pudo cancelar la cita");
-        return;
-      }
-
-      setStatus("CANCELLED");
-      onCancel?.(appointment.id);
-
-      toast.success(`Cita de ${appointment.customerName} cancelada`, {
-        style: {
-          borderRadius: "12px",
-          background: "#FFF",
-          color: "#1e293b",
-          border: "1px solid #bbf7d0",
-          fontSize: "13px",
-        },
-      });
-    } catch {
-      toast.error(t("errors.network"));
-    } finally {
-      setLoadingCancel(false);
-    }
+    setStatus("CONFIRMED");
+    onConfirm?.(appointment.id);
+    toast.success(t("success.confirmed", { name: appointment.customerName }));
   };
 
-  const confirmCancel = () => {
-    toast(
-      (toastInstance) => (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col gap-3 p-1 min-w-55"
-        >
-          <div className="flex items-start gap-2">
-            <div className="p-1.5 bg-red-50 rounded-lg shrink-0">
-              <AlertTriangle size={14} className="text-red-500" />
-            </div>
+  const markNoShow = async () => {
+    if (!(await changeStatus("NO_SHOW", t("errors.noShowFailed")))) return;
 
-            <div>
-              <p className="text-sm font-black text-gray-900 leading-tight">
-                Cancelar cita
-              </p>
-
-              <p className="text-[11px] text-gray-500 mt-0.5 font-medium">
-                ¿Seguro que quieres cancelar la cita de {appointment.customerName} para {appointment.service}?
-              </p>
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                toast.dismiss(toastInstance.id);
-                executeCancel();
-              }}
-              className="flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors active:scale-95"
-            >
-              Cancelar cita
-            </button>
-
-            <button
-              onClick={() => toast.dismiss(toastInstance.id)}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-2 rounded-xl text-xs font-bold transition-colors active:scale-95"
-            >
-              Mantener
-            </button>
-          </div>
-        </motion.div>
-      ),
-      {
-        duration: 6000,
-        position: "bottom-center",
-        style: {
-          borderRadius: "16px",
-          padding: "12px",
-          background: "#fff",
-          boxShadow: "0 20px 40px -8px rgba(0,0,0,0.15)",
-          border: "1px solid #f1f5f9",
-        },
-      }
-    );
+    setStatus("NO_SHOW");
+    toast.success(t("success.noShow", { name: appointment.customerName }));
   };
 
-  const statusStyles: Record<AppointmentStatus, string> = {
-    CONFIRMED: "bg-emerald-50 text-emerald-700 border-emerald-100",
-    COMPLETED: "bg-gray-50 text-gray-500 border-gray-100",
-    PENDING: "bg-amber-50 text-amber-700 border-amber-100",
-    CANCELLED: "bg-red-50 text-red-700 border-red-100",
-    NO_SHOW: "bg-gray-100 text-gray-600 border-gray-200",
+  const cancel = async () => {
+    if (!(await changeStatus("CANCELLED", t("errors.cancelFailed")))) return;
+
+    setCancelling(false);
+    toast.success(t("success.cancelled", { name: appointment.customerName }));
+    onChanged?.();
   };
 
-  const canCancel = status === "PENDING" || status === "CONFIRMED";
-  const canReschedule = canCancel && new Date(appointment.date).getTime() > Date.now();
+  const isOpen = status === "PENDING" || status === "CONFIRMED";
+  const canReschedule = isOpen && new Date(appointment.date).getTime() > Date.now();
+  const hasPhone = appointment.customerPhone.replace(/\D/g, "").length === 10;
+  const contact = [appointment.customerPhone, appointment.customerEmail].filter((value) => value && value !== "N/A").join(" · ");
+  const hasActions = hasPhone || canReschedule || status === "COMPLETED" || isOpen;
 
   return (
-    <Popover className="relative">
-      {({ open }) => (
-        <motion.div
-          whileHover={{ y: -2 }}
-          className={`relative border border-gray-100 rounded-2xl p-3 md:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white shadow-sm hover:shadow-md transition-all duration-200 gap-4 ${open ? "z-50" : "z-0 hover:z-20"
-            }`}
-        >
-          <div className="flex items-center gap-3 md:gap-4 w-full sm:w-auto">
-            <PopoverButton className="flex items-center gap-3 md:gap-4 focus:outline-none group/btn text-left cursor-pointer min-w-0 flex-1">
-              <div
-                className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center transition-colors ${status === "PENDING"
-                  ? "bg-amber-50 text-amber-500"
-                  : status === "CANCELLED"
-                    ? "bg-red-50 text-red-500"
-                    : "bg-indigo-50 text-indigo-500"
-                  }`}
-              >
-                {status === "COMPLETED" ? (
-                  <CheckCircle2 size={20} />
-                ) : status === "CANCELLED" ? (
-                  <XCircle size={20} />
-                ) : (
-                  <User size={20} />
-                )}
-              </div>
+    <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:gap-4">
+      <div className="flex min-w-0 flex-1 gap-3 sm:gap-4">
+        <p className="w-20 shrink-0 whitespace-nowrap font-semibold tabular-nums">{appointment.time}</p>
 
-              <div className="min-w-0">
-                <p className="font-bold text-gray-900 group-hover/btn:text-indigo-600 transition-colors flex items-center gap-1 text-sm md:text-base">
-                  <span className="truncate">{appointment.customerName}</span>
-                  {appointment.isWalkIn && (
-                    <span className="shrink-0 bg-[#e4dccb] px-1.5 py-0.5 text-[10px] font-semibold text-[#0f2733]">
-                      {t("walkIn")}
-                    </span>
-                  )}
-                  <ExternalLink
-                    size={12}
-                    className="opacity-0 group-hover/btn:opacity-100 transition-opacity text-gray-400 shrink-0"
-                  />
-                </p>
+        <div className="min-w-0">
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-semibold">
+            <span className="min-w-0 break-words">{appointment.customerName}</span>
+            {appointment.isWalkIn && <span className="bg-amber-100 px-1.5 py-0.5 text-xs font-semibold">{t("walkIn")}</span>}
+          </p>
+          <p className="text-sm text-gray-600">{appointment.service}</p>
+          {contact && <p className="truncate text-xs text-gray-500">{contact}</p>}
+        </div>
+      </div>
 
-                <div className="flex items-center gap-2 text-[11px] md:text-xs text-gray-500 mt-0.5">
-                  <span className="flex items-center gap-1 truncate">
-                    <Scissors size={12} className="shrink-0" />
-                    {appointment.service}
-                  </span>
-                </div>
-              </div>
-            </PopoverButton>
+      <div className="flex items-center justify-between gap-2 sm:justify-end">
+        <span className={`whitespace-nowrap px-2 py-1 text-xs font-semibold ${STATUS_STYLE[status]}`}>
+          {t(`status.${status}`)}
+        </span>
 
-            <Transition
-              as={Fragment}
-              enter="transition ease-out duration-200"
-              enterFrom="opacity-0 translate-y-1"
-              enterTo="opacity-100 translate-y-0"
-              leave="transition ease-in duration-150"
-              leaveFrom="opacity-100 translate-y-0"
-              leaveTo="opacity-0 translate-y-1"
+        <div className="flex items-center gap-1">
+          {status === "PENDING" && (
+            <button
+              type="button"
+              onClick={confirm}
+              disabled={working}
+              className="min-h-11 bg-gray-900 px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
             >
-              <PopoverPanel className="absolute left-0 sm:left-12 top-full z-50 mt-3 w-[calc(100vw-3rem)] sm:w-64 px-0 sm:px-4">
-                <div className="overflow-hidden rounded-2xl shadow-xl ring-1 ring-black/5 bg-white p-4">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
-                    {t("customerDetails")}
-                  </p>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between group/item">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                          <Phone size={14} />
-                        </div>
-
-                        <div className="min-w-0">
-                          <p className="text-xs text-gray-400 font-medium leading-none">
-                            {t("fields.phone")}
-                          </p>
-                          <p className="text-sm font-bold text-gray-700 truncate">
-                            {appointment.customerPhone || t("fields.noPhone")}
-                          </p>
-                        </div>
-                      </div>
-
-                      {appointment.customerPhone && (
-                        <a
-                          href={getWhatsAppUrl(appointment.customerPhone)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 rounded-lg bg-gray-50 text-gray-400 hover:bg-emerald-500 hover:text-white transition-all shrink-0"
-                        >
-                          <MessageCircle size={14} />
-                        </a>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                        <Mail size={14} />
-                      </div>
-
-                      <div className="min-w-0">
-                        <p className="text-xs text-gray-400 font-medium leading-none">
-                          {t("fields.email")}
-                        </p>
-                        <p className="text-sm font-bold text-gray-700 truncate">
-                          {appointment.customerEmail || t("fields.noEmail")}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </PopoverPanel>
-            </Transition>
-          </div>
-
-          <div className="text-left sm:text-right flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center w-full sm:w-auto gap-2 border-t sm:border-t-0 pt-3 sm:pt-0 border-gray-50">
-            <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs md:text-sm font-bold text-gray-700 bg-gray-50 px-2 py-1 rounded-lg">
-              <Clock size={14} className="text-indigo-500" />
-              {appointment.time}
-            </div>
-
-            <div className="flex flex-wrap gap-2 items-center justify-end">
-              <span
-                className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border shrink-0 ${statusStyles[status]}`}
-              >
-                {status === "CANCELLED" ? "CANCELADA" : t(`status.${status}`)}
-              </span>
-
-              {status === "PENDING" && (
-                <button
-                  onClick={handleConfirm}
-                  disabled={loadingConfirm || loadingCancel}
-                  className="text-[11px] md:text-xs px-3 md:px-4 py-1.5 rounded-full bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all cursor-pointer whitespace-nowrap disabled:opacity-50"
-                >
-                  {loadingConfirm ? "..." : t("confirm")}
-                </button>
-              )}
-
-              {canReschedule && (
-                <button
-                  onClick={() => setRescheduling(true)}
-                  className="text-[11px] md:text-xs px-3 md:px-4 py-1.5 rounded-full border border-[#0f2733]/25 text-[#0f2733] font-bold hover:bg-[#0f2733] hover:text-white transition-all cursor-pointer whitespace-nowrap"
-                >
-                  {t("reschedule")}
-                </button>
-              )}
-
-              {canCancel && (
-                <button
-                  onClick={confirmCancel}
-                  disabled={loadingCancel || loadingConfirm}
-                  className="text-[11px] md:text-xs px-3 md:px-4 py-1.5 rounded-full bg-red-50 text-red-600 border border-red-100 font-bold hover:bg-red-600 hover:text-white transition-all cursor-pointer whitespace-nowrap disabled:opacity-50"
-                >
-                  {loadingCancel ? "..." : "Cancelar"}
-                </button>
-              )}
-
-              {status === "COMPLETED" && (
-                <button
-                  onClick={handleNoShow}
-                  disabled={loadingNoShow}
-                  className="text-[11px] md:text-xs px-3 md:px-4 py-1.5 rounded-full bg-gray-50 text-gray-600 border border-gray-200 font-bold hover:bg-gray-700 hover:text-white transition-all cursor-pointer whitespace-nowrap disabled:opacity-50"
-                >
-                  {loadingNoShow ? "..." : t("markNoShow")}
-                </button>
-              )}
-            </div>
-          </div>
-
-          {rescheduling && (
-            <RescheduleDialog
-              appointmentId={appointment.id}
-              currentDate={appointment.date}
-              serviceName={appointment.service}
-              onClose={() => setRescheduling(false)}
-              onDone={() => {
-                setRescheduling(false);
-                onChanged?.();
-              }}
-            />
+              {t("confirm")}
+            </button>
           )}
-        </motion.div>
+
+          {hasActions && (
+            <Menu as="div" className="relative">
+              <MenuButton
+                aria-label={t("actions", { name: appointment.customerName })}
+                className="flex h-11 w-11 items-center justify-center text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 data-[open]:bg-gray-100"
+              >
+                <MoreVertical size={20} aria-hidden="true" />
+              </MenuButton>
+
+              <MenuItems
+                anchor="bottom end"
+                className="z-50 mt-1 w-60 border border-[#dbe0de] bg-white py-1 text-sm text-[#0f2733] outline-none"
+              >
+                {hasPhone && (
+                  <MenuItem>
+                    <a href={getWhatsAppUrl(appointment.customerPhone)} target="_blank" rel="noopener noreferrer" className={menuItemClass}>
+                      <MessageCircle size={18} aria-hidden="true" />
+                      {t("whatsapp")}
+                    </a>
+                  </MenuItem>
+                )}
+                {canReschedule && (
+                  <MenuItem>
+                    <button type="button" onClick={() => setRescheduling(true)} className={menuItemClass}>
+                      <CalendarClock size={18} aria-hidden="true" />
+                      {t("reschedule")}
+                    </button>
+                  </MenuItem>
+                )}
+                {status === "COMPLETED" && (
+                  <MenuItem>
+                    <button type="button" onClick={markNoShow} className={menuItemClass}>
+                      <UserX size={18} aria-hidden="true" />
+                      {t("markNoShow")}
+                    </button>
+                  </MenuItem>
+                )}
+                {isOpen && (
+                  <MenuItem>
+                    <button type="button" onClick={() => setCancelling(true)} className={`${menuItemClass} text-[#b8431f]`}>
+                      <XCircle size={18} aria-hidden="true" />
+                      {t("cancelAppointment")}
+                    </button>
+                  </MenuItem>
+                )}
+              </MenuItems>
+            </Menu>
+          )}
+        </div>
+      </div>
+
+      {rescheduling && (
+        <RescheduleDialog
+          appointmentId={appointment.id}
+          currentDate={appointment.date}
+          serviceName={appointment.service}
+          onClose={() => setRescheduling(false)}
+          onDone={() => {
+            setRescheduling(false);
+            onChanged?.();
+          }}
+        />
       )}
-    </Popover>
+
+      {cancelling && (
+        <BrandDialog
+          title={t("cancelAppointment")}
+          subtitle={t("cancelText", { name: appointment.customerName, service: appointment.service, time: appointment.time })}
+          closeLabel={t("keep")}
+          onClose={() => !working && setCancelling(false)}
+        >
+          <button type="button" onClick={cancel} disabled={working} className={brandPrimaryButton}>
+            {t("cancelAppointment")}
+          </button>
+        </BrandDialog>
+      )}
+    </div>
   );
 }

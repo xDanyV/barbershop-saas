@@ -32,7 +32,7 @@ export default function BusinessPosts({ posts }: Props) {
                 </div>
 
                 {latestPosts.length > 0 && (
-                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-indigo-300">
+                    <p className="text-xs font-black   text-indigo-300">
                         {t("count", { count: latestPosts.length })}
                     </p>
                 )}

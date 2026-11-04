@@ -1,8 +1,122 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Tema de toda la app con la paleta de la marca (ver .brand más abajo).
+   Las pantallas usan clases de Tailwind como indigo-600 o gray-900; aquí esos nombres
+   apuntan a los colores de la marca, para que todas compartan una sola paleta.
+   Verde, ámbar y rojo se conservan como colores de estado. */
+@theme {
+  --font-sans: var(--font-brand), system-ui, sans-serif;
+
+  --color-indigo-50: #e6eae8;
+  --color-indigo-100: #dde3e1;
+  --color-indigo-200: #c5cfcc;
+  --color-indigo-300: #8b999e;
+  --color-indigo-400: #4a5a61;
+  --color-indigo-500: #0f2733;
+  --color-indigo-600: #0f2733;
+  --color-indigo-700: #1a3a4a;
+  --color-indigo-800: #0f2733;
+  --color-indigo-900: #0f2733;
+  --color-indigo-950: #0f2733;
+
+  --color-purple-50: #f4efe5;
+  --color-purple-100: #e4dccb;
+  --color-purple-200: #d6cbb3;
+  --color-purple-300: #b8431f;
+  --color-purple-400: #b8431f;
+  --color-purple-500: #b8431f;
+  --color-purple-600: #b8431f;
+  --color-purple-700: #9c3719;
+
+  --color-blue-50: #e6eae8;
+  --color-blue-100: #dde3e1;
+  --color-blue-200: #c5cfcc;
+  --color-blue-400: #4a5a61;
+  --color-blue-500: #0f2733;
+  --color-blue-600: #0f2733;
+  --color-blue-800: #0f2733;
+
+  --color-gray-50: #f1f3f2;
+  --color-gray-100: #e6eae8;
+  --color-gray-200: #dbe0de;
+  --color-gray-300: #8b999e;
+  --color-gray-400: #667479;
+  --color-gray-500: #4a5a61;
+  --color-gray-600: #4a5a61;
+  --color-gray-700: #2c4450;
+  --color-gray-800: #1a3440;
+  --color-gray-900: #0f2733;
+  --color-gray-950: #0f2733;
+
+  --color-emerald-50: #e4efe9;
+  --color-emerald-100: #d3e6dc;
+  --color-emerald-200: #b5d4c4;
+  --color-emerald-400: #2c8a70;
+  --color-emerald-500: #1f6f5c;
+  --color-emerald-600: #1f6f5c;
+  --color-emerald-700: #185a4a;
+  --color-green-50: #e4efe9;
+  --color-green-100: #d3e6dc;
+  --color-green-200: #b5d4c4;
+  --color-green-500: #1f6f5c;
+  --color-green-600: #1f6f5c;
+  --color-green-800: #185a4a;
+
+  --color-amber-50: #f4efe5;
+  --color-amber-100: #e4dccb;
+  --color-amber-200: #d6cbb3;
+  --color-amber-400: #b07a1f;
+  --color-amber-500: #b07a1f;
+  --color-amber-600: #7a5a1e;
+  --color-amber-700: #7a5a1e;
+  --color-amber-800: #5f4615;
+  --color-amber-900: #5f4615;
+
+  --color-red-50: #fbeae4;
+  --color-red-100: #f6d6ca;
+  --color-red-200: #efbba9;
+  --color-red-300: #e8957c;
+  --color-red-400: #c94a25;
+  --color-red-500: #c94a25;
+  --color-red-600: #b8431f;
+  --color-red-700: #9c3719;
+  --color-red-800: #7f2d14;
+
+  /* Sin sombras y con esquinas discretas, como la landing */
+  --shadow-sm: 0 0 #0000;
+  --shadow-md: 0 0 #0000;
+  --shadow-lg: 0 0 #0000;
+  --shadow-xl: 0 0 #0000;
+  --shadow-2xl: 0 0 #0000;
+
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+  --radius-2xl: 6px;
+  --radius-3xl: 8px;
+  --radius-4xl: 8px;
+
+  --font-weight-black: 600;
+  --font-weight-extrabold: 600;
+  --font-weight-bold: 600;
+}
+
+/* Superficies oscuras (acceso y página pública de cada barbería): el fondo es el azul de la marca,
+   así que los acentos pasan al naranja y los grises se aclaran. */
+.theme-field {
+  --color-indigo-200: #c9d2d4;
+  --color-indigo-300: #c9d2d4;
+  --color-indigo-400: #e8957c;
+  --color-indigo-500: #c94a25;
+  --color-indigo-600: #c94a25;
+  --color-indigo-700: #b8431f;
+  --color-gray-200: #e6eae8;
+  --color-gray-300: #c9d2d4;
+  --color-gray-400: #a9b7bc;
+  --color-gray-500: #a9b7bc;
+  --color-gray-600: #8b999e;
+  --color-purple-300: #e8957c;
+  --color-purple-500: #e8957c;
+  --color-emerald-500: #1f6f5c;
 }
 
 * {
@@ -15,125 +129,70 @@ body {
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f1f3f2;
+  color: #0f2733;
+  font-family: var(--font-brand), system-ui, sans-serif;
   margin: 0;
 }
 
-.custom-calendar {
-  width: 100% !important;
-  max-width: 100% !important;
-  border: none !important;
-  background: transparent;
-  font-family: inherit;
+:focus-visible {
+  outline: 2px solid #e8603a;
+  outline-offset: 2px;
 }
 
-.custom-calendar .react-calendar__navigation {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 1rem;
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
 }
 
-.custom-calendar .react-calendar__navigation button {
-  background: transparent;
-  border-radius: 8px;
-  font-weight: 600;
-  padding: 6px;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
-.custom-calendar .react-calendar__navigation button:hover {
-  background: #eef2ff;
-}
-
-.custom-calendar .react-calendar__month-view__days {
-  display: grid !important;
-  grid-template-columns: repeat(7, 1fr);
-}
-
-.custom-calendar .react-calendar__month-view__weekdays {
-  text-transform: uppercase;
-  font-size: 0.7rem;
-  color: #6b7280;
-}
-
-.custom-calendar .react-calendar__tile {
-  padding: 10px 0 4px;
-  border-radius: 10px;
-  font-weight: 500;
-}
-
-.custom-calendar .react-calendar__tile:enabled:hover {
-  background: #eef2ff;
-}
-
-.custom-calendar .react-calendar__tile--active {
-  background: #4f46e5 !important;
-  color: white !important;
-}
-
-.custom-calendar .react-calendar__tile--now {
-  background: #e0e7ff !important;
-  color: #1e3a8a !important;
-}
-
-.custom-calendar .react-calendar__tile:disabled {
-  color: #d1d5db;
-  background: transparent;
-}
-
-/* exception days inside .custom-calendar */
-.custom-calendar .react-calendar__tile.exception-day,
-.custom-calendar .react-calendar__tile.exception-day:disabled,
-.custom-calendar .react-calendar__tile.exception-day:enabled:hover,
-.custom-calendar .react-calendar__tile.exception-day:enabled:focus {
-  background-color: #fee2e2 !important;
-  color: #b91c1c !important;
-  opacity: 1 !important;
-}
-
-.exception-tooltip {
-  font-size: 9px;
-  color: #b91c1c;
-  text-align: center;
-  line-height: 1;
-  margin-top: 2px;
-}
-
-/* ── react-calendar shared base styles ─────────────────────────────────── */
+/* ── Calendario de reserva (react-calendar) ─────────────────────────────── */
 
 .react-calendar {
   width: 100% !important;
   border: none !important;
+  background: transparent !important;
   font-family: inherit !important;
-  padding: 10px;
 }
 
 .react-calendar__navigation {
-  margin-bottom: 20px !important;
   height: 44px !important;
+  margin-bottom: 12px !important;
 }
 
 .react-calendar__navigation button {
-  font-weight: 800 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.1em !important;
-  font-size: 0.8rem !important;
-  color: #111827 !important;
-  border-radius: 12px !important;
+  min-width: 44px;
+  font-weight: 600 !important;
+  font-size: 0.9375rem !important;
+  color: #0f2733 !important;
+  border-radius: 4px !important;
 }
 
-.react-calendar__navigation button:hover {
-  background-color: #f3f4f6 !important;
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus {
+  background-color: #e6eae8 !important;
+}
+
+.react-calendar__navigation__label__labelText {
+  text-transform: capitalize;
 }
 
 .react-calendar__month-view__weekdays {
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  font-size: 0.65rem !important;
-  letter-spacing: 0.1em !important;
-  color: #9ca3af !important;
-  margin-bottom: 10px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  font-size: 0.75rem !important;
+  color: #4a5a61 !important;
+  margin-bottom: 4px !important;
 }
 
 .react-calendar__month-view__weekdays abbr {
@@ -141,146 +200,57 @@ body {
 }
 
 .react-calendar__tile {
-  padding: 1.25em 0.5em !important;
-  font-weight: 700 !important;
-  font-size: 0.9rem !important;
-  color: #374151 !important;
-  border-radius: 16px !important;
-  transition: all 0.2s ease !important;
-  position: relative !important;
+  min-height: 44px;
+  padding: 0.5em 0.25em !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  color: #0f2733 !important;
+  border-radius: 4px !important;
+  transition: background-color 150ms ease !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
+  justify-content: center !important;
 }
 
-.react-calendar__tile--active {
-  background: #4f46e5 !important;
-  color: white !important;
-  box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3) !important;
-}
-
-.react-calendar__tile--active:enabled:hover {
-  background: #4338ca !important;
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
+  background-color: #e6eae8 !important;
 }
 
 .react-calendar__tile--now {
-  background: #fef2f2 !important;
-  color: #ef4444 !important;
+  background: transparent !important;
+  box-shadow: inset 0 0 0 2px #e8603a;
 }
 
-.react-calendar__tile:disabled {
+.react-calendar__tile--active,
+.react-calendar__tile--active:enabled:hover,
+.react-calendar__tile--active:enabled:focus {
+  background: #0f2733 !important;
+  color: #ffffff !important;
+}
+
+.react-calendar__tile:disabled,
+.react-calendar__tile.unavailable-day,
+.react-calendar__tile.unavailable-day:disabled {
   background-color: transparent !important;
-  color: #d1d5db !important;
+  color: #8b999e !important;
   cursor: not-allowed !important;
   font-weight: 400 !important;
 }
 
-.react-calendar__tile:enabled:hover {
-  background-color: #eef2ff !important;
-  color: #4f46e5 !important;
-}
-
-/* ── Exception day — used in customer CalendarPicker ───────────────────── */
-/* Must come AFTER :disabled rules to win the specificity battle.           */
-/* All four selectors needed to override react-calendar's disabled styles.  */
-
+/* Día libre del barbero: se ve distinto pero no se puede elegir */
 .react-calendar__tile.exception-day,
 .react-calendar__tile.exception-day:disabled,
 .react-calendar__tile.exception-day:enabled:hover,
 .react-calendar__tile.exception-day:enabled:focus {
-  background-color: #faf5ff !important;
-  /* lavender */
-  color: #7c3aed !important;
-  /* purple-700 */
+  background-color: #f4efe5 !important;
+  color: #7a5a1e !important;
   cursor: not-allowed !important;
-  font-weight: 700 !important;
   opacity: 1 !important;
-  text-decoration: none !important;
-  /* removes the line-through from old rule */
 }
 
-/* Dot indicator below the number */
-.react-calendar__tile.exception-day::after {
-  content: "";
-  display: block;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #a855f7;
-  margin: 3px auto 0;
-  flex-shrink: 0;
-}
-
-/* ── Unavailable day (not a working day or past) ───────────────────────── */
-.react-calendar__tile.unavailable-day,
-.react-calendar__tile.unavailable-day:disabled,
-.react-calendar__tile.unavailable-day:enabled:hover {
-  background-color: transparent !important;
-  color: #d1d5db !important;
-  cursor: not-allowed !important;
-  font-weight: 400 !important;
-  text-decoration: none !important;
-}
-
-/* ── calendar-container overrides (customer booking view) ──────────────── */
-
-.calendar-container .react-calendar {
-  width: 100% !important;
-  background: transparent;
-  border: none;
-}
-
-.calendar-container .react-calendar__viewContainer {
-  padding: 0.5rem;
-}
-
-.calendar-container .react-calendar__tile {
-  padding: 1rem 0.5rem !important;
-  aspect-ratio: 1 / 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.875rem;
-  border-radius: 1rem;
-  transition: all 0.2s;
-}
-
-.calendar-container .react-calendar__tile--active {
-  background: #4f46e5 !important;
-  color: white !important;
-  border-radius: 1rem !important;
-}
-
-.calendar-container .react-calendar__tile--now {
-  background: #fee2e2 !important;
-  color: #ef4444 !important;
-}
-
-/* exception-day inside calendar-container — re-assert with higher specificity */
-.calendar-container .react-calendar__tile.exception-day,
-.calendar-container .react-calendar__tile.exception-day:disabled,
-.calendar-container .react-calendar__tile.exception-day:enabled:hover {
-  background-color: #faf5ff !important;
-  color: #7c3aed !important;
-  cursor: not-allowed !important;
-  font-weight: 700 !important;
-  text-decoration: none !important;
-}
-
-@media (max-width: 640px) {
-  .calendar-container .react-calendar__tile {
-    padding: 0.75rem 0.25rem !important;
-    font-size: 0.75rem;
-  }
-
-  .calendar-container .react-calendar__navigation button {
-    font-size: 1rem !important;
-  }
-}
-
-/* ── Custom scrollbar ──────────────────────────────────────────────────── */
+/* ── Barra de desplazamiento ────────────────────────────────────────────── */
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
@@ -291,13 +261,19 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #e5e7eb;
-  border-radius: 10px;
+  background: #c5cfcc;
+  border-radius: 4px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #d1d5db;
+/* Tiras de pestañas que se deslizan en móvil, sin barra visible */
+.scroll-strip {
+  scrollbar-width: none;
 }
+
+.scroll-strip::-webkit-scrollbar {
+  display: none;
+}
+
 /* Marca pública (landing y "próximamente"). Paleta tomada de Tijuana:
    neblina del Pacífico, el mar al anochecer, el atardecer en Playas y los cerros. */
 .brand {

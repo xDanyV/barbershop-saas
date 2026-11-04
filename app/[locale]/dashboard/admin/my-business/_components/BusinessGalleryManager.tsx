@@ -302,7 +302,7 @@ export default function BusinessGalleryManager() {
                                             {item.caption || "Imagen de galería"}
                                         </p>
 
-                                        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100 text-[11px] text-gray-400 font-bold">
+                                        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100 text-xs text-gray-400 font-bold">
                                             <CalendarDays size={13} />
                                             {new Date(item.createdAt).toLocaleDateString("es-MX")}
                                         </div>
@@ -399,7 +399,7 @@ export default function BusinessGalleryManager() {
 
                                 {imageUrl.trim() && (
                                     <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3">
-                                        <p className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2">
+                                        <p className="text-xs font-black text-gray-500   mb-2">
                                             Vista previa
                                         </p>
 
@@ -412,7 +412,7 @@ export default function BusinessGalleryManager() {
                                 )}
 
                                 <div>
-                                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                                    <label className="text-xs font-black text-gray-500  ">
                                         Descripción opcional
                                     </label>
 

@@ -96,13 +96,13 @@ export default function AvailableSlots({
 
         <div className="flex flex-wrap items-center gap-2">
           {schedule && (
-            <div className="inline-flex items-center rounded-2xl bg-indigo-50 px-3 py-2 text-[11px] font-black text-indigo-600">
+            <div className="inline-flex items-center rounded-2xl bg-indigo-50 px-3 py-2 text-xs font-black text-indigo-600">
               {schedule.startTime} — {schedule.endTime}
             </div>
           )}
 
           {!loading && (
-            <div className="inline-flex items-center rounded-2xl bg-gray-50 px-3 py-2 text-[11px] font-black text-gray-500">
+            <div className="inline-flex items-center rounded-2xl bg-gray-50 px-3 py-2 text-xs font-black text-gray-500">
               {availableSlots.length} disponible
               {availableSlots.length === 1 ? "" : "s"}
             </div>

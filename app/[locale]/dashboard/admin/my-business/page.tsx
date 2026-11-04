@@ -4,7 +4,8 @@ import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { ExternalLink, Loader2, Store, QrCode, X, Download } from "lucide-react";
+import { ChevronDown, Copy, ExternalLink, Loader2, Store, QrCode, Share2, X, Download } from "lucide-react";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { usePathname } from "next/navigation";
 import type { BusinessBillingStatus, BusinessPlanType } from "@prisma/client";
 import { QRCodeCanvas } from "qrcode.react";
@@ -54,7 +55,12 @@ export default function MyBusinessPage() {
         maintenanceMessage: "",
     });
 
-    const [activeTab, setActiveTab] = useState<BusinessTab>("profile");
+    // El aviso de membresía enlaza directo a esta pestaña (?tab=membership)
+    const [activeTab, setActiveTab] = useState<BusinessTab>(() =>
+        typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab") === "membership"
+            ? "membership"
+            : "profile"
+    );
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
@@ -209,7 +215,7 @@ export default function MyBusinessPage() {
     }
 
     return (
-        <main className="min-h-screen bg-gray-50 px-4 pt-6 pb-32 md:px-8 md:py-10">
+        <main className="py-6">
             <div className="max-w-5xl mx-auto space-y-6">
                 <motion.div
                     initial={{ opacity: 0, y: 14 }}
@@ -217,7 +223,7 @@ export default function MyBusinessPage() {
                     className="flex flex-col md:flex-row md:items-end justify-between gap-4"
                 >
                     <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-black uppercase tracking-widest mb-3">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-black   mb-3">
                             <Store size={14} />
                             Mi negocio
                         </div>
@@ -231,45 +237,56 @@ export default function MyBusinessPage() {
                         </p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-2">
-                        <button
-                            type="button"
-                            onClick={handleCopyPublicUrl}
-                            className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 text-xs font-black hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
-                        >
-                            Copiar link público
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() => setShowQrModal(true)}
-                            className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 text-xs font-black hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
-                        >
-                            Código QR
-                        </button>
-
+                    <div className="grid grid-cols-2 gap-2 sm:flex">
                         <a
                             href={publicUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-4 py-2.5 rounded-xl bg-gray-900 text-white text-xs font-black hover:bg-indigo-600 transition-all flex items-center justify-center gap-2"
+                            className="min-h-11 px-4 bg-gray-900 text-white text-sm font-semibold transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
                         >
                             Ver página
-                            <ExternalLink size={14} />
+                            <ExternalLink size={16} aria-hidden="true" />
                         </a>
+
+                        <Menu as="div" className="relative">
+                            <MenuButton className="flex min-h-11 w-full items-center justify-center gap-2 border border-gray-200 bg-white px-4 text-sm font-semibold transition-colors hover:border-gray-900">
+                                <Share2 size={16} aria-hidden="true" />
+                                Compartir
+                                <ChevronDown size={16} aria-hidden="true" />
+                            </MenuButton>
+                            <MenuItems
+                                anchor="bottom end"
+                                className="z-50 mt-1 w-56 border border-[#dbe0de] bg-white py-1 text-sm text-[#0f2733] outline-none"
+                            >
+                                <MenuItem>
+                                    <button type="button" onClick={handleCopyPublicUrl} className="flex min-h-11 w-full items-center gap-3 px-4 text-left data-[focus]:bg-[#f1f3f2]">
+                                        <Copy size={18} aria-hidden="true" />
+                                        Copiar enlace
+                                    </button>
+                                </MenuItem>
+                                <MenuItem>
+                                    <button type="button" onClick={() => setShowQrModal(true)} className="flex min-h-11 w-full items-center gap-3 px-4 text-left data-[focus]:bg-[#f1f3f2]">
+                                        <QrCode size={18} aria-hidden="true" />
+                                        Código QR
+                                    </button>
+                                </MenuItem>
+                            </MenuItems>
+                        </Menu>
                     </div>
                 </motion.div>
-
-                <BusinessBillingCard
-                    billingStatus={business.billingStatus}
-                    billingPlan={business.billingPlan}
-                    subscriptionEndsAt={business.subscriptionEndsAt}
-                />
 
                 <MyBusinessTabs
                     activeTab={activeTab}
                     onChange={setActiveTab}
                 />
+
+                {activeTab === "membership" && (
+                    <BusinessBillingCard
+                        billingStatus={business.billingStatus}
+                        billingPlan={business.billingPlan}
+                        subscriptionEndsAt={business.subscriptionEndsAt}
+                    />
+                )}
 
                 {activeTab === "profile" && (
                     <BusinessProfileForm

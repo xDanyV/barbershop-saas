@@ -73,7 +73,7 @@ export default function EditServiceForm({ service, onCancel, onSuccess }: Props)
 
             <div className="space-y-4">
                 <div className="space-y-1.5">
-                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400 ml-1 flex items-center gap-2">
+                    <label className="text-xs font-bold   text-gray-400 ml-1 flex items-center gap-2">
                         {t("fields.name")}
                     </label>
                     <input
@@ -87,7 +87,7 @@ export default function EditServiceForm({ service, onCancel, onSuccess }: Props)
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                        <label className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400 ml-1 flex items-center gap-2">
+                        <label className="text-xs font-bold   text-gray-400 ml-1 flex items-center gap-2">
                             <DollarSign size={12} /> {t("fields.price")}
                         </label>
                         <input
@@ -99,7 +99,7 @@ export default function EditServiceForm({ service, onCancel, onSuccess }: Props)
                         />
                     </div>
                     <div className="space-y-1.5">
-                        <label className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-400 ml-1 flex items-center gap-2">
+                        <label className="text-xs font-bold   text-gray-400 ml-1 flex items-center gap-2">
                             <Clock size={12} /> {t("fields.duration")}
                         </label>
                         <input

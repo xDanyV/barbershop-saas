@@ -6,8 +6,7 @@ import CreateServiceForm from "./components/CreateServiceForm";
 import { Service } from "@prisma/client";
 import EditServiceForm from "./components/EditServiceForm";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, ArrowLeft, LayoutDashboard } from "lucide-react";
-import Link from "next/link";
+import { Plus, ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 export default function CatalogPage() {
@@ -16,22 +15,7 @@ export default function CatalogPage() {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
 
   return (
-    <div className="max-w-5xl mx-auto  md:pt-20 pb-24 md:pb-0 px-4 sm:px-6">
-
-      <motion.div
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="mb-6 md:mb-4"
-      >
-        <Link
-          href="/dashboard/barber"
-          className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-indigo-600 transition-colors group"
-        >
-          <LayoutDashboard size={16} className="group-hover:-translate-y-0.5 transition-transform" />
-          <span className="hidden sm:inline">{t("backToDashboard")}</span>
-          <span className="sm:hidden">{t("backToDashboardShort")}</span>
-        </Link>
-      </motion.div>
+    <div className="max-w-5xl mx-auto py-6">
 
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 border-b border-gray-100 pb-6 gap-6">
         <div className="flex-1">

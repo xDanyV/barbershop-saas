@@ -83,7 +83,12 @@ export async function proxy(request: NextRequest) {
     );
   } catch (error) {
     console.error("Proxy session error:", error);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    // Una página no debe mostrarle JSON a una persona; la sesión sigue intacta para cuando vuelva la base
+    if (pathname.startsWith("/api")) {
+      return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 503, headers: { "Retry-After": "30" } });
+    }
+
+    return NextResponse.rewrite(new URL(`${localePrefix || `/${routing.defaultLocale}`}/unavailable`, request.url), { status: 503 });
   }
 
   if (!session) {

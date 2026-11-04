@@ -3,7 +3,7 @@
 import { useEffect, useState, Fragment } from "react";
 import { Dialog, Transition, TransitionChild, DialogPanel, DialogTitle } from "@headlessui/react";
 import { toast } from "react-hot-toast";
-import { X, Calendar, Coffee } from "lucide-react";
+import { X, Clock, Coffee } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
 
@@ -35,7 +35,7 @@ const SplitTimeSelect = ({
 
     return (
         <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block ml-1">
+            <label className="text-xs font-bold text-gray-400   block ml-1">
                 {label}
             </label>
             <div className="flex gap-1.5 items-center">
@@ -70,7 +70,7 @@ const SplitTimeSelect = ({
     );
 };
 
-export default function AvailabilityModal({ isScrolled = false }: { isScrolled?: boolean }) {
+export default function AvailabilityModal() {
     const t = useTranslations("AvailabilityModal");
     const [isOpen, setIsOpen] = useState(false);
     const [selectedDays, setSelectedDays] = useState<number[]>([]);
@@ -155,18 +155,12 @@ export default function AvailabilityModal({ isScrolled = false }: { isScrolled?:
     return (
         <>
             <button
+                type="button"
                 onClick={() => setIsOpen(true)}
-                className={`
-                    flex items-center justify-center gap-2 rounded-xl font-bold transition-all active:scale-95
-                    ${isScrolled
-                        ? "w-12 h-12 bg-indigo-600 text-white shadow-xl rounded-full"
-                        : "w-full lg:w-auto px-5 py-3 bg-indigo-600 text-white text-sm shadow-sm hover:bg-indigo-700"
-                    }
-                `}
-                title={t("triggerButton")}
+                className="flex min-h-11 items-center justify-center gap-2 border border-gray-200 bg-white px-4 text-sm font-semibold transition-colors hover:border-gray-900"
             >
-                <Calendar size={isScrolled ? 24 : 18} />
-                {!isScrolled && <span className="whitespace-nowrap">{t("triggerButton")}</span>}
+                <Clock size={18} aria-hidden="true" />
+                {t("triggerButton")}
             </button>
 
             <Transition show={isOpen} as={Fragment}>
@@ -198,7 +192,7 @@ export default function AvailabilityModal({ isScrolled = false }: { isScrolled?:
 
                                     <div className="space-y-6">
                                         <div>
-                                            <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 block">
+                                            <label className="text-xs font-bold text-gray-400   mb-3 block">
                                                 {t("labels.activeDays")}
                                             </label>
                                             <div className="flex flex-wrap gap-2">
@@ -232,7 +226,7 @@ export default function AvailabilityModal({ isScrolled = false }: { isScrolled?:
                                                     <div className="p-2 bg-amber-50 rounded-lg text-amber-600"><Coffee size={16} /></div>
                                                     <div>
                                                         <p className="text-sm font-bold text-gray-900">{t("labels.lunchBreak")}</p>
-                                                        <p className="text-[10px] text-gray-400 font-medium">{t("labels.lunchBreakDesc")}</p>
+                                                        <p className="text-xs text-gray-400 font-medium">{t("labels.lunchBreakDesc")}</p>
                                                     </div>
                                                 </div>
                                                 <button

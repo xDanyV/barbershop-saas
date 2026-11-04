@@ -1,5 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 import DashboardNavbar from "@/[locale]/components/DashboardNavbar";
 import TermsPrompt from "@/[locale]/components/legal/TermsPrompt";
 import BillingBanner from "@/[locale]/components/BillingBanner";
@@ -15,15 +17,26 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const termsPending = headerList.get("x-terms-pending") === "true";
   const ownerBusinessId = userRole === "OWNER" ? headerList.get("x-business-id") : null;
 
+  const t = await getTranslations("States");
+  const locale = await getLocale();
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <DashboardNavbar role={userRole} />
       {termsPending && <TermsPrompt />}
       {ownerBusinessId && <BillingBanner businessId={ownerBusinessId} />}
 
-      <main className="w-full max-w-7xl mx-auto px-4 pt-4 sm:px-8 flex-1">
+      <main className="w-full max-w-7xl mx-auto px-4 pb-24 sm:px-8 md:pb-8 flex-1">
         {children}
       </main>
+
+      {/* En móvil estos enlaces están en "Mi cuenta": la barra inferior ya ocupa ese espacio */}
+      <footer className="hidden border-t border-gray-200 md:block">
+        <div className="mx-auto flex max-w-7xl gap-6 px-8 py-4 text-sm text-gray-500">
+          <Link href={`/${locale}/privacy`} className="hover:text-gray-900 hover:underline">{t("footer.privacy")}</Link>
+          <Link href={`/${locale}/terms`} className="hover:text-gray-900 hover:underline">{t("footer.terms")}</Link>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -117,7 +117,7 @@ export default function RegisterPage() {
     };
 
     return (
-        <main className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4 py-8 md:py-16 relative overflow-hidden">
+        <main className="theme-field min-h-screen bg-[#0f2733] flex items-center justify-center px-4 py-8 md:py-16 relative overflow-hidden">
             {/* Background glow */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-72 bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none" />
 
@@ -227,7 +227,7 @@ export default function RegisterPage() {
                             {/* Inputs Básicos */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">{t("form.fullName")}</label>
+                                    <label className="text-xs font-semibold text-gray-400 mb-2 block  ">{t("form.fullName")}</label>
                                     <input
                                         name="name"
                                         type="text"
@@ -235,11 +235,11 @@ export default function RegisterPage() {
                                         value={form.name}
                                         onChange={handleChange}
                                         required
-                                        className="w-full bg-[#0f0f16] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
+                                        className="w-full bg-[#16323f] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">{t("form.phone")}</label>
+                                    <label className="text-xs font-semibold text-gray-400 mb-2 block  ">{t("form.phone")}</label>
                                     <input
                                         name="phone"
                                         type="text"
@@ -247,13 +247,13 @@ export default function RegisterPage() {
                                         value={form.phone}
                                         onChange={handleChange}
                                         required
-                                        className="w-full bg-[#0f0f16] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
+                                        className="w-full bg-[#16323f] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">{t("form.email")}</label>
+                                <label className="text-xs font-semibold text-gray-400 mb-2 block  ">{t("form.email")}</label>
                                 <input
                                     name="email"
                                     type="email"
@@ -261,7 +261,7 @@ export default function RegisterPage() {
                                     value={form.email}
                                     onChange={handleChange}
                                     required
-                                    className="w-full bg-[#0f0f16] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
+                                    className="w-full bg-[#16323f] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
                                 />
                             </div>
 
@@ -271,7 +271,7 @@ export default function RegisterPage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     className="bg-indigo-500/5 border border-indigo-500/20 rounded-2xl p-4"
                                 >
-                                    <label className="text-xs font-semibold text-indigo-300 mb-2 block uppercase tracking-wider">
+                                    <label className="text-xs font-semibold text-indigo-300 mb-2 block  ">
                                         {t("form.businessSlug")}
                                     </label>
 
@@ -282,10 +282,10 @@ export default function RegisterPage() {
                                         value={form.businessSlug}
                                         onChange={handleChange}
                                         required={role === "BARBER"}
-                                        className="w-full bg-[#0f0f16] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
+                                        className="w-full bg-[#16323f] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
                                     />
 
-                                    <p className="text-[11px] text-gray-500 mt-2 leading-relaxed">
+                                    <p className="text-xs text-gray-500 mt-2 leading-relaxed">
                                         {t("form.businessSlugHintBefore")}{" "}
                                         <span className="text-indigo-300 font-bold">
                                             barberia-el-nuevo-rey
@@ -298,7 +298,7 @@ export default function RegisterPage() {
                             {/* Contraseñas */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">
+                                    <label className="text-xs font-semibold text-gray-400 mb-2 block  ">
                                         {t("form.password")}
                                     </label>
 
@@ -310,7 +310,7 @@ export default function RegisterPage() {
                                             value={form.password}
                                             onChange={handleChange}
                                             required
-                                            className="w-full bg-[#0f0f16] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 pr-10 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
+                                            className="w-full bg-[#16323f] border border-white/10 text-white placeholder:text-gray-600 rounded-xl px-4 py-3 pr-10 text-sm focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
                                         />
 
                                         <button
@@ -324,7 +324,7 @@ export default function RegisterPage() {
                                 </div>
 
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-400 mb-2 block uppercase tracking-wider">
+                                    <label className="text-xs font-semibold text-gray-400 mb-2 block  ">
                                         {t("form.confirmPassword")}
                                     </label>
 
@@ -335,7 +335,7 @@ export default function RegisterPage() {
                                         value={form.confirmPassword}
                                         onChange={handleChange}
                                         required
-                                        className={`w-full bg-[#0f0f16] border text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none transition-all ${form.confirmPassword && form.password !== form.confirmPassword
+                                        className={`w-full bg-[#16323f] border text-white placeholder:text-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none transition-all ${form.confirmPassword && form.password !== form.confirmPassword
                                             ? "border-red-500/50 focus:border-red-500 focus:ring-1 focus:ring-red-500/50"
                                             : "border-white/10 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50"
                                             }`}
