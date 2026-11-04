@@ -93,6 +93,7 @@ export default function RegisterPage() {
 
             if (!response.ok) {
                 if (response.status === 429) data.error = t("errors.tooManyAttempts");
+                if (response.status >= 500) data.error = t("errors.generic");
                 setError(data.error || t("errors.generic"));
                 toast.error(data.error || t("toasts.failed"), { id: loadingToast });
                 setLoading(false);

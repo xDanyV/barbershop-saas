@@ -61,7 +61,8 @@
         "errors": {
             "invalidCredentials": "Credenciales incorrectas",
             "generic": "Algo salió mal. Por favor intenta de nuevo.",
-            "tooManyAttempts": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo."
+            "tooManyAttempts": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.",
+            "server": "No pudimos iniciar tu sesión por un problema de nuestro lado. Inténtalo de nuevo en unos minutos."
         },
         "buttons": {
             "signingIn": "Iniciando sesión...",

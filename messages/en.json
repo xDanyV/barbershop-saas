@@ -61,7 +61,8 @@
         "errors": {
             "invalidCredentials": "Invalid credentials",
             "generic": "Something went wrong. Please try again.",
-            "tooManyAttempts": "Too many attempts. Wait a few minutes and try again."
+            "tooManyAttempts": "Too many attempts. Wait a few minutes and try again.",
+            "server": "We could not sign you in because of a problem on our side. Please try again in a few minutes."
         },
         "buttons": {
             "signingIn": "Signing in...",
