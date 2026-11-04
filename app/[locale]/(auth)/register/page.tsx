@@ -243,7 +243,7 @@ export default function RegisterPage() {
                                     <input
                                         name="phone"
                                         type="text"
-                                        placeholder="+1 (555) 000-0000"
+                                        placeholder="664 123 4567"
                                         value={form.phone}
                                         onChange={handleChange}
                                         required

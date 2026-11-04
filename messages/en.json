@@ -504,6 +504,11 @@
         "button": {
             "saving": "Saving...",
             "save": "Save Settings"
+        },
+        "payment": {
+            "label": "Payment instructions",
+            "help": "Barbershop owners see them in \"My business\". They do not appear on public pages.",
+            "placeholder": "E.g.: Transfer to account... and send your receipt to..."
         }
     },
     "AdminDashboard": {
@@ -776,7 +781,7 @@
                 },
                 "pay": {
                     "q": "How do I pay?",
-                    "a": "The membership is monthly. For now, payment is arranged directly with us when you set up your barbershop."
+                    "a": "The first 30 days are free. After that the membership is monthly and, for now, payment is arranged directly with us."
                 }
             }
         },
@@ -905,6 +910,104 @@
             "phone": "Enter a 10-digit Mexican phone number.",
             "conflict": "That time is not available: there is another appointment or you marked it as a day off.",
             "failed": "Could not save the appointment. Check the details."
+        }
+    },
+    "Billing": {
+        "status": {
+            "TRIALING": "Free trial",
+            "PENDING_PAYMENT": "Payment pending",
+            "ACTIVE": "Active",
+            "PAST_DUE": "Past due",
+            "SUSPENDED": "Suspended",
+            "CANCELED": "Canceled"
+        },
+        "descriptions": {
+            "TRIALING": "You are on your free trial. Your barbershop has every feature.",
+            "PENDING_PAYMENT": "Your barbershop is not taking bookings yet: your first payment still needs to be recorded.",
+            "ACTIVE": "Your membership is up to date and your barbershop is taking bookings.",
+            "PAST_DUE": "Your payment is overdue. Your barbershop keeps taking bookings for 7 days, then it is suspended.",
+            "SUSPENDED": "Your public page is hidden and you are not taking bookings until payment is made.",
+            "CANCELED": "Your membership is canceled. Your public page is hidden and you are not taking bookings."
+        },
+        "plans": {
+            "FOUNDER": "Founder plan",
+            "BASIC": "Basic plan"
+        },
+        "methods": {
+            "CASH": "Cash",
+            "TRANSFER": "Transfer",
+            "CARD": "Card",
+            "OTHER": "Other"
+        },
+        "alerts": {
+            "trialEnding": "{days, plural, =0 {Your trial ends today.} one {Your trial ends in # day.} other {Your trial ends in # days.}}",
+            "dueSoon": "{days, plural, =0 {Your membership is due today.} one {Your membership is due in # day.} other {Your membership is due in # days.}}",
+            "pastDue": "{days, plural, =0 {Your payment is overdue. Your barbershop is suspended today.} one {Your payment is overdue. Your barbershop is suspended in # day.} other {Your payment is overdue. Your barbershop is suspended in # days.}}",
+            "suspended": "Your barbershop is suspended: your page is hidden and you are not taking bookings.",
+            "canceled": "Your membership is canceled: your page is hidden and you are not taking bookings.",
+            "pending": "Your barbershop is not taking bookings until your first payment is recorded.",
+            "action": "See how to pay"
+        },
+        "card": {
+            "title": "Membership",
+            "plan": "Plan",
+            "price": "Price",
+            "perMonth": "/mo",
+            "trialEnds": "Your trial ends",
+            "validUntil": "Valid until",
+            "howToPay": "How to pay",
+            "history": "Payment history",
+            "loading": "Loading...",
+            "noPayments": "No payments recorded yet.",
+            "paidOn": "Paid on {date}"
+        },
+        "admin": {
+            "title": "Memberships",
+            "subtitle": "Record the payments you receive. Each payment extends the membership and reactivates the business.",
+            "stats": {
+                "attention": "Need attention",
+                "dueSoon": "Due in 7 days",
+                "trial": "On trial",
+                "collected": "Collected this month"
+            },
+            "empty": "No businesses yet.",
+            "until": "until {date}",
+            "alerts": {
+                "trialEnding": "{days, plural, =0 {Trial ends today} one {Trial ends in # day} other {Trial ends in # days}}",
+                "dueSoon": "{days, plural, =0 {Due today} one {Due in # day} other {Due in # days}}",
+                "pastDue": "{days, plural, =0 {Past due: suspended today} one {Past due: suspended in # day} other {Past due: suspended in # days}}",
+                "suspended": "Suspended",
+                "canceled": "Canceled",
+                "pending": "No first payment"
+            },
+            "recordPayment": "Record payment",
+            "history": "History",
+            "adjust": "Adjust",
+            "close": "Close",
+            "months": "Months",
+            "amount": "Amount (MXN)",
+            "method": "Payment method",
+            "paidAt": "Payment date",
+            "note": "Note (optional)",
+            "savePayment": "Save payment",
+            "saving": "Saving...",
+            "paymentSaved": "Payment recorded",
+            "monthsCount": "{months, plural, one {# month} other {# months}}",
+            "void": "Void this payment",
+            "voidConfirm": "Void this payment? The membership goes back to how it was before.",
+            "voided": "Payment voided",
+            "voidedLabel": "Voided",
+            "adjustHint": "For special cases. For a regular payment use \"Record payment\".",
+            "statusLabel": "Status",
+            "saveAdjust": "Save changes",
+            "adjusted": "Membership updated",
+            "errors": {
+                "load": "Could not load memberships.",
+                "payment": "Could not record the payment. Check the details.",
+                "void": "Could not void the payment.",
+                "voidChanged": "The membership changed after this payment. Fix it with \"Adjust\".",
+                "adjust": "Could not update the membership."
+            }
         }
     }
 }

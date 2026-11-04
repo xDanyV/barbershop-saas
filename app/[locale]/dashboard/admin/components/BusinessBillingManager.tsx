@@ -1,402 +1,455 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { BusinessBillingStatus, BusinessPlanType } from "@prisma/client";
-import {
-    Building2,
-    CalendarDays,
-    CreditCard,
-    Loader2,
-    Save,
-    ShieldAlert,
-} from "lucide-react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import type { BusinessBillingStatus, BusinessPlanType, PaymentMethod } from "@prisma/client";
+import { useLocale, useTranslations } from "next-intl";
 import toast from "react-hot-toast";
-import { motion } from "framer-motion";
-import { getBillingStatusLabel } from "@/lib/billing/status";
-import { getBillingPlan } from "@/lib/billing/pricing";
+import { brandFontClasses } from "@/[locale]/brand";
+import BrandDialog, { brandInput, brandPrimaryButton } from "@/[locale]/components/BrandDialog";
+import type { BillingAlert } from "@/lib/billing/periods";
+import { formatPriceFromCents, getBillingPlan } from "@/lib/billing/pricing";
 
-type BusinessBillingItem = {
+type BusinessItem = {
     id: string;
     name: string;
     slug: string;
-    active: boolean;
     billingStatus: BusinessBillingStatus;
     billingPlan: BusinessPlanType;
-    subscriptionEndsAt: string | null;
-    owner: {
-        id: string;
-        name: string | null;
-        email: string;
-    };
-    subscription: {
-        id: string;
-        provider: string;
-        billingStatus: BusinessBillingStatus;
-        currentPeriodEnd: string | null;
-        monthlyPriceCents: number;
-        currency: string;
-    } | null;
+    subscriptionEndKey: string | null;
+    alert: BillingAlert | null;
+    owner: { name: string | null; email: string };
 };
 
-type BillingDraft = {
-    billingStatus: BusinessBillingStatus;
-    billingPlan: BusinessPlanType;
-    subscriptionEndsAt: string;
+type Payment = {
+    id: string;
+    amountCents: number;
+    method: PaymentMethod;
+    months: number;
+    paidAt: string;
+    periodEnd: string;
+    note: string | null;
+    voidedAt: string | null;
 };
 
-const statusOptions: BusinessBillingStatus[] = [
-    "PENDING_PAYMENT",
-    "ACTIVE",
-    "PAST_DUE",
-    "SUSPENDED",
-    "CANCELED",
-];
+type DialogState =
+    | { type: "payment" | "history" | "adjust"; business: BusinessItem }
+    | null;
 
-const planOptions: BusinessPlanType[] = ["FOUNDER", "BASIC"];
+const STATUSES: BusinessBillingStatus[] = ["TRIALING", "PENDING_PAYMENT", "ACTIVE", "PAST_DUE", "SUSPENDED", "CANCELED"];
+const PLANS: BusinessPlanType[] = ["FOUNDER", "BASIC"];
+const METHODS: PaymentMethod[] = ["TRANSFER", "CASH", "CARD", "OTHER"];
 
-function toDateInputValue(date: string | null) {
-    if (!date) return "";
+// Primero lo que necesita atención
+const URGENCY: Record<BillingAlert["kind"], number> = {
+    suspended: 0,
+    pastDue: 1,
+    pending: 2,
+    dueSoon: 3,
+    trialEnding: 4,
+    canceled: 6,
+};
 
-    return new Date(date).toISOString().slice(0, 10);
+function urgency(business: BusinessItem) {
+    return business.alert ? URGENCY[business.alert.kind] : 5;
 }
 
-function getStatusClass(status: BusinessBillingStatus) {
-    const classes: Record<BusinessBillingStatus, string> = {
-        ACTIVE: "bg-emerald-50 text-emerald-700 border-emerald-100",
-        PAST_DUE: "bg-amber-50 text-amber-700 border-amber-100",
-        PENDING_PAYMENT: "bg-yellow-50 text-yellow-700 border-yellow-100",
-        SUSPENDED: "bg-red-50 text-red-700 border-red-100",
-        CANCELED: "bg-gray-100 text-gray-700 border-gray-200",
-    };
-
-    return classes[status];
+function localDateKey(date = new Date()) {
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${date.getFullYear()}-${month}-${day}`;
 }
 
 export default function BusinessBillingManager() {
-    const [businesses, setBusinesses] = useState<BusinessBillingItem[]>([]);
-    const [drafts, setDrafts] = useState<Record<string, BillingDraft>>({});
-    const [loading, setLoading] = useState(true);
-    const [savingId, setSavingId] = useState<string | null>(null);
+    const t = useTranslations("Billing");
+    const locale = useLocale();
+    const [businesses, setBusinesses] = useState<BusinessItem[] | null>(null);
+    const [collected, setCollected] = useState(0);
+    const [dialog, setDialog] = useState<DialogState>(null);
 
-    const loadBusinesses = async () => {
+    const load = useCallback(async () => {
+        const res = await fetch("/api/admin/businesses/billing").catch(() => null);
+
+        if (!res?.ok) {
+            toast.error(t("admin.errors.load"));
+            setBusinesses((prev) => prev ?? []);
+            return;
+        }
+
+        const data = await res.json();
+        setBusinesses(data.businesses);
+        setCollected(data.collectedThisMonthCents);
+    }, [t]);
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- carga inicial desde la API
+        load();
+    }, [load]);
+
+    const sorted = useMemo(
+        () => [...(businesses ?? [])].sort((a, b) => urgency(a) - urgency(b) || a.name.localeCompare(b.name)),
+        [businesses]
+    );
+
+    const formatKey = (key: string) =>
+        new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            timeZone: "UTC",
+        }).format(new Date(`${key}T12:00:00Z`));
+
+    const count = (kinds: BillingAlert["kind"][]) =>
+        (businesses ?? []).filter((b) => b.alert && kinds.includes(b.alert.kind)).length;
+
+    const stats = [
+        { label: t("admin.stats.attention"), value: String(count(["pastDue", "suspended", "pending"])) },
+        { label: t("admin.stats.dueSoon"), value: String(count(["dueSoon", "trialEnding"])) },
+        { label: t("admin.stats.trial"), value: String((businesses ?? []).filter((b) => b.billingStatus === "TRIALING").length) },
+        { label: t("admin.stats.collected"), value: formatPriceFromCents(collected) },
+    ];
+
+    const done = () => {
+        setDialog(null);
+        load();
+    };
+
+    return (
+        <section className={`brand ${brandFontClasses} p-5 pb-24 sm:p-8 md:pb-8`}>
+            <h2 className="brand-display text-[length:var(--step-head)]">{t("admin.title")}</h2>
+            <p className="mt-2 max-w-[60ch] text-[var(--brand-muted)]">{t("admin.subtitle")}</p>
+
+            <dl className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                {stats.map((stat) => (
+                    <div key={stat.label} className="p-4" style={{ background: "var(--brand-paper)" }}>
+                        <dt className="text-[length:var(--step-small)] text-[var(--brand-muted)]">{stat.label}</dt>
+                        <dd className="tabular mt-1 text-[length:var(--step-lead)] font-semibold">{stat.value}</dd>
+                    </div>
+                ))}
+            </dl>
+
+            {businesses === null ? (
+                <p className="mt-8 text-[var(--brand-muted)]">{t("card.loading")}</p>
+            ) : sorted.length === 0 ? (
+                <p className="mt-8 text-[var(--brand-muted)]">{t("admin.empty")}</p>
+            ) : (
+                <ul className="mt-6 space-y-3">
+                    {sorted.map((business) => (
+                        <li key={business.id} className="p-4 sm:p-5" style={{ background: "var(--brand-paper)" }}>
+                            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                                <div className="min-w-0">
+                                    <h3 className="truncate font-semibold">{business.name}</h3>
+                                    <p className="truncate text-[length:var(--step-small)] text-[var(--brand-muted)]">
+                                        {business.owner.name || business.owner.email} · {t(`plans.${business.billingPlan}`)}
+                                    </p>
+                                    <p className="mt-2 text-[length:var(--step-small)]">
+                                        <span className="font-semibold">{t(`status.${business.billingStatus}`)}</span>
+                                        {business.subscriptionEndKey && (
+                                            <span className="text-[var(--brand-muted)]">
+                                                {" · "}
+                                                {t("admin.until", { date: formatKey(business.subscriptionEndKey) })}
+                                            </span>
+                                        )}
+                                    </p>
+                                    {business.alert && (
+                                        <p className="mt-1 text-[length:var(--step-small)] font-semibold text-[#b8431f]">
+                                            {t(`admin.alerts.${business.alert.kind}`, { days: business.alert.days })}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="flex shrink-0 flex-wrap gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setDialog({ type: "payment", business })}
+                                        className="min-h-11 bg-[var(--brand-ink)] px-4 text-[length:var(--step-small)] font-semibold text-[var(--brand-paper)] transition-opacity hover:opacity-90"
+                                    >
+                                        {t("admin.recordPayment")}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setDialog({ type: "history", business })}
+                                        className="min-h-11 border border-[var(--brand-surface)] px-4 text-[length:var(--step-small)] font-semibold transition-colors hover:border-[var(--brand-ink)]"
+                                    >
+                                        {t("admin.history")}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setDialog({ type: "adjust", business })}
+                                        className="min-h-11 border border-[var(--brand-surface)] px-4 text-[length:var(--step-small)] font-semibold transition-colors hover:border-[var(--brand-ink)]"
+                                    >
+                                        {t("admin.adjust")}
+                                    </button>
+                                </div>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            )}
+
+            {dialog?.type === "payment" && <PaymentDialog business={dialog.business} onClose={() => setDialog(null)} onDone={done} />}
+            {dialog?.type === "history" && <HistoryDialog business={dialog.business} onClose={() => setDialog(null)} onChanged={load} />}
+            {dialog?.type === "adjust" && <AdjustDialog business={dialog.business} onClose={() => setDialog(null)} onDone={done} />}
+        </section>
+    );
+}
+
+function PaymentDialog({ business, onClose, onDone }: { business: BusinessItem; onClose: () => void; onDone: () => void }) {
+    const t = useTranslations("Billing");
+    const monthly = getBillingPlan(business.billingPlan).monthlyPriceCents;
+    const [months, setMonths] = useState(1);
+    const [amount, setAmount] = useState(String(monthly / 100));
+    const [method, setMethod] = useState<PaymentMethod>("TRANSFER");
+    const [paidAt, setPaidAt] = useState(() => localDateKey());
+    const [note, setNote] = useState("");
+    const [saving, setSaving] = useState(false);
+
+    const changeMonths = (value: number) => {
+        setMonths(value);
+        setAmount(String((monthly * value) / 100));
+    };
+
+    const submit = async (e: FormEvent) => {
+        e.preventDefault();
+        setSaving(true);
+
         try {
-            setLoading(true);
-
-            const res = await fetch("/api/admin/businesses/billing");
-            const data = await res.json();
+            const res = await fetch(`/api/admin/businesses/${business.id}/payments`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ months, amountCents: Math.round(Number(amount) * 100), method, paidAt, note }),
+            });
 
             if (!res.ok) {
-                toast.error(data.error || "No se pudieron cargar los negocios");
-                setBusinesses([]);
+                toast.error(t("admin.errors.payment"));
                 return;
             }
 
-            if (!Array.isArray(data)) {
-                toast.error("Formato de respuesta inválido");
-                setBusinesses([]);
-                return;
-            }
-
-            setBusinesses(data);
-
-            const nextDrafts = data.reduce<Record<string, BillingDraft>>(
-                (acc, business: BusinessBillingItem) => {
-                    acc[business.id] = {
-                        billingStatus: business.billingStatus,
-                        billingPlan: business.billingPlan,
-                        subscriptionEndsAt: toDateInputValue(
-                            business.subscriptionEndsAt
-                        ),
-                    };
-
-                    return acc;
-                },
-                {}
-            );
-
-            setDrafts(nextDrafts);
-        } catch (error) {
-            console.error("Load businesses billing error:", error);
-            toast.error("Error al cargar suscripciones");
+            toast.success(t("admin.paymentSaved"));
+            onDone();
+        } catch {
+            toast.error(t("admin.errors.payment"));
         } finally {
-            setLoading(false);
+            setSaving(false);
         }
     };
 
+    return (
+        <BrandDialog title={t("admin.recordPayment")} subtitle={business.name} closeLabel={t("admin.close")} onClose={() => !saving && onClose()}>
+            <form onSubmit={submit} className="space-y-5">
+                <div className="grid grid-cols-2 gap-3">
+                    <label className="block min-w-0 font-semibold">
+                        {t("admin.months")}
+                        <select value={months} onChange={(e) => changeMonths(Number(e.target.value))} className={brandInput}>
+                            {[1, 2, 3, 6, 12].map((value) => (
+                                <option key={value} value={value}>
+                                    {value}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+
+                    <label className="block min-w-0 font-semibold">
+                        {t("admin.amount")}
+                        <input
+                            required
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            inputMode="decimal"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            className={brandInput}
+                        />
+                    </label>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <label className="block min-w-0 font-semibold">
+                        {t("admin.method")}
+                        <select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)} className={brandInput}>
+                            {METHODS.map((value) => (
+                                <option key={value} value={value}>
+                                    {t(`methods.${value}`)}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+
+                    <label className="block min-w-0 font-semibold">
+                        {t("admin.paidAt")}
+                        <input
+                            required
+                            type="date"
+                            max={localDateKey()}
+                            value={paidAt}
+                            onChange={(e) => setPaidAt(e.target.value)}
+                            className={brandInput}
+                        />
+                    </label>
+                </div>
+
+                <label className="block font-semibold">
+                    {t("admin.note")}
+                    <input maxLength={200} value={note} onChange={(e) => setNote(e.target.value)} className={brandInput} />
+                </label>
+
+                <button type="submit" disabled={saving} className={brandPrimaryButton}>
+                    {saving ? t("admin.saving") : t("admin.savePayment")}
+                </button>
+            </form>
+        </BrandDialog>
+    );
+}
+
+function HistoryDialog({ business, onClose, onChanged }: { business: BusinessItem; onClose: () => void; onChanged: () => void }) {
+    const t = useTranslations("Billing");
+    const locale = useLocale();
+    const [payments, setPayments] = useState<Payment[] | null>(null);
+    const [voiding, setVoiding] = useState(false);
+
+    const load = useCallback(async () => {
+        const res = await fetch(`/api/admin/businesses/${business.id}/payments`).catch(() => null);
+        setPayments(res?.ok ? await res.json() : []);
+    }, [business.id]);
+
     useEffect(() => {
-        loadBusinesses();
-    }, []);
+        load();
+    }, [load]);
 
-    const updateDraft = <K extends keyof BillingDraft>(
-        businessId: string,
-        key: K,
-        value: BillingDraft[K]
-    ) => {
-        setDrafts((prev) => ({
-            ...prev,
-            [businessId]: {
-                ...prev[businessId],
-                [key]: value,
-            },
-        }));
+    const formatDate = (date: string) =>
+        new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", { day: "numeric", month: "short", year: "numeric" }).format(new Date(date));
+
+    const latestId = payments?.find((payment) => !payment.voidedAt)?.id;
+
+    const voidLatest = async () => {
+        if (!window.confirm(t("admin.voidConfirm"))) return;
+
+        setVoiding(true);
+
+        try {
+            const res = await fetch(`/api/admin/businesses/${business.id}/payments`, { method: "DELETE" });
+
+            if (!res.ok) {
+                toast.error(res.status === 409 ? t("admin.errors.voidChanged") : t("admin.errors.void"));
+                return;
+            }
+
+            toast.success(t("admin.voided"));
+            await load();
+            onChanged();
+        } catch {
+            toast.error(t("admin.errors.void"));
+        } finally {
+            setVoiding(false);
+        }
     };
 
-    const hasChanges = (business: BusinessBillingItem) => {
-        const draft = drafts[business.id];
+    return (
+        <BrandDialog title={t("admin.history")} subtitle={business.name} closeLabel={t("admin.close")} onClose={onClose}>
+            {payments === null ? (
+                <p className="text-[var(--brand-muted)]">{t("card.loading")}</p>
+            ) : payments.length === 0 ? (
+                <p className="text-[var(--brand-muted)]">{t("card.noPayments")}</p>
+            ) : (
+                <ul className="max-h-96 divide-y divide-[var(--brand-surface)] overflow-y-auto">
+                    {payments.map((payment) => (
+                        <li key={payment.id} className={`py-3 ${payment.voidedAt ? "opacity-60" : ""}`}>
+                            <p className="flex flex-wrap items-baseline justify-between gap-x-4">
+                                <span className={`tabular font-semibold ${payment.voidedAt ? "line-through" : ""}`}>
+                                    {formatPriceFromCents(payment.amountCents)}
+                                </span>
+                                <span className="text-[length:var(--step-small)] text-[var(--brand-muted)]">{formatDate(payment.paidAt)}</span>
+                            </p>
+                            <p className="text-[length:var(--step-small)] text-[var(--brand-muted)]">
+                                {t(`methods.${payment.method}`)} · {t("admin.monthsCount", { months: payment.months })} ·{" "}
+                                {t("admin.until", { date: formatDate(payment.periodEnd) })}
+                                {payment.voidedAt && ` · ${t("admin.voidedLabel")}`}
+                            </p>
+                            {payment.note && <p className="mt-1 text-[length:var(--step-small)]">{payment.note}</p>}
+                            {payment.id === latestId && (
+                                <button
+                                    type="button"
+                                    onClick={voidLatest}
+                                    disabled={voiding}
+                                    className="mt-2 min-h-11 text-[length:var(--step-small)] font-semibold underline underline-offset-4 disabled:opacity-50"
+                                >
+                                    {t("admin.void")}
+                                </button>
+                            )}
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </BrandDialog>
+    );
+}
 
-        if (!draft) return false;
+function AdjustDialog({ business, onClose, onDone }: { business: BusinessItem; onClose: () => void; onDone: () => void }) {
+    const t = useTranslations("Billing");
+    const [status, setStatus] = useState(business.billingStatus);
+    const [plan, setPlan] = useState(business.billingPlan);
+    const [ends, setEnds] = useState(business.subscriptionEndKey ?? "");
+    const [saving, setSaving] = useState(false);
 
-        return (
-            draft.billingStatus !== business.billingStatus ||
-            draft.billingPlan !== business.billingPlan ||
-            draft.subscriptionEndsAt !== toDateInputValue(business.subscriptionEndsAt)
-        );
-    };
-
-    const handleSave = async (business: BusinessBillingItem) => {
-        const draft = drafts[business.id];
-
-        if (!draft) return;
-
-        setSavingId(business.id);
+    const submit = async (e: FormEvent) => {
+        e.preventDefault();
+        setSaving(true);
 
         try {
             const res = await fetch("/api/admin/businesses/billing", {
                 method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    businessId: business.id,
-                    billingStatus: draft.billingStatus,
-                    billingPlan: draft.billingPlan,
-                    subscriptionEndsAt: draft.subscriptionEndsAt || null,
-                }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ businessId: business.id, billingStatus: status, billingPlan: plan, subscriptionEndsAt: ends || null }),
             });
 
-            const data = await res.json();
-
             if (!res.ok) {
-                toast.error(data.error || "No se pudo actualizar");
+                toast.error(t("admin.errors.adjust"));
                 return;
             }
 
-            setBusinesses((prev) =>
-                prev.map((item) => (item.id === business.id ? data : item))
-            );
-
-            setDrafts((prev) => ({
-                ...prev,
-                [business.id]: {
-                    billingStatus: data.billingStatus,
-                    billingPlan: data.billingPlan,
-                    subscriptionEndsAt: toDateInputValue(data.subscriptionEndsAt),
-                },
-            }));
-
-            toast.success("Suscripción actualizada");
-        } catch (error) {
-            console.error("Save business billing error:", error);
-            toast.error("Error al actualizar suscripción");
+            toast.success(t("admin.adjusted"));
+            onDone();
+        } catch {
+            toast.error(t("admin.errors.adjust"));
         } finally {
-            setSavingId(null);
+            setSaving(false);
         }
     };
 
-    if (loading) {
-        return (
-            <div className="p-10 text-center font-bold text-gray-400 flex items-center justify-center gap-2">
-                <Loader2 className="animate-spin" size={18} />
-                Cargando suscripciones...
-            </div>
-        );
-    }
-
     return (
-        <section className="space-y-5">
-            <div className="bg-white border border-gray-100 rounded-3xl p-5 md:p-6 shadow-sm">
-                <div className="flex items-start gap-3">
-                    <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                        <CreditCard size={21} />
-                    </div>
+        <BrandDialog title={t("admin.adjust")} subtitle={t("admin.adjustHint")} closeLabel={t("admin.close")} onClose={() => !saving && onClose()}>
+            <form onSubmit={submit} className="space-y-5">
+                <label className="block font-semibold">
+                    {t("card.plan")}
+                    <select value={plan} onChange={(e) => setPlan(e.target.value as BusinessPlanType)} className={brandInput}>
+                        {PLANS.map((value) => (
+                            <option key={value} value={value}>
+                                {t(`plans.${value}`)} · {formatPriceFromCents(getBillingPlan(value).monthlyPriceCents)}
+                            </option>
+                        ))}
+                    </select>
+                </label>
 
-                    <div>
-                        <h2 className="text-xl font-black text-gray-900">
-                            Suscripciones de negocios
-                        </h2>
+                <label className="block font-semibold">
+                    {t("admin.statusLabel")}
+                    <select value={status} onChange={(e) => setStatus(e.target.value as BusinessBillingStatus)} className={brandInput}>
+                        {STATUSES.map((value) => (
+                            <option key={value} value={value}>
+                                {t(`status.${value}`)}
+                            </option>
+                        ))}
+                    </select>
+                </label>
 
-                        <p className="text-sm text-gray-500 mt-1 max-w-2xl">
-                            Administra manualmente el plan y estado de pago de cada negocio.
-                            Esto sirve mientras integras Stripe o Mercado Pago.
-                        </p>
-                    </div>
-                </div>
-            </div>
+                <label className="block font-semibold">
+                    {t("card.validUntil")}
+                    <input type="date" value={ends} onChange={(e) => setEnds(e.target.value)} className={brandInput} />
+                </label>
 
-            {businesses.length === 0 ? (
-                <div className="min-h-64 rounded-3xl bg-white border border-dashed border-gray-200 flex flex-col items-center justify-center text-center px-6">
-                    <ShieldAlert className="text-gray-300 mb-3" size={32} />
-                    <p className="text-gray-500 font-bold">
-                        No hay negocios registrados.
-                    </p>
-                </div>
-            ) : (
-                <div className="grid gap-4">
-                    {businesses.map((business, index) => {
-                        const draft = drafts[business.id];
-
-                        if (!draft) return null;
-
-                        const plan = getBillingPlan(draft.billingPlan);
-                        const changed = hasChanges(business);
-                        const saving = savingId === business.id;
-
-                        return (
-                            <motion.article
-                                key={business.id}
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.03 }}
-                                className="bg-white border border-gray-100 rounded-3xl p-5 md:p-6 shadow-sm"
-                            >
-                                <div className="flex flex-col lg:flex-row lg:items-center gap-5">
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-start gap-3">
-                                            <div className="w-12 h-12 rounded-2xl bg-gray-50 text-indigo-600 flex items-center justify-center shrink-0 border border-gray-100">
-                                                <Building2 size={22} />
-                                            </div>
-
-                                            <div className="min-w-0">
-                                                <div className="flex flex-wrap items-center gap-2">
-                                                    <h3 className="font-black text-gray-900 truncate">
-                                                        {business.name}
-                                                    </h3>
-
-                                                    <span
-                                                        className={`text-[10px] px-2.5 py-1 rounded-full border font-black ${getStatusClass(
-                                                            business.billingStatus
-                                                        )}`}
-                                                    >
-                                                        {getBillingStatusLabel(
-                                                            business.billingStatus
-                                                        )}
-                                                    </span>
-                                                </div>
-
-                                                <p className="text-xs text-gray-400 font-bold mt-1">
-                                                    /business/{business.slug}
-                                                </p>
-
-                                                <p className="text-xs text-gray-500 mt-2">
-                                                    Owner:{" "}
-                                                    <span className="font-bold text-gray-700">
-                                                        {business.owner.name ||
-                                                            business.owner.email}
-                                                    </span>
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:w-155">
-                                        <div>
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                                                Plan
-                                            </label>
-
-                                            <select
-                                                value={draft.billingPlan}
-                                                onChange={(e) =>
-                                                    updateDraft(
-                                                        business.id,
-                                                        "billingPlan",
-                                                        e.target.value as BusinessPlanType
-                                                    )
-                                                }
-                                                className="mt-2 w-full rounded-2xl border border-gray-200 px-3 py-3 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-indigo-500/30"
-                                            >
-                                                {planOptions.map((option) => (
-                                                    <option key={option} value={option}>
-                                                        {getBillingPlan(option).label}
-                                                    </option>
-                                                ))}
-                                            </select>
-
-                                            <p className="text-[11px] text-gray-400 font-bold mt-1">
-                                                {plan.monthlyPriceLabel}
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                                                Estado
-                                            </label>
-
-                                            <select
-                                                value={draft.billingStatus}
-                                                onChange={(e) =>
-                                                    updateDraft(
-                                                        business.id,
-                                                        "billingStatus",
-                                                        e.target.value as BusinessBillingStatus
-                                                    )
-                                                }
-                                                className="mt-2 w-full rounded-2xl border border-gray-200 px-3 py-3 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-indigo-500/30"
-                                            >
-                                                {statusOptions.map((option) => (
-                                                    <option key={option} value={option}>
-                                                        {getBillingStatusLabel(option)}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                                                Corte
-                                            </label>
-
-                                            <div className="relative mt-2">
-                                                <CalendarDays
-                                                    size={15}
-                                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                                                />
-
-                                                <input
-                                                    type="date"
-                                                    value={draft.subscriptionEndsAt}
-                                                    onChange={(e) =>
-                                                        updateDraft(
-                                                            business.id,
-                                                            "subscriptionEndsAt",
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                    className="w-full rounded-2xl border border-gray-200 pl-9 pr-3 py-3 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-indigo-500/30"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => handleSave(business)}
-                                        disabled={!changed || saving}
-                                        className="lg:w-36 inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-4 py-3 text-sm font-black text-white hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                                    >
-                                        {saving ? (
-                                            <Loader2 className="animate-spin" size={16} />
-                                        ) : (
-                                            <Save size={16} />
-                                        )}
-                                        Guardar
-                                    </button>
-                                </div>
-                            </motion.article>
-                        );
-                    })}
-                </div>
-            )}
-        </section>
+                <button type="submit" disabled={saving} className={brandPrimaryButton}>
+                    {saving ? t("admin.saving") : t("admin.saveAdjust")}
+                </button>
+            </form>
+        </BrandDialog>
     );
 }

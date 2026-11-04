@@ -116,7 +116,7 @@ const es: Record<LegalKind, LegalDocument> = {
                 id: "membresia",
                 heading: "Membresía de las barberías",
                 paragraphs: [
-                    "El uso de la plataforma por parte de una barbería requiere una membresía mensual con el precio publicado en el sitio al momento de contratar. El pago es por adelantado.",
+                    "Cada barbería nueva tiene 30 días de prueba sin costo. Después, el uso de la plataforma requiere una membresía mensual con el precio publicado en el sitio al momento de contratar. El pago es por adelantado.",
                     "Si un pago no se recibe a tiempo, la membresía queda con pago atrasado y, después de siete días, se suspende: la página pública deja de mostrarse y no se reciben nuevas reservas hasta regularizar el pago.",
                     "Puedes dejar de usar el servicio cuando quieras. Los periodos ya pagados no son reembolsables.",
                 ],
@@ -228,7 +228,7 @@ const en: Record<LegalKind, LegalDocument> = {
                 id: "membresia",
                 heading: "Barbershop membership",
                 paragraphs: [
-                    "A barbershop needs a monthly membership at the price published on the site when it signs up. Payment is made in advance.",
+                    "Each new barbershop gets a free 30-day trial. After that, using the platform requires a monthly membership at the price published on the site when it signs up. Payment is made in advance.",
                     "If a payment is not received on time, the membership becomes past due and, after seven days, it is suspended: the public page is hidden and no new bookings are accepted until payment is made.",
                     "You can stop using the service at any time. Periods already paid are not refundable.",
                 ],
