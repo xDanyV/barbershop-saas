@@ -117,7 +117,8 @@ model Appointment {
 
   // Sin usuario cuando la barbería registra a un cliente sin cuenta
   userId String?
-  user   User?   @relation(fields: [userId], references: [id])
+  // Restrict: la cuenta se anonimiza al eliminarla, nunca se borra la fila
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   walkInName  String?
   walkInPhone String?
