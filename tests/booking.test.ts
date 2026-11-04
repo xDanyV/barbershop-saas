@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { computeDaySlots } from "@/lib/services/booking.service";
+import { computeDaySlots, overlapsBusy } from "@/lib/services/booking.service";
+import { computeBusinessHours } from "@/lib/business-hours";
 import {
     DEFAULT_TIMEZONE,
     addDaysToKey,
@@ -53,11 +54,13 @@ describe("computeDaySlots", () => {
     const schedule = { startTime: "09:00", endTime: "14:00", breakStart: "12:00", breakEnd: "13:00" };
     const midnight = at(dateKey, "00:00");
 
-    it("generates hourly slots and skips the break", () => {
+    it("generates slots every 30 minutes and skips the break", () => {
         const slots = computeDaySlots({ dateKey, timezone: TZ, schedule, busy: [], now: midnight });
 
-        expect(slots.map((s) => s.label)).toEqual(["09:00 AM", "10:00 AM", "11:00 AM", "01:00 PM"]);
-        expect(slots.map((s) => s.maxMinutes)).toEqual([180, 120, 60, 60]);
+        expect(slots.map((s) => s.label)).toEqual([
+            "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", "01:00 PM", "01:30 PM",
+        ]);
+        expect(slots.map((s) => s.maxMinutes)).toEqual([180, 150, 120, 90, 60, 30, 60, 30]);
         expect(slots[0].start.toISOString()).toBe("2026-11-10T17:00:00.000Z");
     });
 
@@ -65,7 +68,7 @@ describe("computeDaySlots", () => {
         const busy = [{ start: at(dateKey, "09:00"), end: at(dateKey, "10:30") }];
         const slots = computeDaySlots({ dateKey, timezone: TZ, schedule, busy, now: midnight });
 
-        expect(slots.map((s) => s.label)).toEqual(["11:00 AM", "01:00 PM"]);
+        expect(slots.map((s) => s.label)).toEqual(["10:30 AM", "11:00 AM", "11:30 AM", "01:00 PM", "01:30 PM"]);
     });
 
     it("limits free minutes before the next appointment", () => {
@@ -79,12 +82,38 @@ describe("computeDaySlots", () => {
     it("hides slots that already started", () => {
         const slots = computeDaySlots({ dateKey, timezone: TZ, schedule, busy: [], now: at(dateKey, "10:30") });
 
-        expect(slots.map((s) => s.label)).toEqual(["11:00 AM", "01:00 PM"]);
+        expect(slots.map((s) => s.label)).toEqual(["11:00 AM", "11:30 AM", "01:00 PM", "01:30 PM"]);
     });
 
     it("returns nothing on a full-day exception", () => {
         const busy = [{ start: at(dateKey, "00:00"), end: at(addDaysToKey(dateKey, 1), "00:00") }];
 
         expect(computeDaySlots({ dateKey, timezone: TZ, schedule, busy, now: midnight })).toEqual([]);
+    });
+});
+
+describe("overlapsBusy", () => {
+    const busy = [{ start: 100, end: 200 }];
+
+    it("detects any crossing but allows back-to-back appointments", () => {
+        expect(overlapsBusy(150, 250, busy)).toBe(true);
+        expect(overlapsBusy(50, 150, busy)).toBe(true);
+        expect(overlapsBusy(120, 130, busy)).toBe(true);
+        expect(overlapsBusy(200, 300, busy)).toBe(false);
+        expect(overlapsBusy(0, 100, busy)).toBe(false);
+    });
+});
+
+describe("computeBusinessHours", () => {
+    it("joins every barber's hours per day, Monday first", () => {
+        const hours = computeBusinessHours([
+            { dayOfWeek: 1, startTime: "10:00", endTime: "18:00" },
+            { dayOfWeek: 1, startTime: "09:00", endTime: "16:00" },
+            { dayOfWeek: 0, startTime: "11:00", endTime: "15:00" },
+        ]);
+
+        expect(hours[0]).toEqual({ dayOfWeek: 1, open: "09:00", close: "18:00" });
+        expect(hours[1]).toEqual({ dayOfWeek: 2, open: null, close: null });
+        expect(hours[6]).toEqual({ dayOfWeek: 0, open: "11:00", close: "15:00" });
     });
 });

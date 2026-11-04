@@ -4,6 +4,7 @@ import { errorResponse } from "@/lib/errors";
 import { requireBarberAuth } from "@/lib/api/auth";
 import { parseJsonBody } from "@/lib/api/validation";
 import { availabilitySchema } from "@/lib/validations/schemas";
+import { revalidateBusinessPages } from "@/lib/cache/business-pages";
 
 export async function GET(request: NextRequest) {
     try {
@@ -48,6 +49,12 @@ export async function POST(request: NextRequest) {
                 })),
             }),
         ]);
+
+        const barber = await prisma.barber.findUnique({
+            where: { id: barberId },
+            select: { businessId: true },
+        });
+        await revalidateBusinessPages(barber?.businessId);
 
         return NextResponse.json(availability);
     } catch (error) {

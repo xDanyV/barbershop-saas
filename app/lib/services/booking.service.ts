@@ -9,8 +9,8 @@ import {
     zonedToUtc,
 } from "@/lib/time/zoned";
 
-// Los huecos se generan cada hora a partir de la hora de inicio del barbero
-export const SLOT_MINUTES = 60;
+// Los huecos se generan cada media hora a partir de la hora de inicio del barbero
+export const SLOT_MINUTES = 30;
 
 // Una cita cancelada sigue bloqueando su hueco si faltan menos de 2 horas
 const CANCELLED_BLOCK_MS = 2 * 60 * 60 * 1000;
@@ -93,7 +93,8 @@ export async function getBarberDay(
     db: Db,
     barberId: string,
     dateKey: string,
-    timezoneInput?: string | null
+    timezoneInput?: string | null,
+    options?: { excludeAppointmentId?: string }
 ): Promise<BarberDay> {
     const timezone = resolveTimezone(timezoneInput);
     const dayOfWeek = dayOfWeekFromKey(dateKey);
@@ -120,6 +121,8 @@ export async function getBarberDay(
         db.appointment.findMany({
             where: {
                 barberId,
+                // Al reagendar, la cita que se mueve no ocupa su propio horario
+                ...(options?.excludeAppointmentId ? { id: { not: options.excludeAppointmentId } } : {}),
                 status: { in: ["PENDING", "CONFIRMED", "CANCELLED"] },
                 // Margen hacia atrás para citas largas que empiezan el día anterior
                 date: {
@@ -165,6 +168,44 @@ export async function getBarberDay(
         schedule,
         slots: computeDaySlots({ dateKey, timezone, schedule, busy, now }),
     };
+}
+
+// Cálculo puro: ¿el intervalo [start, end) se cruza con alguno de los ocupados?
+export function overlapsBusy(start: number, end: number, busy: BusyInterval[]) {
+    return busy.some((b) => start < b.end && b.start < end);
+}
+
+// Para citas manuales: el barbero puede salirse de su horario, pero no empalmar citas ni usar un día libre
+export async function hasScheduleConflict(db: Db, barberId: string, start: Date, durationMinutes: number) {
+    const startMs = start.getTime();
+    const endMs = startMs + durationMinutes * MINUTE_MS;
+    const end = new Date(endMs);
+
+    const [appointments, exceptions] = await Promise.all([
+        db.appointment.findMany({
+            where: {
+                barberId,
+                status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
+                date: { gte: new Date(startMs - 12 * 60 * MINUTE_MS), lt: end },
+            },
+            select: { date: true, service: { select: { duration: true } } },
+        }),
+        db.barberException.findMany({
+            where: { barberId, startDate: { lt: end }, endDate: { gte: start } },
+            select: { id: true },
+        }),
+    ]);
+
+    if (exceptions.length > 0) return true;
+
+    return overlapsBusy(
+        startMs,
+        endMs,
+        appointments.map((a) => ({
+            start: a.date.getTime(),
+            end: a.date.getTime() + a.service.duration * MINUTE_MS,
+        }))
+    );
 }
 
 // Advisory locks de Postgres liberados al terminar la transacción.

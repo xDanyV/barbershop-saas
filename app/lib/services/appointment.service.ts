@@ -2,10 +2,20 @@ import { prisma } from "@/lib/prisma";
 import { AppointmentStatus } from "@prisma/client";
 import { canBusinessAcceptBookings, getBillingStatus } from "@/lib/billing/status";
 import { AppError } from "@/lib/errors";
-import { getBarberDay, lockKeys } from "@/lib/services/booking.service";
-import { resolveTimezone, toDateKey } from "@/lib/time/zoned";
+import { getBarberDay, hasScheduleConflict, lockKeys } from "@/lib/services/booking.service";
+import { resolveTimezone, toDateKey, zonedToUtc } from "@/lib/time/zoned";
 
 const MAX_ACTIVE_APPOINTMENTS = 2;
+
+// El cliente puede cancelar o mover su cita hasta 2 horas antes
+const CUSTOMER_CHANGE_LIMIT_MS = 2 * 60 * 60 * 1000;
+
+type Actor = {
+    userId: string;
+    role: string;
+    barberId?: string | null;
+    businessId?: string | null;
+};
 
 export async function createAppointment(data: {
     userId: string;
@@ -140,6 +150,238 @@ export async function createAppointment(data: {
     });
 }
 
+// Cita registrada por la barbería para un cliente sin cuenta. Queda confirmada de inmediato.
+export async function createManualAppointment(data: {
+    barberId: string;
+    serviceId: string;
+    date: string;
+    time: string;
+    name: string;
+    phone?: string | null;
+}) {
+    const { barberId, serviceId, date, time, name, phone } = data;
+
+    const barber = await prisma.barber.findUnique({
+        where: { id: barberId },
+        select: {
+            businessId: true,
+            business: {
+                select: {
+                    timezone: true,
+                    subscription: { select: { billingStatus: true } },
+                },
+            },
+        },
+    });
+
+    if (!barber) {
+        throw new AppError("Barber not available");
+    }
+
+    if (!canBusinessAcceptBookings(getBillingStatus(barber.business.subscription))) {
+        throw new AppError("Business is not accepting bookings at this time");
+    }
+
+    const service = await prisma.service.findFirst({
+        where: { id: serviceId, barberId, active: true },
+        select: { id: true, duration: true },
+    });
+
+    if (!service) {
+        throw new AppError("Service not available for this barber");
+    }
+
+    const timezone = resolveTimezone(barber.business.timezone);
+
+    // Se permite hoy aunque la hora ya pasó: el cliente pudo llegar hace unos minutos
+    if (date < toDateKey(new Date(), timezone)) {
+        throw new AppError("Cannot add an appointment on a past day");
+    }
+
+    const start = zonedToUtc(date, time, timezone);
+
+    return prisma.$transaction(async (tx) => {
+        await lockKeys(tx, `barber:${barberId}`);
+
+        if (await hasScheduleConflict(tx, barberId, start, service.duration)) {
+            throw new AppError("That time is not available", 409);
+        }
+
+        return tx.appointment.create({
+            data: {
+                barberId,
+                serviceId,
+                businessId: barber.businessId,
+                date: start,
+                status: "CONFIRMED",
+                walkInName: name,
+                walkInPhone: phone ?? null,
+            },
+        });
+    });
+}
+
+type ReschedulableAppointment = {
+    userId: string | null;
+    barberId: string;
+    businessId: string;
+    status: AppointmentStatus;
+    date: Date;
+};
+
+function assertCanReschedule(appointment: ReschedulableAppointment, actor: Actor) {
+    if (actor.role === "CUSTOMER") {
+        if (appointment.userId !== actor.userId) {
+            throw new AppError("Not authorized", 403);
+        }
+    } else {
+        assertTeamAccess(appointment, actor);
+    }
+
+    if (appointment.status !== "PENDING" && appointment.status !== "CONFIRMED") {
+        throw new AppError("This appointment can no longer be rescheduled");
+    }
+
+    const msUntil = appointment.date.getTime() - Date.now();
+
+    if (msUntil <= 0) {
+        throw new AppError("This appointment can no longer be rescheduled");
+    }
+
+    if (actor.role === "CUSTOMER" && msUntil < CUSTOMER_CHANGE_LIMIT_MS) {
+        throw new AppError("Appointments cannot be rescheduled less than 2 hours before the scheduled time");
+    }
+}
+
+// Horarios a los que se puede mover la cita: libres y con espacio para su servicio
+export async function getRescheduleSlots(appointmentId: string, dateKey: string, actor: Actor) {
+    const appointment = await prisma.appointment.findUnique({
+        where: { id: appointmentId },
+        select: {
+            id: true,
+            userId: true,
+            barberId: true,
+            businessId: true,
+            status: true,
+            date: true,
+            service: { select: { duration: true } },
+            business: { select: { timezone: true } },
+        },
+    });
+
+    if (!appointment) {
+        throw new AppError("Appointment not found", 404);
+    }
+
+    assertCanReschedule(appointment, actor);
+
+    const day = await getBarberDay(prisma, appointment.barberId, dateKey, appointment.business.timezone, {
+        excludeAppointmentId: appointment.id,
+    });
+
+    return day.slots
+        .filter(
+            (slot) =>
+                slot.maxMinutes >= appointment.service.duration &&
+                slot.start.getTime() !== appointment.date.getTime()
+        )
+        .map((slot) => ({ start: slot.start.toISOString(), label: slot.label }));
+}
+
+export async function rescheduleAppointment(appointmentId: string, date: string, actor: Actor) {
+    const startDate = new Date(date);
+
+    return prisma.$transaction(async (tx) => {
+        const lockRef = await tx.appointment.findUnique({
+            where: { id: appointmentId },
+            select: { barberId: true, userId: true },
+        });
+
+        if (!lockRef) {
+            throw new AppError("Appointment not found", 404);
+        }
+
+        // Mismo orden de locks que createAppointment
+        await lockKeys(
+            tx,
+            `barber:${lockRef.barberId}`,
+            ...(lockRef.userId ? [`user:${lockRef.userId}`] : [])
+        );
+
+        // Se vuelve a leer con el lock tomado: pudo cancelarse o moverse mientras tanto
+        const appointment = await tx.appointment.findUniqueOrThrow({
+            where: { id: appointmentId },
+            select: {
+                id: true,
+                userId: true,
+                barberId: true,
+                businessId: true,
+                status: true,
+                date: true,
+                service: { select: { duration: true } },
+                barber: { select: { active: true, status: true } },
+                business: {
+                    select: {
+                        active: true,
+                        timezone: true,
+                        subscription: { select: { billingStatus: true } },
+                        settings: { select: { isServiceActive: true } },
+                    },
+                },
+            },
+        });
+
+        assertCanReschedule(appointment, actor);
+
+        if (!appointment.barber.active || appointment.barber.status !== "APPROVED") {
+            throw new AppError("Barber not available");
+        }
+
+        if (
+            !appointment.business.active ||
+            !canBusinessAcceptBookings(getBillingStatus(appointment.business.subscription))
+        ) {
+            throw new AppError("Business is not accepting bookings at this time");
+        }
+
+        const isCustomer = actor.role === "CUSTOMER";
+
+        if (isCustomer) {
+            if (appointment.business.settings && !appointment.business.settings.isServiceActive) {
+                throw new AppError("Business is temporarily closed");
+            }
+
+            const businessBan = await tx.businessCustomerBan.findUnique({
+                where: { businessId_userId: { businessId: appointment.businessId, userId: actor.userId } },
+                select: { id: true },
+            });
+
+            if (businessBan) {
+                throw new AppError("You cannot book appointments at this business", 403);
+            }
+        }
+
+        const timezone = resolveTimezone(appointment.business.timezone);
+        const day = await getBarberDay(tx, appointment.barberId, toDateKey(startDate, timezone), timezone, {
+            excludeAppointmentId: appointment.id,
+        });
+        const slot = day.slots.find((s) => s.start.getTime() === startDate.getTime());
+
+        if (!slot || appointment.service.duration > slot.maxMinutes) {
+            throw new AppError("Time slot not available", 409);
+        }
+
+        return tx.appointment.update({
+            where: { id: appointment.id },
+            data: {
+                date: startDate,
+                // Si el cliente la mueve, la barbería vuelve a confirmar el nuevo horario
+                ...(isCustomer ? { status: "PENDING" as const } : {}),
+            },
+        });
+    });
+}
+
 export async function getUserAppointments(userId: string) {
     return prisma.appointment.findMany({
         where: {
@@ -191,6 +433,24 @@ export async function getBarberAppointments(barberId: string) {
             date: "asc",
         },
     });
+}
+
+// Barbero dueño de la cita, owner de su negocio o administrador
+function assertTeamAccess(
+    appointment: { barberId: string; businessId: string },
+    actor: Actor
+) {
+    if (actor.role === "BARBER") {
+        if (!actor.barberId || appointment.barberId !== actor.barberId) {
+            throw new AppError("Not authorized", 403);
+        }
+    } else if (actor.role === "OWNER") {
+        if (!actor.businessId || appointment.businessId !== actor.businessId) {
+            throw new AppError("Not authorized", 403);
+        }
+    } else if (actor.role !== "ADMIN") {
+        throw new AppError("Not authorized", 403);
+    }
 }
 
 const allowedTransitions: Record<AppointmentStatus, AppointmentStatus[]> = {
@@ -255,26 +515,13 @@ export async function updateAppointmentStatus(
             throw new AppError("Not authorized", 403);
         }
 
-        const now = new Date();
-        const appointmentDate = new Date(appointment.date);
-        const hoursUntilAppointment =
-            (appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-        if (hoursUntilAppointment < 2) {
+        if (appointment.date.getTime() - Date.now() < CUSTOMER_CHANGE_LIMIT_MS) {
             throw new AppError(
                 "Appointments cannot be cancelled less than 2 hours before the scheduled time"
             );
         }
-    } else if (role === "BARBER") {
-        if (!context?.barberId || appointment.barberId !== context.barberId) {
-            throw new AppError("Not authorized", 403);
-        }
-    } else if (role === "OWNER") {
-        if (!context?.businessId || appointment.businessId !== context.businessId) {
-            throw new AppError("Not authorized", 403);
-        }
-    } else if (role !== "ADMIN") {
-        throw new AppError("Not authorized", 403);
+    } else {
+        assertTeamAccess(appointment, { userId, role, ...context });
     }
 
     return prisma.appointment.update({

@@ -4,13 +4,16 @@ import { useState, useEffect, useCallback } from "react";
 import DashboardHeader from "./components/DashboardHeader";
 import CalendarPicker from "./components/CalendarPicker";
 import AppointmentList from "./components/AppointmentList";
+import WalkInDialog from "./components/WalkInDialog";
 import { motion } from "framer-motion";
 
 type RawAppointment = {
   id: string;
   date: string;
   status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
-  user: { name: string; email?: string; phone?: string };
+  user: { name: string; email?: string; phone?: string } | null;
+  walkInName: string | null;
+  walkInPhone: string | null;
   service: { name: string };
 };
 
@@ -21,6 +24,8 @@ type Appointment = {
   customerPhone: string;
   service: string;
   time: string;
+  date: string;
+  isWalkIn: boolean;
   status: "PENDING" | "CONFIRMED" | "COMPLETED" | "NO_SHOW";
 };
 
@@ -38,6 +43,7 @@ export default function BarberDashboard() {
   const [workingDays, setWorkingDays] = useState<number[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [walkInOpen, setWalkInOpen] = useState(false);
   const POLL_INTERVAL_MS = 30_000; // 30 seconds
 
   useEffect(() => {
@@ -105,8 +111,6 @@ export default function BarberDashboard() {
     );
   };
 
-  const filterDate = date || new Date().toISOString().split("T")[0];
-
   // Extract the LOCAL date string from a UTC ISO string.
   // Dates are stored as true UTC (browser local time → toISOString() → real UTC).
   // We must use local Date methods to display the correct day and time for the user.
@@ -117,6 +121,9 @@ export default function BarberDashboard() {
     const day = String(d.getDate()).padStart(2, "0");
     return `${y}-${m}-${day}`;
   };
+
+  // El día local, no el de UTC: después de las 4 p. m. en Tijuana UTC ya va en el día siguiente
+  const filterDate = date || getLocalDateString(new Date().toISOString());
 
   const getLocalTimeString = (iso: string) => {
     const d = new Date(iso);
@@ -141,11 +148,13 @@ export default function BarberDashboard() {
 
       return {
         id: a.id,
-        customerName: a.user?.name ?? "Unknown",
-        customerEmail: a.user?.email ?? "N/A",
-        customerPhone: a.user?.phone ?? "N/A",
+        customerName: a.user?.name ?? a.walkInName ?? "Unknown",
+        customerEmail: a.user ? a.user.email ?? "N/A" : "",
+        customerPhone: a.user ? a.user.phone ?? "N/A" : a.walkInPhone ?? "",
         service: a.service?.name ?? "Service",
         time: a.date ? getLocalTimeString(a.date) : "--:--",
+        date: a.date,
+        isWalkIn: !a.user,
         status,
       };
     });
@@ -212,11 +221,25 @@ export default function BarberDashboard() {
           <AppointmentList
             appointments={loading ? [] : appointments}
             onConfirm={handleConfirm}
+            onChanged={() => fetchAppointments(false)}
+            onAddWalkIn={barberId ? () => setWalkInOpen(true) : undefined}
             selectedDate={filterDate}
             exceptions={exceptions}
           />
         </div>
       </div>
+
+      {walkInOpen && barberId && (
+        <WalkInDialog
+          barberId={barberId}
+          initialDate={filterDate}
+          onClose={() => setWalkInOpen(false)}
+          onCreated={() => {
+            setWalkInOpen(false);
+            fetchAppointments(false);
+          }}
+        />
+      )}
     </motion.div>
   );
 }

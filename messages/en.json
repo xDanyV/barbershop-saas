@@ -181,7 +181,9 @@
             "confirmed": "{name} appointment confirmed",
             "noShow": "No-show recorded for {name}"
         },
-        "markNoShow": "No-show"
+        "markNoShow": "No-show",
+        "reschedule": "Change time",
+        "walkIn": "No account"
     },
     "AvailabilityModal": {
         "triggerButton": "Availability",
@@ -327,7 +329,8 @@
             "tooLate": "Appointments cannot be cancelled less than 2 hours before the scheduled time",
             "cancelFailed": "Could not cancel appointment",
             "network": "Network error, please try again",
-            "maxAppointments": "You can only have a maximum of 2 active appointments."
+            "maxAppointments": "You can only have a maximum of 2 active appointments.",
+            "tooLateReschedule": "Appointments cannot be changed less than 2 hours before the scheduled time"
         },
         "success": {
             "cancelled": "Appointment cancelled successfully"
@@ -337,7 +340,8 @@
             "description": "This will cancel your {service} appointment.",
             "confirm": "Yes, cancel",
             "keep": "Keep it"
-        }
+        },
+        "reschedule": "Change time"
     },
     "AvailableSlots": {
         "title": "Available times",
@@ -578,6 +582,11 @@
             "description": "Choose your service and an available time to book with this business's team.",
             "book": "Book appointment",
             "fallbackName": "Barber"
+        },
+        "hours": {
+            "title": "Opening hours",
+            "today": "Today",
+            "closed": "Closed"
         }
     },
     "BookingPage": {
@@ -857,6 +866,44 @@
             "button": "Sign out of other devices",
             "working": "Signing out...",
             "done": "We signed you out on your other devices."
+        }
+    },
+    "Reschedule": {
+        "title": "Change time",
+        "subtitle": "Choose another day and time for {service}.",
+        "date": "Date",
+        "times": "Free times",
+        "loading": "Looking for times...",
+        "empty": "No free times on this day. Try another date.",
+        "needsConfirmation": "The barbershop will need to confirm the new time.",
+        "confirm": "Save new time",
+        "saving": "Saving...",
+        "close": "Close",
+        "success": "The appointment was moved to the new time.",
+        "errors": {
+            "load": "Could not load the times.",
+            "taken": "That time is no longer available. Choose another.",
+            "failed": "Could not change the time."
+        }
+    },
+    "WalkIn": {
+        "button": "Add appointment",
+        "title": "Add appointment",
+        "subtitle": "For customers who walk in or book by phone.",
+        "name": "Customer name",
+        "phone": "Phone (optional)",
+        "service": "Service",
+        "date": "Date",
+        "time": "Time",
+        "save": "Save appointment",
+        "saving": "Saving...",
+        "close": "Close",
+        "noServices": "Add a service to your catalog first.",
+        "success": "Appointment for {name} added",
+        "errors": {
+            "phone": "Enter a 10-digit Mexican phone number.",
+            "conflict": "That time is not available: there is another appointment or you marked it as a day off.",
+            "failed": "Could not save the appointment. Check the details."
         }
     }
 }
