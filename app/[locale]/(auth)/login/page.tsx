@@ -45,7 +45,13 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(response.status === 429 ? t("errors.tooManyAttempts") : data.error || t("errors.invalidCredentials"));
+        setError(
+          response.status === 429
+            ? t("errors.tooManyAttempts")
+            : response.status >= 500
+              ? t("errors.server")
+              : t("errors.invalidCredentials")
+        );
         return;
       }
 
