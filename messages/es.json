@@ -8,7 +8,7 @@
             "phone": "Número de teléfono",
             "email": "Correo electrónico",
             "password": "Contraseña",
-            "confirmPassword": "Confirmar Contraseña",
+            "confirmPassword": "Confirmar contraseña",
             "businessSlug": "Enlace de tu barbería",
             "acceptTerms": "Acepto los <terms>Términos y Condiciones</terms> y el <privacy>Aviso de Privacidad</privacy>.",
             "businessSlugHint": "Pídeselo al dueño o cópialo de la página de la barbería.",
@@ -91,14 +91,18 @@
     },
     "DashboardNavbar": {
         "menu": {
-            "adminControl": "Panel de control",
             "myAppointments": "Mis citas",
             "catalog": "Catálogo",
             "book": "Reservar",
             "myBusiness": "Mi negocio",
             "createBusiness": "Crear negocio",
             "account": "Mi cuenta",
-            "myBookings": "Mis reservas"
+            "myBookings": "Mis reservas",
+            "home": "Inicio",
+            "agenda": "Agenda",
+            "team": "Equipo",
+            "customers": "Clientes",
+            "platform": "Plataforma"
         },
         "logout": "Cerrar sesión",
         "errors": {
@@ -288,13 +292,11 @@
         "warning": "Si tienes citas agendadas en este rango de fechas, <strong>serán canceladas automáticamente</strong> para liberar tu agenda."
     },
     "CatalogPage": {
-        "backToDashboard": "Volver al Dashboard",
-        "backToDashboardShort": "Dashboard",
-        "title": "Catálogo de Servicios",
+        "title": "Catálogo de servicios",
         "subtitle": "Administra los servicios y precios de tu barbería.",
         "buttons": {
-            "createService": "Crear Servicio",
-            "backToList": "Volver a la Lista"
+            "createService": "Crear servicio",
+            "backToList": "Volver a la lista"
         }
     },
     "ServiceList": {
@@ -346,7 +348,7 @@
         }
     },
     "CustomerHome": {
-        "title": "Mis Citas",
+        "title": "Mis citas",
         "subtitleUpcoming": "Tu próximo estilo te espera",
         "subtitleHistory": "Revisa tus sesiones pasadas",
         "tabs": {
@@ -383,7 +385,8 @@
         "cancelledByBusiness": "Cancelada por la barbería",
         "expiredUnconfirmed": "No se confirmó a tiempo",
         "bookAgain": "Reservar otra hora",
-        "contactBusiness": "Escribir a la barbería"
+        "contactBusiness": "Escribir a la barbería",
+        "titleStaff": "Mis reservas"
     },
     "AvailableSlots": {
         "title": "Horarios disponibles",
@@ -454,22 +457,22 @@
         "statusLabels": {
             "PENDING": "Pendiente",
             "APPROVED": "Activo",
-            "REJECTED": "Bloqueado"
+            "REJECTED": "Sin acceso"
         },
         "confirmModal": {
             "question": "¿Cambiar estado a",
             "cancel": "Cancelar",
             "confirm": "Confirmar"
         },
-        "empty": "No hay barberos gestionados en el sistema.",
+        "empty": "Todavía no hay barberos en tu equipo.",
         "barber": {
             "noName": "Sin nombre",
-            "yourAccount": "Tu Cuenta (Admin)"
+            "yourAccount": "Tú"
         },
         "options": {
-            "APPROVED": "🟢 Activo",
-            "PENDING": "🟠 Pendiente",
-            "REJECTED": "🔴 Bloqueado"
+            "APPROVED": "Activo",
+            "PENDING": "Pendiente",
+            "REJECTED": "Sin acceso"
         }
     },
     "CustomersList": {
@@ -553,17 +556,15 @@
         }
     },
     "AdminDashboard": {
-        "title": "Panel de Control",
-        "subtitle": "Gestiona tu personal, clientes y la configuración global.",
+        "title": "Plataforma",
+        "subtitle": "Negocios, membresías y moderación de toda la plataforma.",
+        "moderationHint": "Bloquea en toda la plataforma a quien abuse del servicio. Cada barbería puede bloquear a sus propios clientes.",
         "tabs": {
-            "pending": "Aceptar Barberos",
-            "barbers": "Administrar Barberos",
-            "customers": "Gestionar Clientes",
-            "settings": "Configuración Global",
-            "billing": "Membresías",
             "businesses": "Negocios",
+            "billing": "Membresías",
+            "moderation": "Moderación",
             "audit": "Actividad",
-            "summary": "Resumen"
+            "settings": "Configuración"
         }
     },
     "BannedCustomerScreen": {
@@ -1232,5 +1233,30 @@
         "NOT_FOUND": "No encontramos lo que buscas. Puede que ya no exista.",
         "VALIDATION": "Revisa los datos e inténtalo de nuevo.",
         "INVALID_PHONE": "Escribe un teléfono de México de 10 dígitos."
+    },
+    "OwnerHome": {
+        "title": "Inicio",
+        "subtitle": "Lo que pasa hoy en tu barbería."
+    },
+    "TeamPage": {
+        "title": "Equipo",
+        "subtitle": "Invita a tus barberos y decide quién puede recibir citas.",
+        "requests": "Solicitudes",
+        "requestsHint": "Barberos que pidieron unirse. Aprueba solo a quien trabaja contigo.",
+        "members": "Tu equipo",
+        "membersHint": "Cambia el estado o la foto de cada barbero.",
+        "invite": {
+            "title": "Invita a un barbero",
+            "text": "Comparte este enlace. Al registrarse queda unido a tu barbería y solo falta que lo apruebes aquí.",
+            "share": "Enviar por WhatsApp",
+            "copy": "Copiar enlace",
+            "copied": "Enlace copiado",
+            "copyFailed": "No se pudo copiar el enlace",
+            "message": "Únete al equipo de {name} para recibir tus citas en línea: {link}"
+        }
+    },
+    "CustomersPage": {
+        "title": "Clientes",
+        "subtitle": "Quiénes han reservado contigo. Bloquea a quien deja citas sin avisar."
     }
 }

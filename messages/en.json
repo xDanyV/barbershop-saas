@@ -8,7 +8,7 @@
             "phone": "Phone number",
             "email": "Email address",
             "password": "Password",
-            "confirmPassword": "Confirm Password",
+            "confirmPassword": "Confirm password",
             "businessSlug": "Your barbershop's link",
             "acceptTerms": "I accept the <terms>Terms and Conditions</terms> and the <privacy>Privacy Notice</privacy>.",
             "businessSlugHint": "Ask the owner for it or copy it from the barbershop's page.",
@@ -91,14 +91,18 @@
     },
     "DashboardNavbar": {
         "menu": {
-            "adminControl": "Admin Control",
             "myAppointments": "My appointments",
             "catalog": "Catalog",
             "book": "Book",
             "myBusiness": "My business",
             "createBusiness": "Create business",
             "account": "My account",
-            "myBookings": "My bookings"
+            "myBookings": "My bookings",
+            "home": "Home",
+            "agenda": "Schedule",
+            "team": "Team",
+            "customers": "Customers",
+            "platform": "Platform"
         },
         "logout": "Sign out",
         "errors": {
@@ -288,13 +292,11 @@
         "warning": "If you have scheduled appointments in this date range, they <strong>will be automatically cancelled</strong> to free up your schedule."
     },
     "CatalogPage": {
-        "backToDashboard": "Back to Dashboard",
-        "backToDashboardShort": "Dashboard",
-        "title": "Services Catalog",
+        "title": "Service catalog",
         "subtitle": "Manage your barber shop services and pricing.",
         "buttons": {
-            "createService": "Create Service",
-            "backToList": "Back to List"
+            "createService": "Create service",
+            "backToList": "Back to the list"
         }
     },
     "ServiceList": {
@@ -346,7 +348,7 @@
         }
     },
     "CustomerHome": {
-        "title": "My Appointments",
+        "title": "My appointments",
         "subtitleUpcoming": "Your next style is waiting",
         "subtitleHistory": "Review your past grooming sessions",
         "tabs": {
@@ -383,7 +385,8 @@
         "cancelledByBusiness": "Canceled by the barbershop",
         "expiredUnconfirmed": "Not confirmed in time",
         "bookAgain": "Book another time",
-        "contactBusiness": "Message the barbershop"
+        "contactBusiness": "Message the barbershop",
+        "titleStaff": "My bookings"
     },
     "AvailableSlots": {
         "title": "Available times",
@@ -454,22 +457,22 @@
         "statusLabels": {
             "PENDING": "Pending",
             "APPROVED": "Active",
-            "REJECTED": "Blocked"
+            "REJECTED": "No access"
         },
         "confirmModal": {
             "question": "Change status to",
             "cancel": "Cancel",
             "confirm": "Confirm"
         },
-        "empty": "No managed barbers in the system.",
+        "empty": "There are no barbers on your team yet.",
         "barber": {
             "noName": "No name",
-            "yourAccount": "Your Account (Admin)"
+            "yourAccount": "You"
         },
         "options": {
-            "APPROVED": "🟢 Active",
-            "PENDING": "🟠 Pending",
-            "REJECTED": "🔴 Blocked"
+            "APPROVED": "Active",
+            "PENDING": "Pending",
+            "REJECTED": "No access"
         }
     },
     "CustomersList": {
@@ -553,17 +556,15 @@
         }
     },
     "AdminDashboard": {
-        "title": "Admin Control Panel",
-        "subtitle": "Manage your staff, customers, and global shop settings.",
+        "title": "Platform",
+        "subtitle": "Businesses, memberships and moderation across the platform.",
+        "moderationHint": "Block anyone who abuses the service across the platform. Each barbershop can block its own customers.",
         "tabs": {
-            "pending": "Pending Barbers",
-            "barbers": "Manage Barbers",
-            "customers": "Manage Customers",
-            "settings": "Global Settings",
-            "billing": "Memberships",
             "businesses": "Businesses",
+            "billing": "Memberships",
+            "moderation": "Moderation",
             "audit": "Activity",
-            "summary": "Summary"
+            "settings": "Settings"
         }
     },
     "BannedCustomerScreen": {
@@ -1232,5 +1233,30 @@
         "NOT_FOUND": "We could not find that. It may no longer exist.",
         "VALIDATION": "Check the details and try again.",
         "INVALID_PHONE": "Enter a 10-digit Mexican phone number."
+    },
+    "OwnerHome": {
+        "title": "Home",
+        "subtitle": "What is happening today at your barbershop."
+    },
+    "TeamPage": {
+        "title": "Team",
+        "subtitle": "Invite your barbers and decide who can take bookings.",
+        "requests": "Requests",
+        "requestsHint": "Barbers who asked to join. Only approve people who work with you.",
+        "members": "Your team",
+        "membersHint": "Change each barber's status or photo.",
+        "invite": {
+            "title": "Invite a barber",
+            "text": "Share this link. When they sign up they join your barbershop and you only need to approve them here.",
+            "share": "Send on WhatsApp",
+            "copy": "Copy link",
+            "copied": "Link copied",
+            "copyFailed": "Could not copy the link",
+            "message": "Join the {name} team to get your bookings online: {link}"
+        }
+    },
+    "CustomersPage": {
+        "title": "Customers",
+        "subtitle": "Who has booked with you. Block people who miss appointments without notice."
     }
 }
