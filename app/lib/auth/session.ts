@@ -19,12 +19,15 @@ export const sessionCookieOptions = {
     path: "/",
 };
 
+// INACTIVE: el dueño lo dio de baja del equipo
+export type BarberSessionStatus = BarberStatus | "INACTIVE";
+
 export type SessionIdentity = {
     userId: string;
     role: Role;
     isBanned: boolean;
     barberId: string | null;
-    barberStatus: BarberStatus | null;
+    barberStatus: BarberSessionStatus | null;
     businessId: string | null;
     // true cuando barberId es otro barbero del equipo y no el perfil propio del OWNER
     isManagingTeamBarber: boolean;
@@ -83,6 +86,7 @@ export async function loadSessionIdentity(
                 select: {
                     id: true,
                     status: true,
+                    active: true,
                     businessId: true,
                 },
             },
@@ -111,8 +115,10 @@ export async function loadSessionIdentity(
         }
     }
 
-    let barberId = user.barberProfile?.id ?? null;
-    let barberStatus = user.barberProfile?.status ?? null;
+    // Dado de baja del equipo: sin perfil de barbero para las APIs; la pantalla explica qué pasó
+    const removedFromTeam = user.barberProfile !== null && user.barberProfile.active === false && user.role === "BARBER";
+    let barberId = removedFromTeam ? null : user.barberProfile?.id ?? null;
+    let barberStatus: BarberSessionStatus | null = removedFromTeam ? "INACTIVE" : user.barberProfile?.status ?? null;
     let isManagingTeamBarber = false;
 
     // Un OWNER puede actuar como cualquier barbero aprobado y activo de su negocio activo.

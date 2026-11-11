@@ -9,20 +9,22 @@ import {
 } from "@/lib/validations/schemas";
 
 describe("availabilitySchema", () => {
-    const base = { days: [1, 2], startTime: "09:00", endTime: "18:00" };
+    const day = { dayOfWeek: 1, startTime: "09:00", endTime: "18:00" };
 
-    it("accepts a schedule with a break inside working hours", () => {
-        expect(availabilitySchema.safeParse({ ...base, breakStart: "13:00", breakEnd: "14:00" }).success).toBe(true);
+    it("accepts different hours per day, a break inside them, and no days at all", () => {
+        expect(availabilitySchema.safeParse({ days: [day, { dayOfWeek: 6, startTime: "10:00", endTime: "14:00" }] }).success).toBe(true);
+        expect(availabilitySchema.safeParse({ days: [{ ...day, breakStart: "13:00", breakEnd: "14:00" }] }).success).toBe(true);
+        expect(availabilitySchema.safeParse({ days: [] }).success).toBe(true);
     });
 
     it("rejects repeated days, inverted hours and breaks outside the schedule", () => {
-        expect(availabilitySchema.safeParse({ ...base, days: [1, 1] }).success).toBe(false);
-        expect(availabilitySchema.safeParse({ ...base, startTime: "18:00", endTime: "09:00" }).success).toBe(false);
-        expect(availabilitySchema.safeParse({ ...base, breakStart: "19:00", breakEnd: "20:00" }).success).toBe(false);
-        expect(availabilitySchema.safeParse({ ...base, breakStart: "13:00" }).success).toBe(false);
+        expect(availabilitySchema.safeParse({ days: [day, day] }).success).toBe(false);
+        expect(availabilitySchema.safeParse({ days: [{ ...day, startTime: "18:00", endTime: "09:00" }] }).success).toBe(false);
+        expect(availabilitySchema.safeParse({ days: [{ ...day, breakStart: "19:00", breakEnd: "20:00" }] }).success).toBe(false);
+        expect(availabilitySchema.safeParse({ days: [{ ...day, breakStart: "13:00" }] }).success).toBe(false);
+        expect(availabilitySchema.safeParse({ days: [{ ...day, dayOfWeek: 7 }] }).success).toBe(false);
     });
 });
-
 describe("services", () => {
     it("converts pesos to integer cents", () => {
         expect(toCents(150)).toBe(15000);

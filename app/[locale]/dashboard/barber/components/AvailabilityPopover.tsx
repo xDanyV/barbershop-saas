@@ -1,155 +1,144 @@
 "use client";
 
-import { useEffect, useState, Fragment } from "react";
-import { Dialog, Transition, TransitionChild, DialogPanel, DialogTitle } from "@headlessui/react";
+import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { X, Clock, Coffee } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Clock } from "lucide-react";
 import { useTranslations } from "next-intl";
+import BrandDialog, { brandPrimaryButton } from "@/[locale]/components/BrandDialog";
+import { useApiError } from "@/[locale]/components/useApiError";
 
-const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
-const DAY_VALUES = [1, 2, 3, 4, 5, 6, 0];
+// Lunes primero, como se lee un horario en México (0 = domingo)
+const WEEK = [
+    { key: "mon", value: 1 },
+    { key: "tue", value: 2 },
+    { key: "wed", value: 3 },
+    { key: "thu", value: 4 },
+    { key: "fri", value: 5 },
+    { key: "sat", value: 6 },
+    { key: "sun", value: 0 },
+] as const;
 
-const SplitTimeSelect = ({
-    value,
-    onChange,
-    label,
-}: {
-    value: string;
-    onChange: (v: string) => void;
-    label: string;
-}) => {
-    const [h24Str, mStr] = value.split(":");
-    const h24 = parseInt(h24Str, 10);
-    const m = mStr === "30" ? "30" : "00";
-    const isPM = h24 >= 12;
-    const ampm = isPM ? "PM" : "AM";
-    const hour12 = h24 % 12 || 12;
+type Day = { open: boolean; start: string; end: string; hasBreak: boolean; breakStart: string; breakEnd: string };
 
-    const updateTime = (newHour12: number, newMin: string, newAmPm: string) => {
-        let newH24 = newHour12;
-        if (newAmPm === "PM" && newHour12 !== 12) newH24 += 12;
-        if (newAmPm === "AM" && newHour12 === 12) newH24 = 0;
-        onChange(`${newH24.toString().padStart(2, "0")}:${newMin}`);
-    };
+const DEFAULT_DAY: Day = { open: false, start: "09:00", end: "19:00", hasBreak: false, breakStart: "14:00", breakEnd: "15:00" };
 
-    return (
-        <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-400   block ml-1">
-                {label}
-            </label>
-            <div className="flex gap-1.5 items-center">
-                <select
-                    value={hour12}
-                    onChange={(e) => updateTime(parseInt(e.target.value, 10), m, ampm)}
-                    className="w-full border border-gray-200 rounded-lg px-1 py-2 text-center text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all bg-white cursor-pointer appearance-none"
-                >
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
-                        <option key={`h-${h}`} value={h}>{h.toString().padStart(2, "0")}</option>
-                    ))}
-                </select>
-                <span className="text-gray-300 font-bold">:</span>
-                <select
-                    value={m}
-                    onChange={(e) => updateTime(hour12, e.target.value, ampm)}
-                    className="w-full border border-gray-200 rounded-lg px-1 py-2 text-center text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all bg-white cursor-pointer appearance-none"
-                >
-                    <option value="00">00</option>
-                    <option value="30">30</option>
-                </select>
-                <select
-                    value={ampm}
-                    onChange={(e) => updateTime(hour12, m, e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-1 py-2 text-center text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all bg-white cursor-pointer appearance-none font-semibold text-indigo-600"
-                >
-                    <option value="AM">AM</option>
-                    <option value="PM">PM</option>
-                </select>
-            </div>
-        </div>
-    );
-};
+type Row = { dayOfWeek: number; startTime: string; endTime: string; breakStart: string | null; breakEnd: string | null };
 
+const timeInput =
+    "min-h-11 w-full border border-[var(--brand-surface)] bg-[var(--brand-paper)] px-2 text-[var(--brand-ink)] outline-none focus:border-[var(--brand-ink)]";
+
+// Horario semanal del barbero: cada día con sus propias horas y, si quiere, un descanso
 export default function AvailabilityModal() {
     const t = useTranslations("AvailabilityModal");
+    const apiError = useApiError();
     const [isOpen, setIsOpen] = useState(false);
-    const [selectedDays, setSelectedDays] = useState<number[]>([]);
-    const [startTime, setStartTime] = useState("09:00");
-    const [endTime, setEndTime] = useState("18:00");
-    const [hasBreak, setHasBreak] = useState(false);
-    const [breakStart, setBreakStart] = useState("13:00");
-    const [breakEnd, setBreakEnd] = useState("14:00");
-    const [loading, setLoading] = useState(false);
+    const [week, setWeek] = useState<Record<number, Day> | null>(null);
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         if (!isOpen) return;
-        async function fetchAvailability() {
-            try {
-                const res = await fetch("/api/protected/availability");
-                const data = await res.json();
-                if (!data?.length) return;
 
-                setSelectedDays(data.map((d: { dayOfWeek: number }) => d.dayOfWeek));
-                setStartTime(data[0].startTime);
-                setEndTime(data[0].endTime);
+        let ignore = false;
 
-                if (data[0].breakStart && data[0].breakEnd) {
-                    setHasBreak(true);
-                    setBreakStart(data[0].breakStart);
-                    setBreakEnd(data[0].breakEnd);
-                } else {
-                    setHasBreak(false);
+        fetch("/api/protected/availability")
+            .then((res) => (res.ok ? res.json() : []))
+            .catch(() => [])
+            .then((rows: Row[]) => {
+                if (ignore) return;
+
+                const next: Record<number, Day> = {};
+
+                for (const { value } of WEEK) {
+                    const row = rows.find((r) => r.dayOfWeek === value);
+                    next[value] = row
+                        ? {
+                            open: true,
+                            start: row.startTime,
+                            end: row.endTime,
+                            hasBreak: Boolean(row.breakStart && row.breakEnd),
+                            breakStart: row.breakStart ?? DEFAULT_DAY.breakStart,
+                            breakEnd: row.breakEnd ?? DEFAULT_DAY.breakEnd,
+                        }
+                        : { ...DEFAULT_DAY };
                 }
-            } catch (error) {
-                console.error("Error loading availability", error);
-            }
-        }
-        fetchAvailability();
+
+                setWeek(next);
+            });
+
+        return () => {
+            ignore = true;
+        };
     }, [isOpen]);
 
-    const toggleDay = (day: number) => {
-        setSelectedDays((prev) =>
-            prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-        );
-    };
+    const update = (day: number, patch: Partial<Day>) => setWeek((prev) => (prev ? { ...prev, [day]: { ...prev[day], ...patch } } : prev));
 
-    const timeToMins = (time: string) => {
-        const [h, m] = time.split(":").map(Number);
-        return h * 60 + m;
-    };
+    // Copia el horario de un día a los demás días abiertos
+    const copyToOpenDays = (from: number) =>
+        setWeek((prev) => {
+            if (!prev) return prev;
 
-    const handleSave = async () => {
-        if (selectedDays.length === 0) return toast.error(t("errors.noDay"));
+            const source = prev[from];
+            const next = { ...prev };
 
-        const startMins = timeToMins(startTime);
-        const endMins = timeToMins(endTime);
-        if (startMins >= endMins) return toast.error(t("errors.endBeforeStart"));
+            for (const { value } of WEEK) {
+                if (value !== from && next[value].open) next[value] = { ...source };
+            }
 
-        if (hasBreak) {
-            const bStartMins = timeToMins(breakStart);
-            const bEndMins = timeToMins(breakEnd);
-            if (bStartMins >= bEndMins) return toast.error(t("errors.breakEndBeforeStart"));
-            if (bStartMins < startMins || bEndMins > endMins) return toast.error(t("errors.breakOutOfRange"));
+            return next;
+        });
+
+    const validate = (current: Record<number, Day>) => {
+        for (const { key, value } of WEEK) {
+            const day = current[value];
+            if (!day.open) continue;
+
+            const name = t(`daysLong.${key}`);
+            if (day.start >= day.end) return t("errors.endBeforeStartDay", { day: name });
+            if (day.hasBreak && day.breakStart >= day.breakEnd) return t("errors.breakEndBeforeStartDay", { day: name });
+            if (day.hasBreak && (day.breakStart < day.start || day.breakEnd > day.end)) return t("errors.breakOutOfRangeDay", { day: name });
         }
 
-        setLoading(true);
-        const res = await fetch("/api/protected/availability", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                days: selectedDays,
-                startTime,
-                endTime,
-                breakStart: hasBreak ? breakStart : null,
-                breakEnd: hasBreak ? breakEnd : null,
-            }),
+        return null;
+    };
+
+    const save = async () => {
+        if (!week) return;
+
+        const problem = validate(week);
+        if (problem) return void toast.error(problem);
+
+        const days = WEEK.filter(({ value }) => week[value].open).map(({ value }) => {
+            const day = week[value];
+            return {
+                dayOfWeek: value,
+                startTime: day.start,
+                endTime: day.end,
+                breakStart: day.hasBreak ? day.breakStart : null,
+                breakEnd: day.hasBreak ? day.breakEnd : null,
+            };
         });
-        setLoading(false);
 
-        if (!res.ok) return toast.error(t("errors.saveFailed"));
+        setSaving(true);
 
-        toast.success(t("success.saved"));
-        setIsOpen(false);
+        try {
+            const res = await fetch("/api/protected/availability", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ days }),
+            });
+
+            if (!res.ok) {
+                toast.error(apiError(await res.json().catch(() => null), t("errors.saveFailed")));
+                return;
+            }
+
+            toast.success(days.length === 0 ? t("success.closed") : t("success.saved"));
+            setIsOpen(false);
+        } catch {
+            toast.error(t("errors.saveFailed"));
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
@@ -163,118 +152,94 @@ export default function AvailabilityModal() {
                 {t("triggerButton")}
             </button>
 
-            <Transition show={isOpen} as={Fragment}>
-                <Dialog as="div" className="relative z-50" onClose={() => { }}>
-                    <TransitionChild
-                        as={Fragment}
-                        enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100"
-                        leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0"
-                    >
-                        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" />
-                    </TransitionChild>
+            {isOpen && (
+                <BrandDialog title={t("title")} subtitle={t("subtitle")} closeLabel={t("buttons.cancel")} onClose={() => !saving && setIsOpen(false)}>
+                    {week === null ? (
+                        <p className="text-[var(--brand-muted)]">{t("loading")}</p>
+                    ) : (
+                        <>
+                            <ul className="max-h-[60svh] divide-y divide-[var(--brand-surface)] overflow-y-auto overflow-x-hidden pr-3">
+                                {WEEK.map(({ key, value }) => {
+                                    const day = week[value];
 
-                    <div className="fixed inset-0 overflow-y-auto">
-                        <div className="flex min-h-full items-center justify-center p-4">
-                            <TransitionChild
-                                as={Fragment}
-                                enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100"
-                                leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95"
-                            >
-                                <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-3xl bg-white p-7 shadow-2xl transition-all">
-                                    <div className="flex items-center justify-between mb-6">
-                                        <DialogTitle as="h3" className="text-xl font-bold text-gray-900">
-                                            {t("title")}
-                                        </DialogTitle>
-                                        <button onClick={() => setIsOpen(false)} className="p-2 rounded-full hover:bg-gray-100 text-gray-400 transition-colors">
-                                            <X size={20} />
-                                        </button>
-                                    </div>
-
-                                    <div className="space-y-6">
-                                        <div>
-                                            <label className="text-xs font-bold text-gray-400   mb-3 block">
-                                                {t("labels.activeDays")}
-                                            </label>
-                                            <div className="flex flex-wrap gap-2">
-                                                {DAY_KEYS.map((key, i) => {
-                                                    const value = DAY_VALUES[i];
-                                                    const active = selectedDays.includes(value);
-                                                    return (
-                                                        <button
-                                                            key={value}
-                                                            onClick={() => toggleDay(value)}
-                                                            className={`h-10 w-10 rounded-xl text-xs font-bold transition-all border ${active
-                                                                    ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200"
-                                                                    : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
-                                                                }`}
-                                                        >
-                                                            {t(`days.${key}`)}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <SplitTimeSelect label={t("labels.shiftStart")} value={startTime} onChange={setStartTime} />
-                                            <SplitTimeSelect label={t("labels.shiftEnd")} value={endTime} onChange={setEndTime} />
-                                        </div>
-
-                                        <div className="pt-4 border-t border-gray-50">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="p-2 bg-amber-50 rounded-lg text-amber-600"><Coffee size={16} /></div>
-                                                    <div>
-                                                        <p className="text-sm font-bold text-gray-900">{t("labels.lunchBreak")}</p>
-                                                        <p className="text-xs text-gray-400 font-medium">{t("labels.lunchBreakDesc")}</p>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    onClick={() => setHasBreak(!hasBreak)}
-                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${hasBreak ? "bg-indigo-600" : "bg-gray-200"}`}
-                                                >
-                                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${hasBreak ? "translate-x-6" : "translate-x-1"}`} />
-                                                </button>
-                                            </div>
-
-                                            <AnimatePresence mode="wait">
-                                                {hasBreak && (
-                                                    <motion.div
-                                                        key="lunch-break-content"
-                                                        initial={{ height: 0, opacity: 0 }}
-                                                        animate={{ height: "auto", opacity: 1 }}
-                                                        exit={{ height: 0, opacity: 0 }}
-                                                        transition={{ duration: 0.2 }}
-                                                        className="overflow-hidden"
+                                    return (
+                                        <li key={value} className="py-3">
+                                            <div className="flex min-h-11 items-center justify-between gap-3">
+                                                <label className="flex items-center gap-3 font-semibold">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={day.open}
+                                                        onChange={(e) => update(value, { open: e.target.checked })}
+                                                        className="h-5 w-5 accent-[#0f2733]"
+                                                    />
+                                                    {t(`daysLong.${key}`)}
+                                                </label>
+                                                {!day.open && <span className="shrink-0 text-[length:var(--step-small)] text-[var(--brand-muted)]">{t("closed")}</span>}
+                                                {day.open && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => copyToOpenDays(value)}
+                                                        className="min-h-11 shrink-0 text-right text-[length:var(--step-small)] font-semibold underline underline-offset-4"
                                                     >
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-2">
-                                                            <SplitTimeSelect label={t("labels.breakStart")} value={breakStart} onChange={setBreakStart} />
-                                                            <SplitTimeSelect label={t("labels.breakEnd")} value={breakEnd} onChange={setBreakEnd} />
-                                                        </div>
-                                                    </motion.div>
+                                                        {t("copyToOthers")}
+                                                    </button>
                                                 )}
-                                            </AnimatePresence>
-                                        </div>
-                                    </div>
+                                            </div>
 
-                                    <div className="mt-8 flex gap-3">
-                                        <button onClick={() => setIsOpen(false)} className="flex-1 py-3 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors">
-                                            {t("buttons.cancel")}
-                                        </button>
-                                        <button
-                                            onClick={handleSave}
-                                            disabled={loading}
-                                            className="flex-1 py-3 bg-indigo-600 text-white text-sm font-bold rounded-2xl hover:bg-indigo-700 disabled:opacity-50 shadow-lg shadow-indigo-100 transition-all"
-                                        >
-                                            {loading ? t("buttons.saving") : t("buttons.save")}
-                                        </button>
-                                    </div>
-                                </DialogPanel>
-                            </TransitionChild>
-                        </div>
-                    </div>
-                </Dialog>
-            </Transition>
+                                            {day.open && (
+                                                <div className="mt-2 space-y-2 pl-8">
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <label className="text-[length:var(--step-small)] text-[var(--brand-muted)]">
+                                                            {t("labels.shiftStart")}
+                                                            <input type="time" step={1800} value={day.start} onChange={(e) => update(value, { start: e.target.value })} className={timeInput} />
+                                                        </label>
+                                                        <label className="text-[length:var(--step-small)] text-[var(--brand-muted)]">
+                                                            {t("labels.shiftEnd")}
+                                                            <input type="time" step={1800} value={day.end} onChange={(e) => update(value, { end: e.target.value })} className={timeInput} />
+                                                        </label>
+                                                    </div>
+
+                                                    {day.hasBreak ? (
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <label className="text-[length:var(--step-small)] text-[var(--brand-muted)]">
+                                                                {t("labels.breakStart")}
+                                                                <input type="time" step={1800} value={day.breakStart} onChange={(e) => update(value, { breakStart: e.target.value })} className={timeInput} />
+                                                            </label>
+                                                            <label className="text-[length:var(--step-small)] text-[var(--brand-muted)]">
+                                                                {t("labels.breakEnd")}
+                                                                <input type="time" step={1800} value={day.breakEnd} onChange={(e) => update(value, { breakEnd: e.target.value })} className={timeInput} />
+                                                            </label>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => update(value, { hasBreak: false })}
+                                                                className="col-span-2 min-h-11 text-left text-[length:var(--step-small)] font-semibold underline underline-offset-4"
+                                                            >
+                                                                {t("removeBreak")}
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => update(value, { hasBreak: true })}
+                                                            className="min-h-11 text-[length:var(--step-small)] font-semibold underline underline-offset-4"
+                                                        >
+                                                            {t("addBreak")}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+
+                            <button type="button" onClick={save} disabled={saving} className={`mt-4 ${brandPrimaryButton}`}>
+                                {saving ? t("buttons.saving") : t("buttons.save")}
+                            </button>
+                        </>
+                    )}
+                </BrandDialog>
+            )}
         </>
     );
 }

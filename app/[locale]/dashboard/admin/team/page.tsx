@@ -3,7 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import PageHeader from "@/[locale]/components/PageHeader";
-import ActiveBarbersList from "../components/ActiveBarbersList";
+import TeamList from "./TeamList";
 import PendingBarbersList from "../components/PendingBarbersList";
 import TeamInvite from "./TeamInvite";
 
@@ -35,7 +35,7 @@ export default async function TeamPage() {
             <section>
                 <h2 className="mb-1 text-xl font-semibold">{t("members")}</h2>
                 <p className="mb-4 text-gray-600">{t("membersHint")}</p>
-                <ActiveBarbersList />
+                <TeamList />
             </section>
         </div>
     );

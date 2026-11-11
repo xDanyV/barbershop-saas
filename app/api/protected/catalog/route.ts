@@ -1,21 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createCatalogService, getActiveServices } from "@/lib/services/catalog.service";
-import { errorResponse } from "@/lib/errors";
+import { AppError, errorResponse } from "@/lib/errors";
+import { prisma } from "@/lib/prisma";
 import { requireBarberAuth } from "@/lib/api/auth";
 import { parseJsonBody } from "@/lib/api/validation";
 import { createServiceSchema, toCents } from "@/lib/validations/schemas";
 
 export async function POST(request: NextRequest) {
     try {
-        const { barberId } = requireBarberAuth(request);
-        const { name, price, duration } = await parseJsonBody(request, createServiceSchema);
+        const auth = requireBarberAuth(request);
+        const { name, price, duration, applyToTeam } = await parseJsonBody(request, createServiceSchema);
+        const data = { name, priceCents: toCents(price), duration };
 
-        const service = await createCatalogService(
-            { name, priceCents: toCents(price), duration },
-            barberId
-        );
+        if (!applyToTeam) {
+            return NextResponse.json(await createCatalogService(data, auth.barberId), { status: 201 });
+        }
 
-        return NextResponse.json(service, { status: 201 });
+        if (auth.role !== "OWNER" || !auth.businessId) {
+            throw new AppError("Forbidden", 403);
+        }
+
+        // Un mismo servicio para cada barbero activo; quien ya lo tenga se queda como está
+        const team = await prisma.barber.findMany({
+            where: { businessId: auth.businessId, status: "APPROVED", active: true },
+            select: { id: true },
+        });
+
+        let created = 0;
+
+        for (const barber of team) {
+            try {
+                await createCatalogService(data, barber.id);
+                created++;
+            } catch (error) {
+                if (!(error instanceof AppError && error.status === 409)) throw error;
+            }
+        }
+
+        return NextResponse.json({ created, skipped: team.length - created }, { status: 201 });
     } catch (error) {
         return errorResponse(error, "Catalog POST error");
     }

@@ -6,8 +6,9 @@ import { Clock, ShieldCheck, LogOut } from "lucide-react";
 import { useRouter } from "../../../../i18n/routing";
 import { useTranslations } from "next-intl";
 
-export default function PendingApproval() {
-    const t = useTranslations("PendingApproval");
+// pending: esperando aprobación. inactive: el dueño lo dio de baja del equipo.
+export default function PendingApproval({ variant = "pending" }: { variant?: "pending" | "inactive" }) {
+    const t = useTranslations(variant === "inactive" ? "RemovedFromTeam" : "PendingApproval");
     const router = useRouter();
 
     const handleLogout = async () => {

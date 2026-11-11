@@ -16,7 +16,7 @@ export default async function BarberDashboardLayout({
 
     return (
         <>
-            {!isApproved && <PendingApproval />}
+            {!isApproved && <PendingApproval variant={status === "INACTIVE" ? "inactive" : "pending"} />}
 
             {role === "OWNER" && <TeamBarberSelector currentBarberId={barberId} />}
 

@@ -21,10 +21,9 @@ export async function GET() {
         }
 
         const managedBarbers = await prisma.barber.findMany({
+            // El equipo: aprobados, activos o dados de baja. Las solicitudes rechazadas no forman parte.
             where: {
-                status: {
-                    not: "PENDING",
-                },
+                status: "APPROVED",
                 ...(role === "OWNER" ? { businessId: businessId! } : {}),
             },
             select: {
@@ -35,6 +34,13 @@ export async function GET() {
                 active: true,
                 createdAt: true,
                 profileImageUrl: true,
+                _count: {
+                    select: {
+                        services: { where: { active: true } },
+                        availability: true,
+                        appointments: { where: { status: { in: ["PENDING", "CONFIRMED"] }, date: { gt: new Date() } } },
+                    },
+                },
                 user: {
                     select: {
                         name: true,
@@ -43,14 +49,15 @@ export async function GET() {
                     },
                 },
             },
-            orderBy: {
-                createdAt: "desc",
-            },
+            orderBy: [{ active: "desc" }, { createdAt: "asc" }],
         });
 
-        const barbersWithSelfFlag = managedBarbers.map((barber) => ({
+        const barbersWithSelfFlag = managedBarbers.map(({ _count, ...barber }) => ({
             ...barber,
             isSelf: barber.userId === userId,
+            servicesCount: _count.services,
+            hoursDays: _count.availability,
+            upcomingCount: _count.appointments,
         }));
 
         return NextResponse.json(barbersWithSelfFlag);

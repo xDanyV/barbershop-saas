@@ -4,17 +4,23 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Scissors, DollarSign, Clock, PlusCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
+import toast from "react-hot-toast";
+import { useApiError } from "@/[locale]/components/useApiError";
 
 type Props = {
     setView: (view: "list") => void;
+    // Solo el dueño puede crear el servicio para todo su equipo de una vez
+    canApplyToTeam?: boolean;
 };
 
-export default function CreateServiceForm({ setView }: Props) {
+export default function CreateServiceForm({ setView, canApplyToTeam = false }: Props) {
     const t = useTranslations("CreateServiceForm");
+    const apiError = useApiError();
     const [name, setName] = useState("");
     const [price, setPrice] = useState("");
     const [duration, setDuration] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [applyToTeam, setApplyToTeam] = useState(false);
 
     const inputStyles = "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:bg-white focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all placeholder:text-gray-400 text-gray-900 font-medium";
 
@@ -24,13 +30,15 @@ export default function CreateServiceForm({ setView }: Props) {
         try {
             const res = await fetch("/api/protected/catalog", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "x-user-role": "BARBER",
-                },
-                body: JSON.stringify({ name, price: Number(price), duration: Number(duration) }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, price: Number(price), duration: Number(duration), applyToTeam: canApplyToTeam && applyToTeam }),
             });
-            if (!res.ok) throw new Error("Failed to create service");
+            const data = await res.json().catch(() => null);
+            if (!res.ok) {
+                toast.error(apiError(data, t("errors.failed")));
+                return;
+            }
+            if (canApplyToTeam && applyToTeam) toast.success(t("teamCreated", { count: data?.created ?? 0 }));
             setView("list");
         } catch (error) {
             console.error("Error creating service:", error);
@@ -99,6 +107,12 @@ export default function CreateServiceForm({ setView }: Props) {
             </div>
 
             <div className="pt-2 flex flex-col gap-3">
+                {canApplyToTeam && (
+                <label className="flex min-h-11 items-center gap-3 text-sm font-semibold text-gray-700">
+                    <input type="checkbox" checked={applyToTeam} onChange={(e) => setApplyToTeam(e.target.checked)} className="h-5 w-5 accent-[#0f2733]" />
+                    {t("applyToTeam")}
+                </label>
+            )}
                 <button
                     type="submit"
                     disabled={isSubmitting}

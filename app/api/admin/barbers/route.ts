@@ -57,11 +57,11 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
     try {
         const auth = requireBarberManager(request);
-        const { barberId, status, profileImageUrl } = await parseJsonBody(request, updateBarberAdminSchema);
+        const { barberId, status, active, profileImageUrl } = await parseJsonBody(request, updateBarberAdminSchema);
 
         const existingBarber = await prisma.barber.findUnique({
             where: { id: barberId },
-            select: { businessId: true, userId: true },
+            select: { businessId: true, userId: true, status: true },
         });
 
         if (!existingBarber) {
@@ -72,17 +72,28 @@ export async function PATCH(request: NextRequest) {
             throw new AppError("Forbidden", 403);
         }
 
+        // Nadie se da de baja ni se cambia el estado a sí mismo
+        if ((active !== undefined || status !== undefined) && existingBarber.userId === auth.userId) {
+            throw new AppError("Not authorized", 403);
+        }
+
+        if (active !== undefined && existingBarber.status !== "APPROVED") {
+            throw new AppError("Barber not found", 404);
+        }
+
         const updatedBarber = await prisma.$transaction(async (tx) => {
             const updated = await tx.barber.update({
                 where: { id: barberId },
                 data: {
                     status,
+                    active,
                     // undefined = no tocar; "" o null = quitar la foto
                     ...(profileImageUrl !== undefined ? { profileImageUrl: profileImageUrl || null } : {}),
                 },
                 select: {
                     id: true,
                     status: true,
+                    active: true,
                     profileImageUrl: true,
                 },
             });
@@ -97,14 +108,25 @@ export async function PATCH(request: NextRequest) {
                 });
             }
 
-            return updated;
+            // Sus citas futuras se cancelan y el cliente lo ve en "Mis citas" como cancelada por la barbería
+            const cancelled = active === false
+                ? await tx.appointment.updateMany({
+                    where: { barberId, status: { in: ["PENDING", "CONFIRMED"] }, date: { gt: new Date() } },
+                    data: { status: "CANCELLED", cancelledBy: "BUSINESS" },
+                })
+                : { count: 0 };
+
+            return { ...updated, cancelledCount: cancelled.count };
         });
 
         await revalidateBusinessPages(existingBarber.businessId);
 
+        const { cancelledCount, ...barber } = updatedBarber;
+
         return NextResponse.json({
             message: "Barber updated successfully",
-            barber: updatedBarber,
+            barber,
+            cancelledCount,
         });
     } catch (error) {
         return errorResponse(error, "Error updating barber");

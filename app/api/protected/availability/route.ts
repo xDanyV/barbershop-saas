@@ -28,10 +28,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const { barberId } = requireBarberAuth(request);
-        const { days, startTime, endTime, breakStart, breakEnd } = await parseJsonBody(
-            request,
-            availabilitySchema
-        );
+        const { days } = await parseJsonBody(request, availabilitySchema);
 
         // Reemplazo atómico: si falla la creación no se pierde el horario anterior
         const [, availability] = await prisma.$transaction([
@@ -41,11 +38,11 @@ export async function POST(request: NextRequest) {
             prisma.availability.createMany({
                 data: days.map((day) => ({
                     barberId,
-                    dayOfWeek: day,
-                    startTime,
-                    endTime,
-                    breakStart: breakStart ?? null,
-                    breakEnd: breakEnd ?? null,
+                    dayOfWeek: day.dayOfWeek,
+                    startTime: day.startTime,
+                    endTime: day.endTime,
+                    breakStart: day.breakStart ?? null,
+                    breakEnd: day.breakEnd ?? null,
                 })),
             }),
         ]);
