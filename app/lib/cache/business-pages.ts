@@ -28,10 +28,13 @@ async function queryPublicBusinessPage(slug: string) {
                     maintenanceMessage: true,
                 },
             },
+            // Sin servicios o sin horario un barbero no tiene nada que reservar
             barbers: {
                 where: {
                     active: true,
                     status: "APPROVED",
+                    services: { some: { active: true } },
+                    availability: { some: {} },
                 },
                 select: {
                     id: true,
@@ -129,10 +132,13 @@ async function queryBookingBusiness(slug: string) {
                     maintenanceMessage: true,
                 },
             },
+            // Sin servicios o sin horario un barbero no tiene nada que reservar
             barbers: {
                 where: {
                     active: true,
                     status: "APPROVED",
+                    services: { some: { active: true } },
+                    availability: { some: {} },
                 },
                 select: {
                     id: true,

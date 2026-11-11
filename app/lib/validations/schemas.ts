@@ -98,35 +98,39 @@ export const updateAppointmentStatusSchema = z.object({
 
 // ---------- Barbero: agenda, catálogo, excepciones ----------
 
-export const availabilitySchema = z
+// Un día del horario semanal: horas de trabajo y, opcional, un descanso dentro de ellas
+const availabilityDaySchema = z
     .object({
-        days: z.array(z.number().int().min(0).max(6)).min(1).max(7),
+        dayOfWeek: z.number().int().min(0).max(6),
         startTime: timeString,
         endTime: timeString,
         breakStart: timeString.nullish(),
         breakEnd: timeString.nullish(),
     })
-    .refine((v) => new Set(v.days).size === v.days.length, { message: "days must be unique", path: ["days"] })
     .refine((v) => v.startTime < v.endTime, { message: "startTime must be before endTime", path: ["startTime"] })
-    .refine((v) => Boolean(v.breakStart) === Boolean(v.breakEnd), {
-        message: "Break needs a start and an end",
-        path: ["breakStart"],
-    })
+    .refine((v) => Boolean(v.breakStart) === Boolean(v.breakEnd), { message: "Break needs a start and an end", path: ["breakStart"] })
     .refine(
-        (v) =>
-            !v.breakStart ||
-            !v.breakEnd ||
-            (v.breakStart < v.breakEnd && v.breakStart >= v.startTime && v.breakEnd <= v.endTime),
+        (v) => !v.breakStart || !v.breakEnd || (v.breakStart < v.breakEnd && v.breakStart >= v.startTime && v.breakEnd <= v.endTime),
         { message: "Break must be inside working hours", path: ["breakStart"] }
     );
+
+// Sin días = el barbero no recibe citas por ahora
+export const availabilitySchema = z.object({
+    days: z
+        .array(availabilityDaySchema)
+        .max(7)
+        .refine((days) => new Set(days.map((d) => d.dayOfWeek)).size === days.length, { message: "days must be unique" }),
+});
 
 export const createServiceSchema = z.object({
     name: z.string().trim().min(1).max(100),
     price: priceInPesos,
     duration: z.coerce.number().int().min(5).max(600),
+    // Solo el dueño: crea el mismo servicio para cada barbero activo del equipo
+    applyToTeam: z.boolean().optional(),
 });
 
-export const updateServiceSchema = createServiceSchema.partial().extend({
+export const updateServiceSchema = createServiceSchema.omit({ applyToTeam: true }).partial().extend({
     active: z.boolean().optional(),
 });
 
@@ -176,10 +180,12 @@ export const updateBarberAdminSchema = z
     .object({
         barberId: z.string().min(1),
         status: z.enum(["PENDING", "APPROVED", "REJECTED"]).optional(),
+        // false = dar de baja del equipo; true = reactivar
+        active: z.boolean().optional(),
         // undefined = no tocar la foto; "" o null = quitarla
         profileImageUrl: z.union([httpsUrl, z.literal(""), z.null()]).optional(),
     })
-    .refine((v) => v.status !== undefined || v.profileImageUrl !== undefined, { message: "No data to update" });
+    .refine((v) => v.status !== undefined || v.active !== undefined || v.profileImageUrl !== undefined, { message: "No data to update" });
 
 export const updateCustomerBanSchema = z.object({
     customerId: z.string().min(1),

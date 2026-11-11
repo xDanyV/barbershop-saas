@@ -229,39 +229,42 @@
     },
     "AvailabilityModal": {
         "triggerButton": "Hours",
-        "title": "Working Hours",
-        "days": {
-            "mon": "Mon",
-            "tue": "Tue",
-            "wed": "Wed",
-            "thu": "Thu",
-            "fri": "Fri",
-            "sat": "Sat",
-            "sun": "Sun"
+        "title": "Weekly hours",
+        "subtitle": "Check the days you work. Each day can have its own hours.",
+        "loading": "Loading...",
+        "closed": "Not working",
+        "copyToOthers": "Copy to all",
+        "addBreak": "Add a break",
+        "removeBreak": "Remove break",
+        "daysLong": {
+            "mon": "Monday",
+            "tue": "Tuesday",
+            "wed": "Wednesday",
+            "thu": "Thursday",
+            "fri": "Friday",
+            "sat": "Saturday",
+            "sun": "Sunday"
         },
         "labels": {
-            "activeDays": "Active Days",
-            "shiftStart": "Shift Start",
-            "shiftEnd": "Shift End",
-            "lunchBreak": "Lunch Break",
-            "lunchBreakDesc": "Add a break to your shift",
-            "breakStart": "Break Start",
-            "breakEnd": "Break End"
+            "shiftStart": "Start",
+            "shiftEnd": "End",
+            "breakStart": "Break starts",
+            "breakEnd": "Break ends"
         },
         "buttons": {
-            "cancel": "Cancel",
-            "save": "Save Changes",
+            "cancel": "Close",
+            "save": "Save hours",
             "saving": "Saving..."
         },
         "errors": {
-            "noDay": "You must select at least one active day.",
-            "endBeforeStart": "The End time must be after the Start time.",
-            "breakEndBeforeStart": "The Lunch Break end must be after its start.",
-            "breakOutOfRange": "The Lunch Break must be within your working hours.",
-            "saveFailed": "Error saving availability"
+            "endBeforeStartDay": "{day}: the end must be after the start.",
+            "breakEndBeforeStartDay": "{day}: the break must end after it starts.",
+            "breakOutOfRangeDay": "{day}: the break must be within working hours.",
+            "saveFailed": "Could not save the hours."
         },
         "success": {
-            "saved": "Schedule updated successfully"
+            "saved": "Hours saved.",
+            "closed": "Hours saved. You will not get bookings for now."
         }
     },
     "ExceptionModal": {
@@ -345,6 +348,11 @@
             "create": "Create Service",
             "creating": "Creating...",
             "cancel": "Cancel"
+        },
+        "applyToTeam": "Add this service to my whole team",
+        "teamCreated": "{count, plural, =0 {Your whole team already had this service.} one {Service added to # barber.} other {Service added to # barbers.}}",
+        "errors": {
+            "failed": "Could not create the service."
         }
     },
     "CustomerHome": {
@@ -441,39 +449,6 @@
     "BarberCard": {
         "fallbackName": "Master Barber",
         "verified": "Verified"
-    },
-    "ActiveBarbersList": {
-        "loadingDir": "Loading barbers directory...",
-        "errors": {
-            "fetch": "Error loading data",
-            "format": "Data format error",
-            "connection": "Server connection error",
-            "update": "Error updating status"
-        },
-        "toasts": {
-            "updating": "Updating status...",
-            "updatedTo": "Status updated to {status}"
-        },
-        "statusLabels": {
-            "PENDING": "Pending",
-            "APPROVED": "Active",
-            "REJECTED": "No access"
-        },
-        "confirmModal": {
-            "question": "Change status to",
-            "cancel": "Cancel",
-            "confirm": "Confirm"
-        },
-        "empty": "There are no barbers on your team yet.",
-        "barber": {
-            "noName": "No name",
-            "yourAccount": "You"
-        },
-        "options": {
-            "APPROVED": "Active",
-            "PENDING": "Pending",
-            "REJECTED": "No access"
-        }
     },
     "CustomersList": {
         "loadingDir": "Loading customer database...",
@@ -1244,7 +1219,7 @@
         "requests": "Requests",
         "requestsHint": "Barbers who asked to join. Only approve people who work with you.",
         "members": "Your team",
-        "membersHint": "Change each barber's status or photo.",
+        "membersHint": "Make sure each barber has services and hours so they show up for booking.",
         "invite": {
             "title": "Invite a barber",
             "text": "Share this link. When they sign up they join your barbershop and you only need to approve them here.",
@@ -1258,5 +1233,46 @@
     "CustomersPage": {
         "title": "Customers",
         "subtitle": "Who has booked with you. Block people who miss appointments without notice."
+    },
+    "RemovedFromTeam": {
+        "title": "You are no longer on the team",
+        "description": "The barbershop owner removed you, so you no longer get bookings there. If you think this is a mistake, talk to them.",
+        "securityTitle": "Your bookings are still available",
+        "securityDesc": "You can keep booking as a customer from \"My bookings\".",
+        "logoutButton": "Sign out"
+    },
+    "TeamList": {
+        "loading": "Loading team...",
+        "empty": "There are no barbers on your team yet.",
+        "noName": "No name",
+        "you": "You",
+        "inactive": "Removed",
+        "uploading": "Uploading photo...",
+        "summary": "{services, plural, =0 {No services} one {# service} other {# services}} · {days, plural, =0 {no hours} one {works # day} other {works # days}} · {upcoming, plural, =0 {no upcoming bookings} one {# upcoming booking} other {# upcoming bookings}}",
+        "missingServices": "Needs services",
+        "missingHours": "Needs hours",
+        "notBookable": "Not bookable for now",
+        "actions": "Actions for {name}",
+        "addPhoto": "Add photo",
+        "changePhoto": "Change photo",
+        "removePhoto": "Remove photo",
+        "remove": "Remove from team",
+        "reactivate": "Reactivate",
+        "keep": "Keep",
+        "openSchedule": "Open schedule",
+        "openCatalog": "Open services",
+        "removeTitle": "Remove {name}",
+        "removeText": "They will no longer be bookable or able to open their schedule. You can reactivate them later.",
+        "removeTextWithAppointments": "{count, plural, one {They have # upcoming booking that will be canceled; the customer will see it.} other {They have # upcoming bookings that will be canceled; customers will see it.}} You can reactivate them later.",
+        "removed": "{name} is no longer on the team. {count, plural, =0 {} one {# booking was canceled.} other {# bookings were canceled.}}",
+        "reactivated": "{name} is back on the team.",
+        "photoSaved": "Photo updated",
+        "errors": {
+            "load": "Could not load the team.",
+            "status": "Could not update the barber.",
+            "photo": "Could not save the photo.",
+            "notImage": "Choose an image.",
+            "tooBig": "The image must be under {mb} MB."
+        }
     }
 }
