@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Service } from "@prisma/client";
 import { motion } from "framer-motion";
 import { Edit2, Trash2, Clock } from "lucide-react";
 import { formatPriceFromCents } from "@/lib/billing/pricing";
 import { useTranslations } from "next-intl";
+import CopyBusinessServices from "./CopyBusinessServices";
+import { notifyBarberSetupChanged } from "../../setup-events";
 
 type Props = {
     onEdit: (service: Service) => void;
@@ -17,20 +19,21 @@ export default function ServiceList({ onEdit }: Props) {
     const [services, setServices] = useState<Service[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        async function fetchServices() {
-            try {
-                const res = await fetch("/api/protected/catalog");
-                const data = await res.json();
-                setServices(data);
-            } catch (error) {
-                console.error("Failed to fetch services", error);
-            } finally {
-                setLoading(false);
-            }
+    const fetchServices = useCallback(async () => {
+        try {
+            const res = await fetch("/api/protected/catalog");
+            const data = await res.json();
+            setServices(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error("Failed to fetch services", error);
+        } finally {
+            setLoading(false);
         }
-        fetchServices();
     }, []);
+
+    useEffect(() => {
+        fetchServices();
+    }, [fetchServices]);
 
     if (loading) {
         return (
@@ -44,8 +47,11 @@ export default function ServiceList({ onEdit }: Props) {
 
     if (!services.length) {
         return (
-            <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl p-12 text-center">
-                <p className="text-gray-500 font-medium">{t("empty")}</p>
+            <div className="space-y-4">
+                <CopyBusinessServices onCopied={fetchServices} />
+                <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl p-8 md:p-12 text-center">
+                    <p className="text-gray-500 font-medium">{t("empty")}</p>
+                </div>
             </div>
         );
     }
@@ -55,6 +61,7 @@ export default function ServiceList({ onEdit }: Props) {
             const res = await fetch(`/api/protected/catalog/${id}`, { method: "DELETE" });
             if (!res.ok) throw new Error();
             setServices((prev) => prev.filter((s) => s.id !== id));
+            notifyBarberSetupChanged();
             toast.success(t("success.deleted"));
         } catch {
             toast.error(t("errors.deleteFailed"));

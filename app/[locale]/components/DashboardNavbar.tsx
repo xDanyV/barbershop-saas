@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
-import { toast } from "react-hot-toast";
 import {
     BookOpen,
     CalendarDays,
@@ -87,30 +86,6 @@ export default function DashboardNavbar({ role }: { role: string }) {
         window.location.assign(href("/login"));
     };
 
-    // Un cliente con 2 citas activas no puede reservar otra: se le avisa antes de llevarlo al listado
-    const guardBooking = async (path: string, event: React.MouseEvent) => {
-        if (path !== "/dashboard/customer/barbers") return;
-
-        event.preventDefault();
-
-        try {
-            const response = await fetch("/api/protected/appointments/user");
-            const data = await response.json();
-            const activeCount = Array.isArray(data)
-                ? data.filter((a: { status: string }) => a.status === "PENDING" || a.status === "CONFIRMED").length
-                : 0;
-
-            if (activeCount >= 2) {
-                toast.error(t("errors.appointmentLimit"), { id: "limit" });
-                return;
-            }
-        } catch (error) {
-            console.error("Error checking appointments:", error);
-        }
-
-        window.location.assign(href(path));
-    };
-
     return (
         <>
             <header className="sticky top-0 z-50 bg-[#0f2733] text-[#f1f3f2]">
@@ -129,7 +104,6 @@ export default function DashboardNavbar({ role }: { role: string }) {
                                         key={item.path}
                                         href={href(item.path)}
                                         aria-current={active ? "page" : undefined}
-                                        onClick={(event) => guardBooking(item.path, event)}
                                         className={`relative flex h-16 items-center px-3 text-sm transition-colors ${active ? "font-semibold text-white" : "text-[#a9b7bc] hover:text-white"}`}
                                     >
                                         {item.label}
@@ -187,7 +161,6 @@ export default function DashboardNavbar({ role }: { role: string }) {
                                 key={item.path}
                                 href={href(item.path)}
                                 aria-current={active ? "page" : undefined}
-                                onClick={(event) => guardBooking(item.path, event)}
                                 className={`relative flex min-h-16 min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 text-xs ${active ? "font-semibold text-white" : "text-[#a9b7bc]"}`}
                             >
                                 {active && <span aria-hidden="true" className="absolute inset-x-4 top-0 h-0.5 bg-[#e8603a]" />}

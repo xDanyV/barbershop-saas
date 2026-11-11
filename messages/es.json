@@ -106,9 +106,6 @@
             "platform": "Plataforma"
         },
         "logout": "Cerrar sesión",
-        "errors": {
-            "appointmentLimit": "Máximo 2 citas activas permitidas."
-        },
         "home": "Inicio",
         "mainNav": "Navegación principal",
         "accountMenu": "Cuenta",
@@ -436,13 +433,18 @@
         }
     },
     "PendingBarbersList": {
-        "loadingDir": "Cargando solicitudes pendientes...",
+        "loadingDir": "Cargando solicitudes...",
+        "empty": "No hay solicitudes pendientes.",
+        "retry": "Reintentar",
+        "approved": "{name} ya forma parte del equipo.",
+        "rejected": "Se rechazó la solicitud de {name}.",
+        "rejectTitle": "Rechazar a {name}",
+        "rejectText": "No podrá entrar a la agenda de tu barbería. Si fue un error, tendrá que registrarse de nuevo con tu enlace.",
+        "keep": "Conservar",
         "errors": {
-            "format": "Error en el formato de los datos",
-            "connection": "Error de conexión",
-            "fetchPrefix": "Error"
+            "load": "No se pudieron cargar las solicitudes.",
+            "action": "No se pudo actualizar la solicitud."
         },
-        "empty": "No hay aprobaciones pendientes.",
         "barber": {
             "noName": "Sin nombre"
         },
@@ -1193,7 +1195,7 @@
         "BOOKINGS_PAUSED": "Esta barbería no está recibiendo reservas por ahora.",
         "BLOCKED_HERE": "No puedes reservar en esta barbería.",
         "ACCOUNT_SUSPENDED": "Tu cuenta está suspendida y no puede reservar.",
-        "TOO_MANY_ACTIVE": "Solo puedes tener 2 citas activas a la vez.",
+        "TOO_MANY_ACTIVE": "Solo puedes tener 2 citas activas a la vez en esta barbería.",
         "OWN_BUSINESS": "No puedes reservar en tu propia barbería. Usa \"Agregar cita\" en tu agenda.",
         "TOO_LATE_TO_CANCEL": "Ya no se puede cancelar: faltan menos de 2 horas.",
         "TOO_LATE_TO_RESCHEDULE": "Ya no se puede cambiar: faltan menos de 2 horas.",
@@ -1343,5 +1345,30 @@
             "notFound": "Ninguna cuenta usa ese correo.",
             "failed": "No se pudo crear el enlace."
         }
+    },
+    "BarberSetup": {
+        "title": "Completa tu perfil para recibir citas",
+        "text": "Mientras falte algo de esto, no aparecerás en la página de reservas de la barbería.",
+        "done": "Listo",
+        "services": {
+            "title": "Agrega tus servicios",
+            "text": "Qué cortes ofreces, su precio y cuánto tardan.",
+            "action": "Ir al catálogo"
+        },
+        "hours": {
+            "title": "Define tu horario",
+            "text": "Los días y horas en que atiendes.",
+            "action": "Definir horario"
+        }
+    },
+    "CopyServices": {
+        "title": "Empieza con los servicios de la barbería",
+        "text": "Estos servicios ya los ofrece la barbería. Cópialos a tu catálogo y luego ajusta precios o tiempos, o crea los tuyos desde cero.",
+        "minutes": "{minutes} min",
+        "action": "{count, plural, one {Usar este servicio} other {Usar estos # servicios}}",
+        "copying": "Copiando...",
+        "hint": "Puedes editarlos o eliminarlos después.",
+        "copied": "{count, plural, =0 {Ya tenías esos servicios.} one {Se agregó # servicio a tu catálogo.} other {Se agregaron # servicios a tu catálogo.}}",
+        "failed": "No se pudieron copiar los servicios."
     }
 }

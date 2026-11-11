@@ -121,3 +121,54 @@ export async function deleteCatalogService(serviceId: string, barberId: string) 
 
   return service;
 }
+
+// Servicios de la barbería que un barbero puede copiar a su catálogo: uno por nombre,
+// con el precio y la duración del dueño cuando él también lo ofrece
+export async function getBusinessServicesToCopy(barberId: string) {
+  const barber = await prisma.barber.findUnique({
+    where: { id: barberId },
+    select: { businessId: true, business: { select: { ownerId: true } } },
+  });
+
+  if (!barber) throw new AppError("Barber not available");
+
+  const [services, own] = await Promise.all([
+    prisma.service.findMany({
+      where: { businessId: barber.businessId, active: true, barberId: { not: barberId }, barber: { active: true } },
+      select: { name: true, priceCents: true, duration: true, barber: { select: { userId: true } } },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.service.findMany({ where: { barberId, active: true }, select: { name: true } }),
+  ]);
+
+  const taken = new Set(own.map((service) => service.name.trim().toLowerCase()));
+  const byName = new Map<string, { name: string; priceCents: number; duration: number }>();
+
+  for (const service of services) {
+    const key = service.name.trim().toLowerCase();
+    if (taken.has(key)) continue;
+
+    const isOwner = service.barber.userId === barber.business.ownerId;
+    if (!byName.has(key) || isOwner) {
+      byName.set(key, { name: service.name, priceCents: service.priceCents, duration: service.duration });
+    }
+  }
+
+  return [...byName.values()].sort((a, b) => a.priceCents - b.priceCents);
+}
+
+export async function copyBusinessServices(barberId: string) {
+  const services = await getBusinessServicesToCopy(barberId);
+  let created = 0;
+
+  for (const service of services) {
+    try {
+      await createCatalogService(service, barberId);
+      created++;
+    } catch (error) {
+      if (!(error instanceof AppError && error.status === 409)) throw error;
+    }
+  }
+
+  return { created };
+}

@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Check, X, User, Mail, Phone } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Check, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import toast from "react-hot-toast";
+import BrandDialog, { brandPrimaryButton } from "@/[locale]/components/BrandDialog";
+import { useApiError } from "@/[locale]/components/useApiError";
 
 type PendingBarber = {
     id: string;
@@ -12,123 +14,143 @@ type PendingBarber = {
     user: { name: string | null; email: string; phone: string };
 };
 
+// Al aprobar a alguien, la lista del equipo se vuelve a cargar
+export const TEAM_CHANGED = "team-changed";
+
+// Solicitudes de barberos que se registraron con el enlace de invitación
 export default function PendingBarbersList() {
     const t = useTranslations("PendingBarbersList");
-    const [barbers, setBarbers] = useState<PendingBarber[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const apiError = useApiError();
+    const [barbers, setBarbers] = useState<PendingBarber[] | null>(null);
+    const [failed, setFailed] = useState(false);
+    const [workingId, setWorkingId] = useState<string | null>(null);
+    const [rejecting, setRejecting] = useState<PendingBarber | null>(null);
 
-    const fetchPending = useCallback(async () => {
+    const load = useCallback(async () => {
         try {
-            setLoading(true);
             const res = await fetch("/api/admin/barbers");
+            const data = await res.json().catch(() => null);
 
-            if (!res.ok) {
-                setError(`${t("errors.fetchPrefix")} ${res.status}: ${res.statusText}`);
-                setBarbers([]);
-                return;
-            }
+            if (!res.ok || !Array.isArray(data)) throw new Error();
 
-            const data = await res.json();
-            if (!Array.isArray(data)) {
-                setBarbers([]);
-                setError(t("errors.format"));
-            } else {
-                setBarbers(data);
-                setError(null);
-            }
-        } catch (err) {
-            console.error("Fetch error:", err);
-            setError(t("errors.connection"));
-        } finally {
-            setLoading(false);
+            setBarbers(data);
+            setFailed(false);
+        } catch {
+            setBarbers((current) => current ?? []);
+            setFailed(true);
         }
-    }, [t]);
+    }, []);
 
     useEffect(() => {
-        fetchPending();
-    }, [fetchPending]);
+        load();
+    }, [load]);
 
-    const handleAction = async (barberId: string, status: string) => {
+    const decide = async (barber: PendingBarber, status: "APPROVED" | "REJECTED") => {
+        setWorkingId(barber.id);
+        const name = barber.user.name || t("barber.noName");
+
         try {
             const res = await fetch("/api/admin/barbers", {
                 method: "PATCH",
-                body: JSON.stringify({ barberId, status }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ barberId: barber.id, status }),
             });
-            if (res.ok) fetchPending();
-        } catch (err) {
-            console.error("Action error:", err);
+            const data = await res.json().catch(() => null);
+
+            if (!res.ok) {
+                toast.error(apiError(data, t("errors.action")));
+                return;
+            }
+
+            setBarbers((current) => (current ?? []).filter((item) => item.id !== barber.id));
+            setRejecting(null);
+
+            if (status === "APPROVED") {
+                toast.success(t("approved", { name }));
+                window.dispatchEvent(new Event(TEAM_CHANGED));
+            } else {
+                toast.success(t("rejected", { name }));
+            }
+        } catch {
+            toast.error(t("errors.action"));
+        } finally {
+            setWorkingId(null);
         }
     };
 
-    if (loading) return <div className="p-10 text-center font-bold text-gray-400">{t("loadingDir")}</div>;
+    if (barbers === null) return <p className="py-6 text-gray-500">{t("loadingDir")}</p>;
 
     return (
-        <div className="space-y-6">
-            {error && (
-                <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-2xl font-bold mx-4 md:mx-0">
-                    Error: {error}
+        <>
+            {failed && (
+                <div role="alert" className="mb-4 flex flex-col gap-3 border-l-4 border-[#b8431f] bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-gray-900">{t("errors.load")}</p>
+                    <button type="button" onClick={load} className="min-h-11 border border-gray-200 px-4 text-sm font-semibold transition-colors hover:border-gray-900">
+                        {t("retry")}
+                    </button>
                 </div>
             )}
 
-            {/* Contenedor con altura máxima y scroll interno. Incluye el pb-24 para el navbar */}
-            <div className="max-h-150 md:max-h-175 overflow-y-auto pr-1  custom-scrollbar">
-                <div className="grid gap-4">
-                    <AnimatePresence mode="popLayout">
-                        {Array.isArray(barbers) && barbers.length === 0 ? (
-                            <p className="text-center py-10 text-gray-400 font-bold italic">{t("empty")}</p>
-                        ) : (
-                            Array.isArray(barbers) && barbers.map((barber) => (
-                                <motion.div
-                                    key={barber.id}
-                                    layout
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, x: -100 }}
-                                    className="bg-white border border-gray-100 p-5 md:p-6 rounded-4xl shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4 md:gap-6 hover:shadow-md transition-shadow"
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className="shrink-0 w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
-                                            <User size={24} />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <h3 className="font-black text-gray-900 truncate">
-                                                {barber.user?.name || t("barber.noName")}
-                                            </h3>
-                                            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-x-4 gap-y-1 mt-1">
-                                                <span className="text-xs text-gray-400 flex items-center gap-1 truncate">
-                                                    <Mail size={12} className="shrink-0" />
-                                                    <span className="truncate">{barber.user?.email}</span>
-                                                </span>
-                                                <span className="text-xs text-gray-400 flex items-center gap-1 shrink-0">
-                                                    <Phone size={12} className="shrink-0" />
-                                                    {barber.user?.phone}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
+            {barbers.length === 0 ? (
+                !failed && <p className="border border-dashed border-gray-300 p-5 text-gray-500">{t("empty")}</p>
+            ) : (
+                <ul className="divide-y divide-gray-100 border border-gray-200 bg-white">
+                    {barbers.map((barber) => {
+                        const name = barber.user.name || t("barber.noName");
+                        const working = workingId === barber.id;
 
-                                    {/* Contenedor de acciones: se expande en móvil con línea divisoria */}
-                                    <div className="flex items-center gap-2 w-full lg:w-auto mt-2 lg:mt-0 pt-4 lg:pt-0 border-t border-gray-100 lg:border-none">
-                                        <button
-                                            onClick={() => handleAction(barber.id, "APPROVED")}
-                                            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-5 py-3 md:py-2.5 bg-green-50 text-green-600 rounded-xl font-bold text-sm hover:bg-green-100 transition-colors"
-                                        >
-                                            <Check size={18} /> {t("actions.approve")}
-                                        </button>
-                                        <button
-                                            onClick={() => handleAction(barber.id, "REJECTED")}
-                                            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-5 py-3 md:py-2.5 bg-red-50 text-red-600 rounded-xl font-bold text-sm hover:bg-red-100 transition-colors"
-                                        >
-                                            <X size={18} /> {t("actions.reject")}
-                                        </button>
+                        return (
+                            <li key={barber.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:gap-6 md:p-5">
+                                <div className="flex min-w-0 flex-1 items-center gap-3">
+                                    <span className="flex h-12 w-12 shrink-0 items-center justify-center bg-[#f1f3f2] font-semibold" aria-hidden="true">
+                                        {name.charAt(0).toUpperCase()}
+                                    </span>
+                                    <div className="min-w-0">
+                                        <p className="break-words font-semibold text-gray-900">{name}</p>
+                                        <p className="break-all text-sm text-gray-500">
+                                            {barber.user.phone} · {barber.user.email}
+                                        </p>
                                     </div>
-                                </motion.div>
-                            ))
-                        )}
-                    </AnimatePresence>
-                </div>
-            </div>
-        </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 md:flex">
+                                    <button
+                                        type="button"
+                                        onClick={() => decide(barber, "APPROVED")}
+                                        disabled={working}
+                                        className="inline-flex min-h-11 items-center justify-center gap-2 bg-gray-900 px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                                    >
+                                        <Check size={16} aria-hidden="true" />
+                                        {t("actions.approve")}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setRejecting(barber)}
+                                        disabled={working}
+                                        className="inline-flex min-h-11 items-center justify-center gap-2 border border-gray-200 px-4 text-sm font-semibold text-[#b8431f] transition-colors hover:border-[#b8431f] disabled:opacity-50"
+                                    >
+                                        <X size={16} aria-hidden="true" />
+                                        {t("actions.reject")}
+                                    </button>
+                                </div>
+                            </li>
+                        );
+                    })}
+                </ul>
+            )}
+
+            {rejecting && (
+                <BrandDialog
+                    title={t("rejectTitle", { name: rejecting.user.name || t("barber.noName") })}
+                    subtitle={t("rejectText")}
+                    closeLabel={t("keep")}
+                    onClose={() => workingId === null && setRejecting(null)}
+                >
+                    <button type="button" onClick={() => decide(rejecting, "REJECTED")} disabled={workingId !== null} className={brandPrimaryButton}>
+                        {t("actions.reject")}
+                    </button>
+                </BrandDialog>
+            )}
+        </>
     );
 }

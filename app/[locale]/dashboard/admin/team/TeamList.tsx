@@ -11,6 +11,7 @@ import { useApiError } from "@/[locale]/components/useApiError";
 import { useUploadThing } from "@/lib/uploadthing";
 import { compressImage } from "@/lib/compress-image";
 import ResetLinkDialog from "@/[locale]/components/ResetLinkDialog";
+import { TEAM_CHANGED } from "../components/PendingBarbersList";
 
 type Member = {
     id: string;
@@ -48,6 +49,9 @@ export default function TeamList() {
 
     useEffect(() => {
         load();
+        // Un barbero recién aprobado aparece sin recargar la página
+        window.addEventListener(TEAM_CHANGED, load);
+        return () => window.removeEventListener(TEAM_CHANGED, load);
     }, [load]);
 
     const patch = async (body: object, failed: string) => {

@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import PendingApproval from "@/[locale]/components/barber/PendingApproval";
 import TeamBarberSelector from "./components/TeamBarberSelector";
+import BarberSetupNotice from "./components/BarberSetupNotice";
 
 export default async function BarberDashboardLayout({
     children,
@@ -19,6 +20,8 @@ export default async function BarberDashboardLayout({
             {!isApproved && <PendingApproval variant={status === "INACTIVE" ? "inactive" : "pending"} />}
 
             {role === "OWNER" && <TeamBarberSelector currentBarberId={barberId} />}
+
+            {isApproved && barberId && <BarberSetupNotice />}
 
             <div className={!isApproved ? "blur-md pointer-events-none select-none" : ""}>
                 {children}
