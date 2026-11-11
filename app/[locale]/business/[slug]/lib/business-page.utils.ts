@@ -19,12 +19,14 @@ export function getInitials(name: string) {
         .slice(0, 2);
 }
 
-// wa.me necesita el número internacional: uno local de 10 dígitos (Tijuana / México) se completa con 52
-export function getWhatsAppUrl(phone: string) {
+// wa.me necesita el número internacional: uno local de 10 dígitos (Tijuana / México) se completa con 52.
+// Con texto, WhatsApp abre el chat con el mensaje ya escrito; la persona lo revisa y lo envía.
+export function getWhatsAppUrl(phone: string, text?: string) {
     const cleanPhone = phone.replace(/\D/g, "");
     const internationalPhone = cleanPhone.length === 10 ? `52${cleanPhone}` : cleanPhone;
+    const query = text ? `?text=${encodeURIComponent(text)}` : "";
 
-    return `https://wa.me/${internationalPhone}`;
+    return `https://wa.me/${internationalPhone}${query}`;
 }
 
 // Búsqueda de Google Maps con la dirección tal como la escribió el negocio

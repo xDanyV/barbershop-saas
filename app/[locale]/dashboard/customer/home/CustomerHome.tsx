@@ -25,9 +25,21 @@ type Appointment = {
 // isStaff: un dueño o barbero viendo lo que reservó en otras barberías
 export default function CustomerHome({ isStaff = false }: { isStaff?: boolean }) {
   const t = useTranslations("CustomerHome");
+  const tw = useTranslations("WhatsAppMessages");
   const apiError = useApiError();
   const locale = useLocale();
   const dateLocale = useLocale() === "en" ? "en-US" : "es-MX";
+
+  // Al escribirle a la barbería, el mensaje ya dice de qué cita se trata
+  const aboutMessage = (a: Appointment) => {
+    const date = new Date(a.date);
+    return tw("customerAbout", {
+      service: a.service.name,
+      day: date.toLocaleDateString(dateLocale, { weekday: "long", day: "numeric", month: "long" }).replace(",", ""),
+      time: date.toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" }),
+      barber: a.barber.user.name ?? "",
+    });
+  };
   const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [history, setHistory] = useState<Appointment[]>([]);
@@ -393,7 +405,7 @@ export default function CustomerHome({ isStaff = false }: { isStaff?: boolean })
                               </Link>
                               {a.business.phone && (
                                 <a
-                                  href={getWhatsAppUrl(a.business.phone)}
+                                  href={getWhatsAppUrl(a.business.phone, aboutMessage(a))}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="flex min-h-11 items-center justify-center px-4 text-xs font-bold text-gray-900 hover:bg-gray-100"
@@ -402,6 +414,16 @@ export default function CustomerHome({ isStaff = false }: { isStaff?: boolean })
                                 </a>
                               )}
                             </>
+                          )}
+                          {(a.status === "PENDING" || a.status === "CONFIRMED") && date.getTime() > Date.now() && a.business.phone && (
+                            <a
+                              href={getWhatsAppUrl(a.business.phone, aboutMessage(a))}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex min-h-11 w-full items-center justify-center px-4 text-xs font-bold text-[#0f2733] transition-colors hover:bg-gray-100 sm:w-auto"
+                            >
+                              {t("contactBusiness")}
+                            </a>
                           )}
                           {(a.status === "PENDING" || a.status === "CONFIRMED") && date.getTime() > Date.now() && (
                             <button

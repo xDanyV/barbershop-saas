@@ -27,6 +27,7 @@ export type BusinessForm = {
     logoUrl: string;
     coverUrl: string;
     isServiceActive: boolean;
+    autoConfirm: boolean;
     maintenanceMessage: string;
 };
 
@@ -423,6 +424,29 @@ export default function BusinessProfileForm({
                             <ToggleRight className="text-emerald-600" size={30} />
                         ) : (
                             <ToggleLeft className="text-red-500" size={30} />
+                        )}
+                    </button>
+
+                    <button
+                        type="button"
+                        role="switch"
+                        aria-checked={form.autoConfirm}
+                        onClick={() => onUpdateField("autoConfirm", !form.autoConfirm)}
+                        className="w-full flex items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-gray-50 p-4 text-left transition-all"
+                    >
+                        <div>
+                            <p className="text-sm font-black text-gray-900">Confirmar reservas automáticamente</p>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                                {form.autoConfirm
+                                    ? "Las citas en línea quedan confirmadas al instante."
+                                    : "Cada cita en línea espera a que el barbero la confirme."}
+                            </p>
+                        </div>
+
+                        {form.autoConfirm ? (
+                            <ToggleRight className="shrink-0 text-emerald-600" size={30} />
+                        ) : (
+                            <ToggleLeft className="shrink-0 text-gray-400" size={30} />
                         )}
                     </button>
 

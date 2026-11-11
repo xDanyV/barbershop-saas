@@ -72,6 +72,7 @@ export async function createAppointment(data: {
                     settings: {
                         select: {
                             isServiceActive: true,
+                            autoConfirm: true,
                         },
                     },
                 },
@@ -168,6 +169,8 @@ export async function createAppointment(data: {
                 serviceId,
                 businessId: barber.businessId,
                 date: startDate,
+                // Sin ajustes guardados se confirma, igual que el valor por defecto
+                status: barber.business.settings?.autoConfirm === false ? "PENDING" : "CONFIRMED",
             },
         });
     });

@@ -30,6 +30,8 @@ type Props = {
         name: string;
         slug: string;
         logoUrl: string | null;
+        // Si la barbería confirma sola, el cliente reserva; si no, envía una solicitud
+        autoConfirm: boolean;
         timezone: string;
         barbers: Barber[];
     };
@@ -233,7 +235,7 @@ export default function BusinessBookingClient({ business, initial }: Props) {
                 return;
             }
 
-            toast.success(t("success"));
+            toast.success(data?.status === "CONFIRMED" ? t("successConfirmed") : t("success"));
             window.location.assign(`/${locale}/dashboard/customer/home`);
         } catch {
             toast.error(t("errors.network"));
@@ -439,9 +441,9 @@ export default function BusinessBookingClient({ business, initial }: Props) {
                             </div>
                         ))}
                     </dl>
-                    <p className="mt-4 text-[length:var(--step-small)] text-[var(--brand-muted)]">{t("confirm.note")}</p>
+                    <p className="mt-4 text-[length:var(--step-small)] text-[var(--brand-muted)]">{business.autoConfirm ? t("confirm.noteInstant") : t("confirm.note")}</p>
                     <button type="button" onClick={book} disabled={booking} className={`mt-5 ${brandPrimaryButton}`}>
-                        {booking ? t("confirm.sending") : t("confirm.action")}
+                        {booking ? t("confirm.sending") : business.autoConfirm ? t("confirm.actionInstant") : t("confirm.action")}
                     </button>
                 </BrandDialog>
             )}

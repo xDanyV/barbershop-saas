@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { CalendarClock, MessageCircle, MoreVertical, UserX, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { getWhatsAppUrl } from "@/[locale]/business/[slug]/lib/business-page.utils";
 import BrandDialog, { brandPrimaryButton } from "@/[locale]/components/BrandDialog";
 import RescheduleDialog from "@/[locale]/components/RescheduleDialog";
@@ -21,6 +21,8 @@ type Appointment = {
   date: string;
   isWalkIn: boolean;
   status: AppointmentStatus;
+  businessName: string;
+  businessSlug: string;
 };
 
 type Props = {
@@ -41,10 +43,14 @@ const menuItemClass = "flex min-h-11 w-full items-center gap-3 px-4 text-left da
 
 export default function AppointmentCard({ appointment, onConfirm, onChanged }: Props) {
   const t = useTranslations("AppointmentCard");
+  const tw = useTranslations("WhatsAppMessages");
+  const locale = useLocale();
   const [status, setStatus] = useState<AppointmentStatus>(appointment.status);
   const [working, setWorking] = useState(false);
   const [rescheduling, setRescheduling] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  // Después de cancelar se ofrece avisarle al cliente antes de quitar la cita de la lista
+  const [cancelled, setCancelled] = useState(false);
 
   const changeStatus = async (next: AppointmentStatus, failedMessage: string) => {
     setWorking(true);
@@ -82,19 +88,52 @@ export default function AppointmentCard({ appointment, onConfirm, onChanged }: P
     toast.success(t("success.noShow", { name: appointment.customerName }));
   };
 
+  const hasPhone = appointment.customerPhone.replace(/\D/g, "").length === 10;
+
   const cancel = async () => {
     if (!(await changeStatus("CANCELLED", t("errors.cancelFailed")))) return;
 
-    setCancelling(false);
     toast.success(t("success.cancelled", { name: appointment.customerName }));
+
+    if (hasPhone) {
+      setStatus("CANCELLED");
+      setCancelled(true);
+      return;
+    }
+
+    setCancelling(false);
     onChanged?.();
   };
 
+  const closeCancelDialog = () => {
+    if (working) return;
+
+    setCancelling(false);
+
+    if (cancelled) {
+      setCancelled(false);
+      onChanged?.();
+    }
+  };
+
   const isOpen = status === "PENDING" || status === "CONFIRMED";
-  const canReschedule = isOpen && new Date(appointment.date).getTime() > Date.now();
-  const hasPhone = appointment.customerPhone.replace(/\D/g, "").length === 10;
+  const isUpcoming = new Date(appointment.date).getTime() > Date.now();
+  const canReschedule = isOpen && isUpcoming;
   const contact = [appointment.customerPhone, appointment.customerEmail].filter((value) => value && value !== "N/A").join(" · ");
   const hasActions = hasPhone || canReschedule || status === "COMPLETED" || isOpen;
+
+  // Mensaje ya escrito según el estado de la cita; el barbero lo revisa en WhatsApp antes de enviarlo
+  const values = {
+    name: appointment.customerName.split(" ")[0],
+    business: appointment.businessName,
+    service: appointment.service,
+    // "jueves 12 de noviembre", sin la coma que agrega el formato
+    day: new Date(appointment.date).toLocaleDateString(locale === "en" ? "en-US" : "es-MX", { weekday: "long", day: "numeric", month: "long" }).replace(",", ""),
+    time: appointment.time,
+  };
+  const sendsConfirmation = status === "CONFIRMED" && isUpcoming;
+  const message = sendsConfirmation ? tw("confirmed", values) : isOpen && isUpcoming ? tw("about", values) : tw("general", values);
+  const bookAgainLink = typeof window === "undefined" ? "" : `${window.location.origin}/${locale}/business/${appointment.businessSlug}/book`;
 
   return (
     <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:gap-4">
@@ -139,13 +178,13 @@ export default function AppointmentCard({ appointment, onConfirm, onChanged }: P
 
               <MenuItems
                 anchor="bottom end"
-                className="z-50 mt-1 w-60 border border-[#dbe0de] bg-white py-1 text-sm text-[#0f2733] outline-none"
+                className="z-50 mt-1 w-64 border border-[#dbe0de] bg-white py-1 text-sm text-[#0f2733] outline-none"
               >
                 {hasPhone && (
                   <MenuItem>
-                    <a href={getWhatsAppUrl(appointment.customerPhone)} target="_blank" rel="noopener noreferrer" className={menuItemClass}>
+                    <a href={getWhatsAppUrl(appointment.customerPhone, message)} target="_blank" rel="noopener noreferrer" className={menuItemClass}>
                       <MessageCircle size={18} aria-hidden="true" />
-                      {t("whatsapp")}
+                      {sendsConfirmation ? t("whatsappConfirmation") : t("whatsapp")}
                     </a>
                   </MenuItem>
                 )}
@@ -194,14 +233,35 @@ export default function AppointmentCard({ appointment, onConfirm, onChanged }: P
 
       {cancelling && (
         <BrandDialog
-          title={t("cancelAppointment")}
-          subtitle={t("cancelText", { name: appointment.customerName, service: appointment.service, time: appointment.time })}
-          closeLabel={t("keep")}
-          onClose={() => !working && setCancelling(false)}
+          title={cancelled ? t("cancelledTitle") : t("cancelAppointment")}
+          subtitle={
+            cancelled
+              ? t("cancelledText", { name: appointment.customerName })
+              : t("cancelText", { name: appointment.customerName, service: appointment.service, time: appointment.time })
+          }
+          closeLabel={cancelled ? t("done") : t("keep")}
+          onClose={closeCancelDialog}
         >
-          <button type="button" onClick={cancel} disabled={working} className={brandPrimaryButton}>
-            {t("cancelAppointment")}
-          </button>
+          {cancelled ? (
+            <div className="flex flex-col gap-3">
+              <a
+                href={getWhatsAppUrl(appointment.customerPhone, tw("cancelled", { ...values, link: bookAgainLink }))}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${brandPrimaryButton} gap-2`}
+              >
+                <MessageCircle size={18} aria-hidden="true" />
+                {t("notifyCancellation")}
+              </a>
+              <button type="button" onClick={closeCancelDialog} className="min-h-12 font-semibold underline underline-offset-4">
+                {t("done")}
+              </button>
+            </div>
+          ) : (
+            <button type="button" onClick={cancel} disabled={working} className={brandPrimaryButton}>
+              {t("cancelAppointment")}
+            </button>
+          )}
         </BrandDialog>
       )}
     </div>

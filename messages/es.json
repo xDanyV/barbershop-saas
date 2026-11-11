@@ -225,7 +225,12 @@
         "cancelAppointment": "Cancelar cita",
         "keep": "Conservar la cita",
         "cancelText": "Se cancelará la cita de {name} para {service} a las {time}.",
-        "noActions": "No hay acciones disponibles"
+        "noActions": "No hay acciones disponibles",
+        "whatsappConfirmation": "Enviar confirmación por WhatsApp",
+        "cancelledTitle": "Cita cancelada",
+        "cancelledText": "Avísale a {name} para que pueda elegir otro horario.",
+        "notifyCancellation": "Avisar por WhatsApp",
+        "done": "Listo"
     },
     "AvailabilityModal": {
         "triggerButton": "Horario",
@@ -518,7 +523,8 @@
             "pausedText": "Por ahora no se pueden reservar citas desde aquí. Escribe a la barbería para agendar.",
             "openUntil": "Abierto ahora · cierra a las {time}",
             "opensToday": "Cerrado ahora · abre hoy a las {time}",
-            "closedNow": "Cerrado ahora"
+            "closedNow": "Cerrado ahora",
+            "whatsappMessage": "Hola, vi la página de {name} y quiero información."
         },
         "services": {
             "title": "Servicios y precios",
@@ -609,7 +615,9 @@
             "note": "La barbería recibe tu solicitud y la confirma. El pago se hace en el local.",
             "action": "Enviar solicitud",
             "sending": "Enviando...",
-            "cancel": "Cancelar"
+            "cancel": "Cancelar",
+            "noteInstant": "Tu cita queda confirmada al reservar. El pago se hace en el local.",
+            "actionInstant": "Reservar cita"
         },
         "success": "Listo, enviamos tu solicitud. Te avisamos cuando la barbería la confirme.",
         "errors": {
@@ -623,7 +631,9 @@
             "text": "Para apartar un espacio o registrar a un cliente, usa \"Agregar cita\" en tu agenda.",
             "action": "Ir a mi agenda"
         },
-        "meta": "Reservar en {name}"
+        "meta": "Reservar en {name}",
+        "whatsappMessage": "Hola, quiero agendar una cita.",
+        "successConfirmed": "Listo, tu cita quedó confirmada."
     },
     "BusinessDirectory": {
         "eyebrow": "Barberías disponibles",
@@ -1257,5 +1267,12 @@
             "notImage": "Elige una imagen.",
             "tooBig": "La imagen no debe pesar más de {mb} MB."
         }
+    },
+    "WhatsAppMessages": {
+        "confirmed": "Hola {name}, te escribo de {business}. Tu cita de {service} quedó confirmada para el {day} a las {time}. Si no puedes venir, avísanos por aquí.",
+        "about": "Hola {name}, te escribo de {business} sobre tu cita de {service} del {day} a las {time}.",
+        "general": "Hola {name}, te escribo de {business}.",
+        "cancelled": "Hola {name}, te escribo de {business}. Tuvimos que cancelar tu cita de {service} del {day} a las {time}. Disculpa las molestias. Puedes elegir otro horario aquí: {link}",
+        "customerAbout": "Hola, les escribo por mi cita de {service} del {day} a las {time} con {barber}."
     }
 }

@@ -64,7 +64,7 @@ export default async function BusinessBookPage({ params, searchParams }: BookPag
 
     const t = await getTranslations("BookingPage");
     const profileUrl = `/${locale}/business/${business.slug}`;
-    const whatsappUrl = business.phone ? getWhatsAppUrl(business.phone) : null;
+    const whatsappUrl = business.phone ? getWhatsAppUrl(business.phone, t("whatsappMessage")) : null;
     const contactLinks = (
         <>
             {whatsappUrl && (
@@ -122,6 +122,7 @@ export default async function BusinessBookPage({ params, searchParams }: BookPag
                 name: business.name,
                 slug: business.slug,
                 logoUrl: business.logoUrl,
+                autoConfirm: business.settings?.autoConfirm ?? true,
                 timezone: resolveTimezone(business.timezone),
                 barbers: business.barbers.map((barber) => ({
                     id: barber.id,

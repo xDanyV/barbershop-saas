@@ -83,7 +83,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
         servicesPerBarber.set(service.barber.id, (servicesPerBarber.get(service.barber.id) ?? 0) + 1);
     }
 
-    const whatsappUrl = business.phone ? getWhatsAppUrl(business.phone) : null;
+    const whatsappUrl = business.phone ? getWhatsAppUrl(business.phone, t("hero.whatsappMessage", { name: business.name })) : null;
     const mapsUrl = business.address ? getMapsUrl(business.address) : null;
     const hasHours = hours.some((day) => day.open);
 

@@ -23,6 +23,7 @@ import BusinessBillingCard from "./_components/BusinessBillingCard";
 
 type BusinessSettings = {
     isServiceActive: boolean;
+    autoConfirm: boolean;
     maintenanceMessage: string | null;
 };
 
@@ -54,6 +55,7 @@ export default function MyBusinessPage() {
         logoUrl: "",
         coverUrl: "",
         isServiceActive: true,
+        autoConfirm: true,
         maintenanceMessage: "",
     });
 
@@ -104,6 +106,7 @@ export default function MyBusinessPage() {
                     logoUrl: data.logoUrl ?? "",
                     coverUrl: data.coverUrl ?? "",
                     isServiceActive: data.settings?.isServiceActive ?? true,
+                    autoConfirm: data.settings?.autoConfirm ?? true,
                     maintenanceMessage: data.settings?.maintenanceMessage ?? "",
                 });
             } catch {

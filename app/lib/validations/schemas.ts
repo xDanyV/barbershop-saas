@@ -156,6 +156,7 @@ export const createBusinessSchema = z.object({
 
 export const updateBusinessSchema = createBusinessSchema.extend({
     isServiceActive: z.boolean().optional(),
+    autoConfirm: z.boolean().optional(),
     maintenanceMessage: z.string().trim().max(300).optional(),
 });
 
@@ -194,6 +195,7 @@ export const updateCustomerBanSchema = z.object({
 
 export const systemSettingsSchema = z.object({
     isServiceActive: z.boolean().optional(),
+    autoConfirm: z.boolean().optional(),
     maintenanceMessage: z.string().trim().max(300).optional(),
     paymentInstructions: z.string().trim().max(1000).nullish(),
 });

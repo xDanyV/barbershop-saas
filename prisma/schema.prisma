@@ -105,6 +105,8 @@ model BusinessSettings {
   businessId         String   @unique
   business           Business @relation(fields: [businessId], references: [id])
   isServiceActive    Boolean  @default(true)
+  // Las reservas en línea quedan confirmadas al instante; si no, el barbero las confirma
+  autoConfirm        Boolean  @default(true)
   maintenanceMessage String   @default("El servicio está temporalmente inactivo. Por favor, vuelve más tarde.")
   updatedAt          DateTime @updatedAt
 }
