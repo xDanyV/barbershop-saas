@@ -1,112 +1,73 @@
 "use client";
 
-import { useState } from "react";
-import { UserPlus, Users, Settings, ShieldAlert, CreditCard, Store, History, LayoutDashboard } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useRouter, useSearchParams } from "next/navigation";
+import { CreditCard, History, Settings, ShieldAlert, Store } from "lucide-react";
 import { useTranslations } from "next-intl";
-
-import PendingBarbersList from "./PendingBarbersList";
-import ActiveBarbersList from "./ActiveBarbersList";
+import PageHeader from "@/[locale]/components/PageHeader";
+import AuditLogList from "./AuditLogList";
+import BusinessBillingManager from "./BusinessBillingManager";
 import CustomersList from "./CustomersList";
+import PlatformBusinesses from "./PlatformBusinesses";
 import SystemSettings from "./SystemSettings";
 
-import BusinessBillingManager from "./BusinessBillingManager";
-import PlatformBusinesses from "./PlatformBusinesses";
-import AuditLogList from "./AuditLogList";
-import OwnerOverview from "./OwnerOverview";
+// Solo trabajo de la plataforma. El equipo y los clientes de cada barbería los administra su dueño.
+const TABS = [
+    { id: "businesses", icon: Store },
+    { id: "billing", icon: CreditCard },
+    { id: "moderation", icon: ShieldAlert },
+    { id: "audit", icon: History },
+    { id: "settings", icon: Settings },
+] as const;
 
+type TabId = (typeof TABS)[number]["id"];
 
-// Definimos las pestañas solo con sus identificadores e iconos
-const TABS: { id: string; icon: typeof UserPlus; adminOnly?: boolean; ownerOnly?: boolean }[] = [
-    { id: "summary", icon: LayoutDashboard, ownerOnly: true },
-    { id: "businesses", icon: Store, adminOnly: true },
-    { id: "billing", icon: CreditCard, adminOnly: true },
-    { id: "pending", icon: UserPlus },
-    { id: "barbers", icon: Users },
-    { id: "customers", icon: ShieldAlert },
-    { id: "settings", icon: Settings, adminOnly: true },
-    { id: "audit", icon: History, adminOnly: true },
-];
-
-type Props = {
-    role: string;
-};
-
-export default function AdminDashboardClient({ role }: Props) {
+export default function AdminDashboardClient() {
     const t = useTranslations("AdminDashboard");
-    const [activeTab, setActiveTab] = useState(role === "ADMIN" ? "businesses" : "summary");
+    const router = useRouter();
+    const searchParams = useSearchParams();
 
-    // Facturación y mantenimiento global son de la plataforma: solo los ve el ADMIN
-    const tabs = TABS.filter((tab) => (!tab.adminOnly || role === "ADMIN") && (!tab.ownerOnly || role === "OWNER"));
+    // La pestaña vive en la URL: recargar o volver atrás conserva dónde estabas
+    const requested = searchParams.get("tab");
+    const activeTab: TabId = TABS.some((tab) => tab.id === requested) ? (requested as TabId) : "businesses";
+
+    const selectTab = (id: TabId) => router.replace(`?tab=${id}`, { scroll: false });
 
     return (
-        <div className="space-y-5 py-6">
-            {/* Header del Dashboard */}
-            <div>
-                <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
-                    {t("title")}
-                </h1>
-                <p className="text-sm md:text-base text-gray-500 font-medium mt-1">
-                    {t("subtitle")}
-                </p>
+        <div className="pb-6">
+            <PageHeader title={t("title")} subtitle={t("subtitle")} />
+
+            <div role="tablist" aria-label={t("title")} className="scroll-strip -mx-4 flex gap-1 overflow-x-auto border-b border-gray-200 px-4 md:mx-0 md:px-0">
+                {TABS.map(({ id, icon: Icon }) => {
+                    const isActive = activeTab === id;
+
+                    return (
+                        <button
+                            key={id}
+                            type="button"
+                            role="tab"
+                            aria-selected={isActive}
+                            onClick={() => selectTab(id)}
+                            className={`relative flex min-h-11 items-center gap-2 whitespace-nowrap px-3 text-sm font-semibold transition-colors md:px-4 ${isActive ? "text-gray-900" : "text-gray-500 hover:text-gray-900"}`}
+                        >
+                            <Icon size={18} aria-hidden="true" />
+                            {t(`tabs.${id}`)}
+                            {isActive && <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-0.5 bg-[#e8603a]" />}
+                        </button>
+                    );
+                })}
             </div>
 
-            {/* Contenedor de Pestañas (Scroll horizontal oculto en móviles) */}
-            <div className="relative border-b border-gray-200">
-                <div className="scroll-strip -mx-4 flex gap-1 overflow-x-auto px-4 md:mx-0 md:px-0">
-                    {tabs.map((tab) => {
-                        const Icon = tab.icon;
-                        const isActive = activeTab === tab.id;
-
-                        return (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`relative flex items-center gap-2 min-h-11 px-3 md:px-4 font-semibold text-sm transition-colors whitespace-nowrap ${isActive ? "text-indigo-600" : "text-gray-400 hover:text-gray-700"
-                                    }`}
-                            >
-                                <Icon size={18} className={isActive ? "text-indigo-600" : "text-gray-400"} />
-                                <span>{t(`tabs.${tab.id}`)}</span>
-
-                                {/* Indicador Animado de Pestaña Activa */}
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="activeTabIndicator"
-                                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#e8603a]"
-                                        initial={false}
-                                        transition={{
-                                            type: "spring",
-                                            stiffness: 500,
-                                            damping: 30
-                                        }}
-                                    />
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* Renderizado de Componentes con Animación de Cross-fade */}
-            <div className="pt-2 md:pt-4">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={activeTab}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                    >
-                        {activeTab === "summary" && role === "OWNER" && <OwnerOverview />}
-                        {activeTab === "pending" && <PendingBarbersList />}
-                        {activeTab === "barbers" && <ActiveBarbersList />}
-                        {activeTab === "customers" && <CustomersList />}
-                        {activeTab === "settings" && role === "ADMIN" && <SystemSettings />}
-                        {activeTab === "billing" && role === "ADMIN" && <BusinessBillingManager />}
-                        {activeTab === "businesses" && role === "ADMIN" && <PlatformBusinesses />}
-                        {activeTab === "audit" && role === "ADMIN" && <AuditLogList />}
-                    </motion.div>
-                </AnimatePresence>
+            <div role="tabpanel" className="pt-6">
+                {activeTab === "businesses" && <PlatformBusinesses />}
+                {activeTab === "billing" && <BusinessBillingManager />}
+                {activeTab === "moderation" && (
+                    <>
+                        <p className="mb-4 max-w-[70ch] text-gray-600">{t("moderationHint")}</p>
+                        <CustomersList />
+                    </>
+                )}
+                {activeTab === "audit" && <AuditLogList />}
+                {activeTab === "settings" && <SystemSettings />}
             </div>
         </div>
     );

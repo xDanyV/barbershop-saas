@@ -109,6 +109,12 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // Pantallas de la barbería: solo su dueño (el administrador de la plataforma no tiene negocio)
+  const ownerOnly = ["/dashboard/admin/team", "/dashboard/admin/customers", "/dashboard/admin/my-business"];
+  if (ownerOnly.some((path) => pathnameWithoutLocale.startsWith(path)) && session.role !== "OWNER") {
+    return redirectTo(getHomePathForRole(session.role));
+  }
+
   if (pathnameWithoutLocale.startsWith("/dashboard/admin")) {
     const canAccess = session.role === "ADMIN" || session.role === "OWNER";
 

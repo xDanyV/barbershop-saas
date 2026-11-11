@@ -8,6 +8,9 @@ import { toast } from "react-hot-toast";
 import {
     BookOpen,
     CalendarDays,
+    Contact,
+    LayoutDashboard,
+    Users,
     ChevronDown,
     LogOut,
     Menu as MenuIcon,
@@ -32,10 +35,13 @@ export default function DashboardNavbar({ role }: { role: string }) {
     const [moreOpen, setMoreOpen] = useState(false);
 
     const account: NavItem = { label: t("menu.account"), path: "/dashboard/account", icon: UserRound };
-    const panel: NavItem = { label: t("menu.adminControl"), path: "/dashboard/admin", icon: ShieldCheck };
+    const panel: NavItem = { label: t("menu.platform"), path: "/dashboard/admin", icon: ShieldCheck };
+    const home: NavItem = { label: t("menu.home"), path: "/dashboard/admin", icon: LayoutDashboard };
+    const team: NavItem = { label: t("menu.team"), path: "/dashboard/admin/team", icon: Users };
+    const customers: NavItem = { label: t("menu.customers"), path: "/dashboard/admin/customers", icon: Contact };
     const business: NavItem = { label: t("menu.myBusiness"), path: "/dashboard/admin/my-business", icon: Store };
     const catalog: NavItem = { label: t("menu.catalog"), path: "/dashboard/barber/catalog", icon: Scissors };
-    const agenda: NavItem = { label: t("menu.myAppointments"), path: "/dashboard/barber", icon: CalendarDays };
+    const agenda: NavItem = { label: t("menu.agenda"), path: "/dashboard/barber", icon: CalendarDays };
     // Las citas que esta persona reservó como cliente en otra barbería
     const bookings: NavItem = { label: t("menu.myBookings"), path: "/dashboard/customer/home", icon: BookOpen };
 
@@ -43,31 +49,32 @@ export default function DashboardNavbar({ role }: { role: string }) {
     let primary: NavItem[];
     let mobile: NavItem[];
     let menu: NavItem[];
-    let home: string;
+    let homePath: string;
 
     if (role === "ADMIN") {
         primary = [panel];
         mobile = [panel];
         menu = [bookings, account];
-        home = panel.path;
+        homePath = panel.path;
     } else if (role === "OWNER") {
-        primary = [panel, agenda, business, catalog];
-        mobile = [panel, agenda, business];
+        // Lo diario primero; en el teléfono lo menos frecuente pasa a "Más"
+        primary = [home, agenda, catalog, team, customers, business];
+        mobile = [home, agenda, team, business];
         menu = [bookings, account];
-        home = panel.path;
+        homePath = home.path;
     } else if (role === "BARBER") {
         primary = [agenda, catalog];
         mobile = [agenda, catalog];
         menu = [bookings, account];
-        home = agenda.path;
+        homePath = agenda.path;
     } else {
-        const myAppointments: NavItem = { ...agenda, path: "/dashboard/customer/home" };
+        const myAppointments: NavItem = { label: t("menu.myAppointments"), path: "/dashboard/customer/home", icon: CalendarDays };
         const book: NavItem = { label: t("menu.book"), path: "/dashboard/customer/barbers", icon: BookOpen };
 
         primary = [myAppointments, book];
         mobile = [myAppointments, book];
         menu = [{ label: t("menu.createBusiness"), path: "/dashboard/business/new", icon: Store }, account];
-        home = myAppointments.path;
+        homePath = myAppointments.path;
     }
 
     const href = (path: string) => `/${locale}${path}`;
@@ -109,7 +116,7 @@ export default function DashboardNavbar({ role }: { role: string }) {
             <header className="sticky top-0 z-50 bg-[#0f2733] text-[#f1f3f2]">
                 <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-6 px-4 sm:px-8 md:h-16">
                     <div className="flex min-w-0 items-center gap-8">
-                        <Link href={href(home)} aria-label={t("home")} className="shrink-0">
+                        <Link href={href(homePath)} aria-label={t("home")} className="shrink-0">
                             <BrandMark iconClassName={BRAND_ICON} iconSize={18} />
                         </Link>
 
