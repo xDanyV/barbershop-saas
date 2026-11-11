@@ -1,86 +1,57 @@
-import { Newspaper } from "lucide-react";
+"use client";
+
+import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { PublicBusinessPost } from "../lib/business-page.types";
+import type { PublicBusinessPost } from "../lib/business-page.types";
 import { formatDate } from "../lib/business-page.utils";
-import LightboxImage from "./LightboxImage";
+import Lightbox from "./LightboxImage";
 
 type Props = {
     posts: PublicBusinessPost[];
 };
 
+// Avisos y promociones del negocio, los más recientes primero
 export default function BusinessPosts({ posts }: Props) {
     const t = useTranslations("BusinessPage.posts");
     const locale = useLocale();
-    const latestPosts = posts.slice(0, 6);
+    const [open, setOpen] = useState<PublicBusinessPost | null>(null);
 
     return (
-        <div className="bg-white/6 border border-white/10 rounded-4xl p-6 md:p-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
-                <div className="flex items-start gap-3">
-                    <div className="w-11 h-11 rounded-2xl bg-indigo-500/15 text-indigo-300 flex items-center justify-center shrink-0">
-                        <Newspaper size={22} />
-                    </div>
+        <>
+            <ul className="mt-8 grid gap-6 md:grid-cols-2">
+                {posts.map((post) => (
+                    <li key={post.id} className="border-t-2 border-[var(--brand-ink)] pt-4">
+                        <p className="tabular text-[length:var(--step-small)] text-[var(--brand-muted)]">{formatDate(new Date(post.createdAt), locale)}</p>
 
-                    <div>
-                        <h2 className="text-2xl md:text-3xl font-black tracking-tight">
-                            {t("title")}
-                        </h2>
-                        <p className="text-gray-400 text-sm mt-1">
-                            {t("subtitle")}
-                        </p>
-                    </div>
-                </div>
-
-                {latestPosts.length > 0 && (
-                    <p className="text-xs font-black   text-indigo-300">
-                        {t("count", { count: latestPosts.length })}
-                    </p>
-                )}
-            </div>
-
-            {latestPosts.length === 0 ? (
-                <div className="min-h-48 md:min-h-56 rounded-3xl border border-dashed border-white/10 bg-black/20 flex flex-col items-center justify-center text-center px-6">
-                    <div className="w-14 h-14 rounded-2xl bg-white/5 text-gray-500 flex items-center justify-center mb-4">
-                        <Newspaper size={26} />
-                    </div>
-
-                    <p className="text-gray-300 font-black text-lg">
-                        {t("empty")}
-                    </p>
-
-                    <p className="text-gray-500 text-sm mt-2 max-w-md">
-                        {t("emptyHint")}
-                    </p>
-                </div>
-            ) : (
-                <div className="columns-1 md:columns-2 gap-4">
-                    {latestPosts.map((post) => (
-                        <article
-                            key={post.id}
-                            className="break-inside-avoid mb-4 bg-black/20 border border-white/10 rounded-3xl overflow-hidden"
-                        >
-                            {post.imageUrl && (
-                                <LightboxImage
+                        {post.imageUrl && (
+                            <button
+                                type="button"
+                                onClick={() => setOpen(post)}
+                                aria-label={t("openImage")}
+                                className="group mt-3 block aspect-[4/3] w-full overflow-hidden bg-[var(--brand-surface)]"
+                            >
+                                <img
                                     src={post.imageUrl}
                                     alt={t("imageAlt")}
-                                    caption={post.content}
-                                    imageClassName="w-full h-auto max-h-[560px] object-contain bg-black/30"
+                                    loading="lazy"
+                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                                 />
-                            )}
+                            </button>
+                        )}
 
-                            <div className="p-5 md:p-6">
-                                <p className="text-gray-200 leading-relaxed text-sm md:text-base whitespace-pre-line">
-                                    {post.content}
-                                </p>
+                        <p className="mt-3 whitespace-pre-line">{post.content}</p>
+                    </li>
+                ))}
+            </ul>
 
-                                <p className="text-xs text-gray-500 mt-4 font-bold">
-                                    {formatDate(post.createdAt, locale)}
-                                </p>
-                            </div>
-                        </article>
-                    ))}
-                </div>
+            {open?.imageUrl && (
+                <Lightbox
+                    items={[{ src: open.imageUrl, alt: t("imageAlt"), caption: open.content }]}
+                    index={0}
+                    onChange={() => undefined}
+                    onClose={() => setOpen(null)}
+                />
             )}
-        </div>
+        </>
     );
 }

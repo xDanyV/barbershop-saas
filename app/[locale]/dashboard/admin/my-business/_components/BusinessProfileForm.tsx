@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useUploadThing } from "@/lib/uploadthing";
+import { compressImage } from "@/lib/compress-image";
 
 export type BusinessForm = {
     name: string;
@@ -111,7 +112,10 @@ export default function BusinessProfileForm({
         const maxSizeInMb = field === "logoUrl" ? 2 : 8;
         const maxSizeInBytes = maxSizeInMb * 1024 * 1024;
 
-        if (file.size > maxSizeInBytes) {
+        // Se sube una versión más ligera; el límite se revisa sobre ella
+        const upload = await compressImage(file, { maxSize: field === "logoUrl" ? 512 : 1920 });
+
+        if (upload.size > maxSizeInBytes) {
             toast.error(`La imagen no debe pesar más de ${maxSizeInMb}MB`);
             return;
         }
@@ -119,11 +123,11 @@ export default function BusinessProfileForm({
         setUploadingField(field);
 
         if (field === "logoUrl") {
-            await startLogoUpload([file]);
+            await startLogoUpload([upload]);
             return;
         }
 
-        await startCoverUpload([file]);
+        await startCoverUpload([upload]);
     };
 
     const isUploadingLogo = uploadingField === "logoUrl";

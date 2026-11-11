@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import BrandDialog, { brandPrimaryButton } from "@/[locale]/components/BrandDialog";
 import { useApiError } from "@/[locale]/components/useApiError";
 import { useUploadThing } from "@/lib/uploadthing";
+import { compressImage } from "@/lib/compress-image";
 
 type Member = {
     id: string;
@@ -102,10 +103,13 @@ export default function TeamList() {
 
         if (!file || !uploadTarget.current) return;
         if (!file.type.startsWith("image/")) return void toast.error(t("errors.notImage"));
-        if (file.size > MAX_PHOTO_MB * 1024 * 1024) return void toast.error(t("errors.tooBig", { mb: MAX_PHOTO_MB }));
+        // Se sube una versión más ligera; el límite se revisa sobre ella
+        const upload = await compressImage(file, { maxSize: 800 });
+
+        if (upload.size > MAX_PHOTO_MB * 1024 * 1024) return void toast.error(t("errors.tooBig", { mb: MAX_PHOTO_MB }));
 
         setUploadingId(uploadTarget.current);
-        await startUpload([file]);
+        await startUpload([upload]);
     };
 
     const removePhoto = async (id: string) => {

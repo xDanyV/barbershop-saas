@@ -1,445 +1,475 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import {
-    ArrowRight,
-    Calendar as CalendarIcon,
-    CheckCircle2,
-    ChevronLeft,
-    Scissors,
-    UserRound,
-} from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { ArrowLeft, Check } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import toast from "react-hot-toast";
+import { brandFontClasses } from "@/[locale]/brand";
+import BrandDialog, { brandPrimaryButton } from "@/[locale]/components/BrandDialog";
+import { useApiError } from "@/[locale]/components/useApiError";
+import { formatPriceFromCents } from "@/lib/billing/pricing";
+import { addDaysToKey, dayOfWeekFromKey, toDateKey } from "@/lib/time/zoned";
+import { getInitials } from "../lib/business-page.utils";
 
-import CalendarPicker from "@/[locale]/dashboard/customer/components/CalendarPicker";
-import AvailableSlots from "@/[locale]/dashboard/customer/components/AvailableSlots";
-import BarberCard from "@/[locale]/dashboard/customer/components/BarberCard";
+type Service = { id: string; name: string; priceCents: number; duration: number };
 
 type Barber = {
     id: string;
-    profileImageUrl: string | null;
-    user: {
-        name: string | null;
-    };
+    name: string;
+    imageUrl: string | null;
+    services: Service[];
+    workDays: number[];
 };
 
-type BookingStep = "details" | "slots";
+type Slot = { start: string; label: string; maxMinutes: number };
+type Exception = { startDate: string; endDate: string };
 
 type Props = {
-    locale: string;
     business: {
         name: string;
         slug: string;
-        description: string | null;
+        logoUrl: string | null;
+        timezone: string;
         barbers: Barber[];
     };
+    // Lo que venga en la URL: el enlace de un servicio o barbero del perfil, o la vuelta después de iniciar sesión
+    initial: { barber: string | null; service: string | null; date: string | null; time: string | null };
 };
 
-export default function BusinessBookingClient({ locale, business }: Props) {
+// Días que se ofrecen para reservar, a partir de hoy
+const DAYS_AHEAD = 21;
+
+const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+function findService(barber: Barber | undefined, wanted: string | null) {
+    if (!barber || !wanted) return null;
+    return barber.services.find((service) => service.id === wanted || sameName(service.name, wanted)) ?? null;
+}
+
+// Primero el barbero, luego el servicio, luego el día y por último la hora:
+// así solo se muestran horas en las que el servicio elegido cabe completo.
+export default function BusinessBookingClient({ business, initial }: Props) {
     const t = useTranslations("BookingPage");
-    const activeLocale = useLocale();
-    const dateLocale = activeLocale === "en" ? "en-US" : "es-MX";
-    const barberFallback = t("barberFallback");
-    const [selectedDate, setSelectedDate] = useState(new Date());
-    const [selectedBarberId, setSelectedBarberId] = useState<string | null>(
-        business.barbers[0]?.id ?? null
+    const locale = useLocale();
+    const apiError = useApiError();
+    const dateLocale = locale === "en" ? "en-US" : "es-MX";
+    const { barbers, timezone } = business;
+
+    const [barberId, setBarberId] = useState<string | null>(() => {
+        if (initial.barber && barbers.some((barber) => barber.id === initial.barber)) return initial.barber;
+        if (barbers.length === 1) return barbers[0].id;
+
+        // Un servicio que solo hace un barbero ya decide con quién
+        const offering = initial.service ? barbers.filter((barber) => findService(barber, initial.service)) : [];
+        return offering.length === 1 ? offering[0].id : null;
+    });
+    const [serviceId, setServiceId] = useState<string | null>(
+        () => findService(barbers.find((barber) => barber.id === barberId), initial.service)?.id ?? null
     );
-    const [selectedService] = useState<string | null>(null);
-    const [step, setStep] = useState<BookingStep>("details");
+    // Nombre del servicio pedido desde el perfil, para elegirlo cuando se escoja barbero
+    const [wantedService, setWantedService] = useState<string | null>(() => (serviceId ? null : initial.service));
+    const [date, setDate] = useState<string | null>(initial.date);
+    const [time, setTime] = useState<string | null>(initial.time);
 
-    const selectedBarber = useMemo(() => {
-        return (
-            business.barbers.find((barber) => barber.id === selectedBarberId) ??
-            null
-        );
-    }, [business.barbers, selectedBarberId]);
+    const [exceptions, setExceptions] = useState<{ barberId: string; list: Exception[] } | null>(null);
+    const [slots, setSlots] = useState<{ key: string; list: Slot[] } | null>(null);
+    const [slotsFailed, setSlotsFailed] = useState(false);
+    const [reloadSlots, setReloadSlots] = useState(0);
+    const [confirming, setConfirming] = useState(false);
+    const [booking, setBooking] = useState(false);
 
-    const displayDate = selectedDate.toLocaleDateString(dateLocale, {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-    });
+    const serviceRef = useRef<HTMLElement>(null);
+    const dateRef = useRef<HTMLElement>(null);
+    const timeRef = useRef<HTMLElement>(null);
 
-    const shortDisplayDate = selectedDate.toLocaleDateString(dateLocale, {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-    });
+    const barber = barbers.find((item) => item.id === barberId);
+    const service = barber?.services.find((item) => item.id === serviceId) ?? null;
+    const exceptionsReady = exceptions?.barberId === barberId;
 
-    const canContinue = Boolean(selectedBarberId && selectedBarber);
+    const days = useMemo(() => {
+        const today = toDateKey(new Date(), timezone);
+        return Array.from({ length: DAYS_AHEAD }, (_, index) => addDaysToKey(today, index));
+    }, [timezone]);
 
-    const handleChangeBarber = (barberId: string) => {
-        setSelectedBarberId(barberId);
+    const isOpenDay = (key: string) => {
+        if (!barber || !barber.workDays.includes(dayOfWeekFromKey(key))) return false;
+        return !(exceptions?.list ?? []).some((range) => key >= range.startDate && key <= range.endDate);
     };
 
-    const handleContinueToSlots = () => {
-        if (!canContinue) return;
-        setStep("slots");
-        window.scrollTo({ top: 0, behavior: "smooth" });
+    // Días libres del barbero (vacaciones, permisos)
+    useEffect(() => {
+        if (!barberId) return;
+
+        let ignore = false;
+
+        fetch(`/api/exceptions/${barberId}`)
+            .then((res) => (res.ok ? res.json() : []))
+            .catch(() => [])
+            .then((list: Exception[]) => {
+                if (!ignore) setExceptions({ barberId, list: Array.isArray(list) ? list : [] });
+            });
+
+        return () => {
+            ignore = true;
+        };
+    }, [barberId]);
+
+    // Con barbero y servicio elegidos se propone el primer día que trabaja
+    useEffect(() => {
+        if (!service || !exceptionsReady) return;
+        if (date && days.includes(date) && isOpenDay(date)) return;
+
+        setDate(days.find(isOpenDay) ?? null);
+        setTime(null);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [service, exceptionsReady, days]);
+
+    const slotsKey = barberId && date ? `${barberId}:${date}:${reloadSlots}` : null;
+
+    useEffect(() => {
+        if (!slotsKey || !service) return;
+
+        let ignore = false;
+        setSlotsFailed(false);
+
+        fetch(`/api/availability/${barberId}/slots?date=${date}`)
+            .then((res) => (res.ok ? res.json() : Promise.reject(new Error("slots"))))
+            .then((data: { slots: Slot[] }) => {
+                if (!ignore) setSlots({ key: slotsKey, list: data.slots ?? [] });
+            })
+            .catch(() => {
+                if (!ignore) setSlotsFailed(true);
+            });
+
+        return () => {
+            ignore = true;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [slotsKey, Boolean(service)]);
+
+    // Solo horas en las que el servicio cabe antes de la siguiente cita, el descanso o el cierre
+    const fittingSlots = useMemo(() => {
+        if (!service || !slots || slots.key !== slotsKey) return null;
+        return slots.list.filter((slot) => slot.maxMinutes >= service.duration);
+    }, [service, slots, slotsKey]);
+
+    // Una hora que ya no está disponible (o ya no cabe) se descarta
+    useEffect(() => {
+        if (time && fittingSlots && !fittingSlots.some((slot) => slot.start === time)) setTime(null);
+    }, [time, fittingSlots]);
+
+    // La selección vive en la URL: si hay que iniciar sesión, al volver todo sigue elegido
+    useEffect(() => {
+        const params = new URLSearchParams();
+        if (barberId) params.set("barber", barberId);
+        if (serviceId) params.set("service", serviceId);
+        else if (wantedService) params.set("service", wantedService);
+        if (date) params.set("date", date);
+        if (time) params.set("time", time);
+
+        const query = params.toString();
+        window.history.replaceState(window.history.state, "", query ? `?${query}` : window.location.pathname);
+    }, [barberId, serviceId, wantedService, date, time]);
+
+    const scrollTo = (ref: React.RefObject<HTMLElement | null>) =>
+        requestAnimationFrame(() => ref.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+
+    const chooseBarber = (next: Barber) => {
+        const sameService = findService(next, service?.name ?? wantedService);
+
+        setBarberId(next.id);
+        setServiceId(sameService?.id ?? null);
+        if (sameService) setWantedService(null);
+        setTime(null);
+        scrollTo(sameService ? dateRef : serviceRef);
     };
 
-    const handleBackToDetails = () => {
-        setStep("details");
-        window.scrollTo({ top: 0, behavior: "smooth" });
+    const chooseService = (next: Service) => {
+        setServiceId(next.id);
+        setWantedService(null);
+        setTime(null);
+        scrollTo(dateRef);
     };
 
-    if (business.barbers.length === 0) {
-        return (
-            <main className="min-h-screen bg-gray-50 text-gray-900">
-                <BookingNavbar locale={locale} slug={business.slug} />
+    const chooseDate = (key: string) => {
+        setDate(key);
+        setTime(null);
+        scrollTo(timeRef);
+    };
 
-                <div className="max-w-5xl mx-auto px-4 py-10">
-                    <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm">
-                        <h1 className="text-3xl font-black text-gray-900">
-                            {business.name}
-                        </h1>
-                        <p className="text-gray-500 mt-3">
-                            {t("noBarbers")}
-                        </p>
-                    </div>
-                </div>
-            </main>
-        );
-    }
+    const dayLabel = (key: string, options: Intl.DateTimeFormatOptions) =>
+        new Intl.DateTimeFormat(dateLocale, { ...options, timeZone: "UTC" }).format(new Date(`${key}T12:00:00Z`));
 
-    if (!selectedBarberId || !selectedBarber) return null;
+    const timeLabel = fittingSlots?.find((slot) => slot.start === time)?.label ?? null;
+    const ready = Boolean(barber && service && date && time && timeLabel);
+
+    const book = async () => {
+        if (!barber || !service || !time) return;
+
+        setBooking(true);
+
+        try {
+            const res = await fetch("/api/protected/appointments", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ barberId: barber.id, serviceId: service.id, date: time }),
+            });
+            const data = await res.json().catch(() => null);
+
+            if (res.status === 401) {
+                toast(t("errors.loginRequired"));
+                const back = window.location.pathname + window.location.search;
+                window.location.assign(`/${locale}/login?redirectTo=${encodeURIComponent(back)}`);
+                return;
+            }
+
+            if (!res.ok) {
+                toast.error(apiError(data, t("errors.bookFailed")));
+                // Quizá alguien más tomó la hora: se vuelve a consultar
+                setConfirming(false);
+                setTime(null);
+                setReloadSlots((value) => value + 1);
+                return;
+            }
+
+            toast.success(t("success"));
+            window.location.assign(`/${locale}/dashboard/customer/home`);
+        } catch {
+            toast.error(t("errors.network"));
+        } finally {
+            setBooking(false);
+        }
+    };
+
+    const optionClass = (selected: boolean) =>
+        `border text-left transition-colors ${selected
+            ? "border-[var(--brand-ink)] bg-[var(--brand-ink)] text-[var(--brand-paper)]"
+            : "border-[var(--brand-surface)] bg-[var(--brand-paper)] hover:border-[var(--brand-ink)]"
+        }`;
 
     return (
-        <main className="min-h-screen bg-gray-50 text-gray-900">
-            <BookingNavbar locale={locale} slug={business.slug} />
+        <main className={`brand ${brandFontClasses} min-h-screen pb-40`}>
+            <header className="sticky top-0 z-40 border-b border-[var(--brand-surface)] bg-[var(--brand-paper)]">
+                <div className="mx-auto flex h-16 max-w-4xl items-center gap-3 px-4 md:px-8">
+                    <Link
+                        href={`/${locale}/business/${business.slug}`}
+                        aria-label={t("backToProfile")}
+                        className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center transition-colors hover:bg-[var(--brand-bg)]"
+                    >
+                        <ArrowLeft size={20} aria-hidden="true" />
+                    </Link>
+                    {business.logoUrl && <img src={business.logoUrl} alt="" className="h-8 w-8 shrink-0 object-cover" />}
+                    <span className="truncate font-semibold">{business.name}</span>
+                </div>
+            </header>
 
-            <div className="max-w-6xl mx-auto px-4 pt-6 pb-32 md:px-8 md:py-10">
-                <BookingHero business={business} />
+            <div className="mx-auto max-w-4xl px-4 md:px-8">
+                <h1 className="brand-display pb-2 pt-8 text-[length:var(--step-head)] md:pt-12">{t("title")}</h1>
 
-                <BookingSteps currentStep={step} />
+                {barbers.length > 1 && (
+                    <Step number={1} title={t("steps.barber")} done={Boolean(barber)}>
+                        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                            {barbers.map((item) => {
+                                const selected = item.id === barberId;
+                                const offersWanted = !wantedService || Boolean(findService(item, wantedService));
 
-                <AnimatePresence mode="wait">
-                    {step === "details" ? (
-                        <motion.section
-                            key="details-step"
-                            initial={{ opacity: 0, y: 18 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -18 }}
-                            transition={{ duration: 0.25 }}
-                            className="space-y-6"
-                        >
-                            <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 lg:gap-8 items-start">
-                                <section className="bg-white border border-gray-100 rounded-4xl p-5 md:p-6 shadow-xl shadow-gray-100/50">
-                                    <div className="flex items-center gap-2 text-indigo-600 font-black text-xs   mb-4">
-                                        <UserRound size={14} />
-                                    </div>
-
-                                    <h2 className="text-2xl font-black text-gray-900">
-                                        {t("chooseBarber")}
-                                    </h2>
-
-                                    <div className="mt-5 space-y-3">
-                                        {business.barbers.map((barber) => {
-                                            const isSelected =
-                                                selectedBarberId === barber.id;
-
-                                            return (
-                                                <button
-                                                    key={barber.id}
-                                                    type="button"
-                                                    onClick={() =>
-                                                        handleChangeBarber(barber.id)
-                                                    }
-                                                    className={`w-full text-left rounded-3xl border p-4 transition-all ${isSelected
-                                                        ? "border-indigo-500 bg-indigo-50 shadow-lg shadow-indigo-100/70"
-                                                        : "border-gray-100 bg-gray-50 hover:bg-gray-100"
-                                                        }`}
-                                                >
-                                                    <div className="flex items-center gap-4">
-                                                        <div
-                                                            className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black shrink-0 overflow-hidden ${isSelected
-                                                                    ? "bg-indigo-600 text-white"
-                                                                    : "bg-white text-indigo-600"
-                                                                }`}
-                                                        >
-                                                            {barber.profileImageUrl ? (
-                                                                <img
-                                                                    src={barber.profileImageUrl}
-                                                                    alt={barber.user.name || "Barbero"}
-                                                                    className="w-full h-full object-cover"
-                                                                />
-                                                            ) : (
-                                                                getInitials(barber.user.name || barberFallback)
-                                                            )}
-                                                        </div>
-
-                                                        <div className="min-w-0 flex-1">
-                                                            <p className="font-black text-gray-900 truncate">
-                                                                {barber.user.name || barberFallback}
-                                                            </p>
-                                                        </div>
-
-                                                        {isSelected && (
-                                                            <CheckCircle2
-                                                                size={20}
-                                                                className="text-indigo-600 shrink-0"
-                                                            />
-                                                        )}
-                                                    </div>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </section>
-
-                                <section className="space-y-4">
-                                    <div className="bg-white border border-gray-100 rounded-4xl p-5 md:p-6 shadow-xl shadow-gray-100/50">
-                                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-5">
-                                            <div>
-                                                <div className="flex items-center gap-2 text-indigo-600 font-black text-xs   mb-2">
-                                                    <CalendarIcon size={14} />
-                                                </div>
-
-                                                <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight capitalize">
-                                                    {displayDate}
-                                                </h2>
-                                            </div>
-
-                                            <div className="rounded-2xl bg-indigo-50 text-indigo-600 px-4 py-2 text-xs font-black">
-                                                {selectedBarber.user.name || barberFallback}
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-white rounded-4xl border border-gray-100 overflow-hidden">
-                                            <CalendarPicker
-                                                barberId={selectedBarberId}
-                                                selectedDate={selectedDate}
-                                                setSelectedDate={setSelectedDate}
-                                            />
-                                        </div>
-                                    </div>
-                                </section>
-                            </div>
-
-                            <div className="sticky bottom-4 z-30">
-                                <div className="max-w-6xl mx-auto bg-white/95 backdrop-blur-xl border border-gray-100 rounded-3xl p-4 shadow-2xl shadow-gray-300/30">
-                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                        <div>
-                                            <p className="text-sm md:text-base font-black text-gray-900">
-                                                {selectedBarber.user.name || barberFallback} ·{" "}
-                                                <span className="capitalize">
-                                                    {shortDisplayDate}
-                                                </span>
-                                            </p>
-                                        </div>
-
+                                return (
+                                    <li key={item.id}>
                                         <button
                                             type="button"
-                                            onClick={handleContinueToSlots}
-                                            disabled={!canContinue}
-                                            className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 text-sm font-black disabled:opacity-50 transition-all"
+                                            onClick={() => chooseBarber(item)}
+                                            aria-pressed={selected}
+                                            className={`flex min-h-16 w-full items-center gap-3 p-2 ${optionClass(selected)} ${offersWanted ? "" : "opacity-60"}`}
                                         >
-                                            {t("seeTimes")}
-                                            <ArrowRight size={17} />
+                                            <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden bg-[var(--brand-sand)] font-semibold text-[var(--brand-ink)]">
+                                                {item.imageUrl ? <img src={item.imageUrl} alt="" className="h-full w-full object-cover" /> : getInitials(item.name)}
+                                            </span>
+                                            <span className="min-w-0 break-words font-semibold leading-tight">{item.name}</span>
                                         </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.section>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                        {wantedService && !barber && <p className="mt-3 text-[length:var(--step-small)] text-[var(--brand-muted)]">{t("wantedService", { name: wantedService })}</p>}
+                    </Step>
+                )}
+
+                <Step ref={serviceRef} number={barbers.length > 1 ? 2 : 1} title={t("steps.service")} done={Boolean(service)}>
+                    {!barber ? (
+                        <p className="text-[var(--brand-muted)]">{t("pickBarberFirst")}</p>
                     ) : (
-                        <motion.section
-                            key="slots-step"
-                            initial={{ opacity: 0, y: 18 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -18 }}
-                            transition={{ duration: 0.25 }}
-                            className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 lg:gap-8 items-start"
-                        >
-                            <aside className="space-y-5">
-                                <button
-                                    type="button"
-                                    onClick={handleBackToDetails}
-                                    className="inline-flex items-center gap-2 text-gray-400 hover:text-indigo-600 font-black text-xs   transition-colors"
-                                >
-                                    <ChevronLeft size={16} />
-                                    {t("changeBarberOrDate")}
-                                </button>
+                        <ul className="grid gap-2 sm:grid-cols-2">
+                            {barber.services.map((item) => {
+                                const selected = item.id === serviceId;
 
-                                <div className="bg-white border border-gray-100 rounded-4xl p-5 shadow-xl shadow-gray-100/50">
-                                    <h2 className="text-2xl font-black text-gray-900 capitalize">
-                                        {shortDisplayDate}
-                                    </h2>
-
-                                    <div className="mt-5 rounded-4xl overflow-hidden border border-indigo-50">
-                                        <BarberCard barber={selectedBarber} />
-                                    </div>
-                                </div>
-                            </aside>
-
-                            <section className="bg-white border border-gray-100 rounded-4xl p-4 md:p-6 shadow-xl shadow-gray-100/50">
-
-                                <AvailableSlots
-                                    barberId={selectedBarberId}
-                                    selectedDate={selectedDate}
-                                    selectedService={selectedService}
-                                />
-                            </section>
-                        </motion.section>
+                                return (
+                                    <li key={item.id}>
+                                        <button
+                                            type="button"
+                                            onClick={() => chooseService(item)}
+                                            aria-pressed={selected}
+                                            className={`flex min-h-16 w-full items-center justify-between gap-4 px-4 py-3 ${optionClass(selected)}`}
+                                        >
+                                            <span className="min-w-0">
+                                                <span className="block font-semibold">{item.name}</span>
+                                                <span className={`block text-[length:var(--step-small)] ${selected ? "text-[var(--brand-field-muted)]" : "text-[var(--brand-muted)]"}`}>
+                                                    {t("minutes", { min: item.duration })}
+                                                </span>
+                                            </span>
+                                            <span className="tabular shrink-0 font-semibold">{formatPriceFromCents(item.priceCents)}</span>
+                                        </button>
+                                    </li>
+                                );
+                            })}
+                        </ul>
                     )}
-                </AnimatePresence>
+                </Step>
+
+                <Step ref={dateRef} number={barbers.length > 1 ? 3 : 2} title={t("steps.date")} done={Boolean(service && date)}>
+                    {!service ? (
+                        <p className="text-[var(--brand-muted)]">{t("pickServiceFirst")}</p>
+                    ) : !exceptionsReady ? (
+                        <p className="text-[var(--brand-muted)]">{t("loading")}</p>
+                    ) : (
+                        <>
+                            <p className="mb-3 font-semibold first-letter:uppercase">{dayLabel(date ?? days[0], { month: "long", year: "numeric" })}</p>
+                            <ul className="scroll-strip -mx-4 flex gap-2 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-7 md:overflow-visible md:px-0">
+                                {days.map((key) => {
+                                    const open = isOpenDay(key);
+                                    const selected = key === date;
+
+                                    return (
+                                        <li key={key} className="shrink-0">
+                                            <button
+                                                type="button"
+                                                disabled={!open}
+                                                onClick={() => chooseDate(key)}
+                                                aria-pressed={selected}
+                                                aria-label={dayLabel(key, { weekday: "long", day: "numeric", month: "long" })}
+                                                className={`flex h-[4.5rem] w-16 flex-col items-center justify-center md:w-full ${open ? optionClass(selected) : "border border-transparent text-[var(--brand-muted)] opacity-50"}`}
+                                            >
+                                                <span className="text-[length:var(--step-small)] first-letter:uppercase">{dayLabel(key, { weekday: "short" }).replace(".", "")}</span>
+                                                <span className="tabular text-xl font-semibold">{dayLabel(key, { day: "numeric" })}</span>
+                                            </button>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                            {!days.some(isOpenDay) && <p className="mt-3 text-[var(--brand-muted)]">{t("noDays")}</p>}
+                        </>
+                    )}
+                </Step>
+
+                <Step ref={timeRef} number={barbers.length > 1 ? 4 : 3} title={t("steps.time")} done={Boolean(timeLabel)}>
+                    {!service || !date ? (
+                        <p className="text-[var(--brand-muted)]">{t("pickDateFirst")}</p>
+                    ) : slotsFailed ? (
+                        <p className="text-[var(--brand-muted)]">
+                            {t("errors.slots")}{" "}
+                            <button type="button" onClick={() => setReloadSlots((value) => value + 1)} className="min-h-11 font-semibold underline underline-offset-4">
+                                {t("retry")}
+                            </button>
+                        </p>
+                    ) : fittingSlots === null ? (
+                        <p className="text-[var(--brand-muted)]">{t("loading")}</p>
+                    ) : fittingSlots.length === 0 ? (
+                        <p className="text-[var(--brand-muted)]">{t("noTimes", { duration: service.duration })}</p>
+                    ) : (
+                        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
+                            {fittingSlots.map((slot) => {
+                                const selected = slot.start === time;
+
+                                return (
+                                    <li key={slot.start}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setTime(slot.start)}
+                                            aria-pressed={selected}
+                                            className={`tabular flex min-h-12 w-full items-center justify-center px-1 font-semibold ${optionClass(selected)} text-center`}
+                                        >
+                                            {slot.label}
+                                        </button>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    )}
+                </Step>
             </div>
+
+            {/* Resumen siempre visible: qué se va a reservar y el botón para confirmar */}
+            <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--brand-surface)] bg-[var(--brand-paper)]">
+                <div className="mx-auto flex max-w-4xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between md:px-8">
+                    <p className="min-w-0 text-[length:var(--step-small)] leading-snug">
+                        {service ? (
+                            <>
+                                <span className="font-semibold">{service.name}</span>
+                                <span className="tabular"> · {formatPriceFromCents(service.priceCents)}</span>
+                                {barbers.length > 1 && barber && <span className="text-[var(--brand-muted)]"> · {barber.name}</span>}
+                                <br />
+                                <span className="inline-block text-[var(--brand-muted)] first-letter:uppercase">
+                                    {date ? dayLabel(date, { weekday: "long", day: "numeric", month: "long" }) : t("summary.noDate")}
+                                    {timeLabel && `, ${timeLabel}`}
+                                </span>
+                            </>
+                        ) : (
+                            <span className="text-[var(--brand-muted)]">{t("summary.empty")}</span>
+                        )}
+                    </p>
+                    <button type="button" disabled={!ready} onClick={() => setConfirming(true)} className={`${brandPrimaryButton} sm:w-auto`}>
+                        {t("continue")}
+                    </button>
+                </div>
+            </div>
+
+            {confirming && barber && service && date && timeLabel && (
+                <BrandDialog title={t("confirm.title")} subtitle={t("confirm.subtitle")} closeLabel={t("confirm.cancel")} onClose={() => !booking && setConfirming(false)}>
+                    <dl className="divide-y divide-[var(--brand-surface)] border-y border-[var(--brand-surface)]">
+                        {[
+                            [t("confirm.service"), `${service.name} (${t("minutes", { min: service.duration })})`],
+                            [t("confirm.barber"), barber.name],
+                            [t("confirm.date"), dayLabel(date, { weekday: "long", day: "numeric", month: "long" })],
+                            [t("confirm.time"), timeLabel],
+                            [t("confirm.price"), formatPriceFromCents(service.priceCents)],
+                        ].map(([label, value]) => (
+                            <div key={label} className="flex items-baseline justify-between gap-4 py-3">
+                                <dt className="text-[var(--brand-muted)]">{label}</dt>
+                                <dd className="text-right font-semibold first-letter:uppercase">{value}</dd>
+                            </div>
+                        ))}
+                    </dl>
+                    <p className="mt-4 text-[length:var(--step-small)] text-[var(--brand-muted)]">{t("confirm.note")}</p>
+                    <button type="button" onClick={book} disabled={booking} className={`mt-5 ${brandPrimaryButton}`}>
+                        {booking ? t("confirm.sending") : t("confirm.action")}
+                    </button>
+                </BrandDialog>
+            )}
         </main>
     );
 }
 
-function BookingNavbar({
-    locale,
-    slug,
-}: {
-    locale: string;
-    slug: string;
-}) {
-    const t = useTranslations("BookingPage");
+type StepProps = {
+    number: number;
+    title: string;
+    done: boolean;
+    children: ReactNode;
+    ref?: React.Ref<HTMLElement>;
+};
 
+function Step({ number, title, done, children, ref }: StepProps) {
     return (
-        <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-100">
-            <div className="max-w-6xl mx-auto px-4 md:px-8 py-3 flex items-center justify-between gap-4">
-                <Link
-                    href={`/${locale}/business/${slug}`}
-                    className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition-colors"
+        <section ref={ref} className="scroll-mt-20 border-t border-[var(--brand-surface)] py-6 first-of-type:border-t-0 md:py-8">
+            <h2 className="mb-4 flex items-center gap-3 text-[length:var(--step-lead)] font-semibold">
+                <span
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center text-base ${done ? "bg-[var(--brand-ink)] text-[var(--brand-paper)]" : "border border-[var(--brand-ink)]"}`}
+                    aria-hidden="true"
                 >
-                    <ChevronLeft size={17} />
-                    <span className="hidden sm:inline text-xs font-black  ">
-                        {t("backToProfile")}
-                    </span>
-                </Link>
-
-                <Link
-                    href={`/${locale}/business/${slug}`}
-                    className="flex items-center gap-2"
-                >
-                    <div className="w-9 h-9 rounded-2xl bg-indigo-600 text-white flex items-center justify-center">
-                        <Scissors size={18} />
-                    </div>
-                    <div className="leading-tight">
-                        <p className="text-sm font-black text-gray-900">
-                            {t("bookings")}
-                        </p>
-                    </div>
-                </Link>
-
-                <div className="w-8 sm:w-28" />
-            </div>
-        </header>
-    );
-}
-
-function BookingHero({
-    business,
-}: {
-    business: {
-        name: string;
-        description: string | null;
-    };
-}) {
-    const t = useTranslations("BookingPage");
-
-    return (
-        <section className="mb-6 md:mb-8 bg-white border border-gray-100 rounded-4xl p-5 md:p-7 shadow-xl shadow-gray-100/50">
-            <p className="text-indigo-600 font-black text-xs   mb-2">
-                {t("title")}
-            </p>
-
-            <h1 className="text-2xl md:text-4xl font-black tracking-tight text-gray-900">
-                {business.name}
-            </h1>
-
-            {business.description && (
-                <p className="text-gray-500 text-sm mt-2 max-w-2xl">
-                    {business.description}
-                </p>
-            )}
+                    {done ? <Check size={16} /> : number}
+                </span>
+                {title}
+            </h2>
+            {children}
         </section>
     );
-}
-
-function BookingSteps({ currentStep }: { currentStep: BookingStep }) {
-    const t = useTranslations("BookingPage.steps");
-    const steps = [
-        {
-            id: "details",
-            label: t("details"),
-            number: "1",
-        },
-        {
-            id: "slots",
-            label: t("slots"),
-            number: "2",
-        },
-        {
-            id: "confirm",
-            label: t("confirm"),
-            number: "3",
-        },
-    ];
-
-    const getStatus = (id: string) => {
-        if (id === "details") {
-            return currentStep === "details" ? "active" : "complete";
-        }
-
-        if (id === "slots") {
-            return currentStep === "slots" ? "active" : "pending";
-        }
-
-        return "pending";
-    };
-
-    return (
-        <div className="mb-6 bg-white border border-gray-100 rounded-3xl p-2 shadow-sm overflow-hidden">
-            <div className="grid grid-cols-3 gap-2">
-                {steps.map((step) => {
-                    const status = getStatus(step.id);
-
-                    return (
-                        <div
-                            key={step.id}
-                            className={`rounded-2xl px-2 md:px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-center sm:justify-start gap-2 transition-all ${status === "active"
-                                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100"
-                                : status === "complete"
-                                    ? "bg-emerald-50 text-emerald-700"
-                                    : "bg-gray-50 text-gray-400"
-                                }`}
-                        >
-                            <div
-                                className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black mx-auto sm:mx-0 ${status === "active"
-                                    ? "bg-white/15 text-white"
-                                    : status === "complete"
-                                        ? "bg-emerald-100 text-emerald-700"
-                                        : "bg-white text-gray-400"
-                                    }`}
-                            >
-                                {status === "complete" ? (
-                                    <CheckCircle2 size={16} />
-                                ) : (
-                                    step.number
-                                )}
-                            </div>
-
-                            <p className="text-xs font-black text-center sm:text-left leading-tight">
-                                {step.label}
-                            </p>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
-}
-
-function getInitials(name: string) {
-    return name
-        .split(" ")
-        .filter(Boolean)
-        .map((word) => word[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2);
 }

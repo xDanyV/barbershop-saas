@@ -27,14 +27,21 @@ export function getWhatsAppUrl(phone: string) {
     return `https://wa.me/${internationalPhone}`;
 }
 
+// Búsqueda de Google Maps con la dirección tal como la escribió el negocio
+export function getMapsUrl(address: string) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+}
+
+// Un mismo servicio puede tenerlo cada barbero con su precio: se agrupa por nombre con el rango de precios
 export function groupServicesByName(
-    services: PublicBusinessService[]
+    services: PublicBusinessService[],
+    fallbackName = "Barbero"
 ): GroupedService[] {
     const grouped = new Map<string, GroupedService>();
 
     for (const service of services) {
         const key = service.name.trim().toLowerCase();
-        const barberName = service.barber.user.name || "Barbero";
+        const barberName = service.barber.user.name || fallbackName;
 
         const existing = grouped.get(key);
 
