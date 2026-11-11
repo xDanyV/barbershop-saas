@@ -15,6 +15,7 @@ type RawAppointment = {
   walkInName: string | null;
   walkInPhone: string | null;
   service: { name: string };
+  business: { name: string; slug: string };
 };
 
 type Appointment = {
@@ -27,6 +28,8 @@ type Appointment = {
   date: string;
   isWalkIn: boolean;
   status: "PENDING" | "CONFIRMED" | "COMPLETED" | "NO_SHOW";
+  businessName: string;
+  businessSlug: string;
 };
 
 type Exception = {
@@ -171,6 +174,8 @@ export default function BarberDashboard() {
         date: a.date,
         isWalkIn: !a.user,
         status,
+        businessName: a.business?.name ?? "",
+        businessSlug: a.business?.slug ?? "",
       };
     });
 

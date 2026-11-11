@@ -134,6 +134,7 @@ async function queryBookingBusiness(slug: string) {
                 select: {
                     isServiceActive: true,
                     maintenanceMessage: true,
+                    autoConfirm: true,
                 },
             },
             // Sin servicios o sin horario un barbero no tiene nada que reservar

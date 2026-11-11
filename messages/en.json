@@ -225,7 +225,12 @@
         "cancelAppointment": "Cancel appointment",
         "keep": "Keep the appointment",
         "cancelText": "{name}'s appointment for {service} at {time} will be canceled.",
-        "noActions": "No actions available"
+        "noActions": "No actions available",
+        "whatsappConfirmation": "Send confirmation on WhatsApp",
+        "cancelledTitle": "Appointment cancelled",
+        "cancelledText": "Let {name} know so they can pick another time.",
+        "notifyCancellation": "Notify on WhatsApp",
+        "done": "Done"
     },
     "AvailabilityModal": {
         "triggerButton": "Hours",
@@ -518,7 +523,8 @@
             "pausedText": "Appointments can't be booked here right now. Message the barbershop to schedule.",
             "openUntil": "Open now · closes at {time}",
             "opensToday": "Closed now · opens today at {time}",
-            "closedNow": "Closed now"
+            "closedNow": "Closed now",
+            "whatsappMessage": "Hi, I saw the {name} page and would like some information."
         },
         "services": {
             "title": "Services and prices",
@@ -609,7 +615,9 @@
             "note": "The barbershop receives your request and confirms it. You pay at the shop.",
             "action": "Send request",
             "sending": "Sending...",
-            "cancel": "Cancel"
+            "cancel": "Cancel",
+            "noteInstant": "Your appointment is confirmed when you book. You pay at the shop.",
+            "actionInstant": "Book appointment"
         },
         "success": "Done, your request was sent. We'll let you know when the barbershop confirms it.",
         "errors": {
@@ -623,7 +631,9 @@
             "text": "To hold a time or record a customer, use \"Add appointment\" in your schedule.",
             "action": "Go to my schedule"
         },
-        "meta": "Book at {name}"
+        "meta": "Book at {name}",
+        "whatsappMessage": "Hi, I'd like to book an appointment.",
+        "successConfirmed": "Done, your appointment is confirmed."
     },
     "BusinessDirectory": {
         "eyebrow": "Available businesses",
@@ -1257,5 +1267,12 @@
             "notImage": "Choose an image.",
             "tooBig": "The image must be under {mb} MB."
         }
+    },
+    "WhatsAppMessages": {
+        "confirmed": "Hi {name}, this is {business}. Your {service} appointment is confirmed for {day} at {time}. If you can't make it, let us know here.",
+        "about": "Hi {name}, this is {business} about your {service} appointment on {day} at {time}.",
+        "general": "Hi {name}, this is {business}.",
+        "cancelled": "Hi {name}, this is {business}. We had to cancel your {service} appointment on {day} at {time}. Sorry for the trouble. You can pick another time here: {link}",
+        "customerAbout": "Hi, I'm writing about my {service} appointment on {day} at {time} with {barber}."
     }
 }

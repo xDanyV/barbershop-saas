@@ -12,6 +12,8 @@ type Appointment = {
     date: string;
     isWalkIn: boolean;
     status: "PENDING" | "CONFIRMED" | "COMPLETED" | "NO_SHOW";
+    businessName: string;
+    businessSlug: string;
 };
 
 type Exception = {
