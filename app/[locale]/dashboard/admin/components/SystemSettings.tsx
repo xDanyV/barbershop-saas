@@ -10,6 +10,7 @@ export default function SystemSettings() {
     const [isActive, setIsActive] = useState(true);
     const [message, setMessage] = useState("");
     const [paymentInstructions, setPaymentInstructions] = useState("");
+    const [supportPhone, setSupportPhone] = useState("");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
@@ -22,6 +23,7 @@ export default function SystemSettings() {
                 setIsActive(data.isServiceActive);
                 setMessage(data.maintenanceMessage || "");
                 setPaymentInstructions(data.paymentInstructions || "");
+                setSupportPhone(data.supportPhone || "");
             } else {
                 toast.error(t("errors.fetch"));
             }
@@ -51,7 +53,8 @@ export default function SystemSettings() {
                 body: JSON.stringify({
                     isServiceActive: isActive,
                     maintenanceMessage: message,
-                    paymentInstructions
+                    paymentInstructions,
+                    supportPhone
                 }),
             });
 
@@ -130,6 +133,22 @@ export default function SystemSettings() {
                     maxLength={1000}
                     rows={4}
                     className="w-full p-4 border rounded-2xl text-sm font-medium bg-gray-50 border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
+                />
+            </div>
+
+            <div className="bg-white border-2 border-gray-100 p-6 md:p-8 rounded-4xl shadow-sm space-y-3">
+                <label htmlFor="support-phone" className="block text-xl font-black text-gray-900">
+                    {t("support.label")}
+                </label>
+                <p className="text-sm text-gray-500">{t("support.help")}</p>
+                <input
+                    id="support-phone"
+                    type="tel"
+                    inputMode="tel"
+                    value={supportPhone}
+                    onChange={(e) => setSupportPhone(e.target.value)}
+                    placeholder="6641234567"
+                    className="w-full min-h-12 px-4 border rounded-2xl text-sm font-medium bg-gray-50 border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                 />
             </div>
 

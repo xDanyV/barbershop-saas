@@ -18,6 +18,7 @@ import {
 import toast from "react-hot-toast";
 import { useUploadThing } from "@/lib/uploadthing";
 import { compressImage } from "@/lib/compress-image";
+import BusinessThemePicker from "./BusinessThemePicker";
 
 export type BusinessForm = {
     name: string;
@@ -29,6 +30,8 @@ export type BusinessForm = {
     isServiceActive: boolean;
     autoConfirm: boolean;
     maintenanceMessage: string;
+    themePrimary: string | null;
+    themeAccent: string | null;
 };
 
 type UpdateBusinessField = <K extends keyof BusinessForm>(
@@ -41,20 +44,23 @@ type Props = {
     saving: boolean;
     onSubmit: (e: FormEvent<HTMLFormElement>) => void;
     onUpdateField: UpdateBusinessField;
+    // El logo y la portada se guardan en cuanto se suben o se quitan
+    onSaveImage: (field: ImageField, url: string) => Promise<boolean>;
 };
 
-type ImageField = "logoUrl" | "coverUrl";
+export type ImageField = "logoUrl" | "coverUrl";
 
 export default function BusinessProfileForm({
     form,
     saving,
     onSubmit,
     onUpdateField,
+    onSaveImage,
 }: Props) {
     const [uploadingField, setUploadingField] = useState<ImageField | null>(null);
 
     const { startUpload: startLogoUpload } = useUploadThing("businessLogoImage", {
-        onClientUploadComplete: (res) => {
+        onClientUploadComplete: async (res) => {
             const uploadedUrl = res?.[0]?.serverData?.url ?? res?.[0]?.url;
 
             if (!uploadedUrl) {
@@ -63,8 +69,7 @@ export default function BusinessProfileForm({
                 return;
             }
 
-            onUpdateField("logoUrl", uploadedUrl);
-            toast.success("Logo subido. Guarda los cambios para aplicarlo.");
+            if (await onSaveImage("logoUrl", uploadedUrl)) toast.success("Logo guardado. Ya aparece en tu página.");
             setUploadingField(null);
         },
         onUploadError: (error) => {
@@ -75,7 +80,7 @@ export default function BusinessProfileForm({
     });
 
     const { startUpload: startCoverUpload } = useUploadThing("businessCoverImage", {
-        onClientUploadComplete: (res) => {
+        onClientUploadComplete: async (res) => {
             const uploadedUrl = res?.[0]?.serverData?.url ?? res?.[0]?.url;
 
             if (!uploadedUrl) {
@@ -84,8 +89,7 @@ export default function BusinessProfileForm({
                 return;
             }
 
-            onUpdateField("coverUrl", uploadedUrl);
-            toast.success("Portada subida. Guarda los cambios para aplicarla.");
+            if (await onSaveImage("coverUrl", uploadedUrl)) toast.success("Portada guardada. Ya aparece en tu página.");
             setUploadingField(null);
         },
         onUploadError: (error) => {
@@ -140,96 +144,105 @@ export default function BusinessProfileForm({
             onSubmit={onSubmit}
             className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6"
         >
-            <motion.section
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.05 }}
-                className="bg-white border border-gray-100 rounded-3xl p-5 md:p-7 shadow-sm space-y-5"
-            >
-                <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                        <Building2 size={20} />
-                    </div>
+            <div className="space-y-6">
+                <motion.section
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05 }}
+                    className="bg-white border border-gray-100 rounded-3xl p-5 md:p-7 shadow-sm space-y-5"
+                >
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                            <Building2 size={20} />
+                        </div>
 
-                    <div>
-                        <h2 className="font-black text-gray-900">
-                            Información básica
-                        </h2>
-                        <p className="text-xs text-gray-500">
-                            Datos principales de tu negocio.
-                        </p>
-                    </div>
-                </div>
-
-                <div>
-                    <label className="text-xs font-black text-gray-500  ">
-                        Nombre del negocio
-                    </label>
-
-                    <input
-                        value={form.name}
-                        onChange={(e) => onUpdateField("name", e.target.value)}
-                        className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                        placeholder="Barbería El Nuevo Rey"
-                        required
-                    />
-                </div>
-
-                <div>
-                    <label className="text-xs font-black text-gray-500  ">
-                        Descripción
-                    </label>
-
-                    <textarea
-                        value={form.description}
-                        onChange={(e) => onUpdateField("description", e.target.value)}
-                        className="mt-2 w-full min-h-32 rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 resize-none"
-                        placeholder="Describe brevemente tu negocio, estilo, servicios o experiencia."
-                    />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="text-xs font-black text-gray-500  ">
-                            Teléfono
-                        </label>
-
-                        <div className="relative mt-2">
-                            <Phone
-                                size={16}
-                                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                            />
-
-                            <input
-                                value={form.phone}
-                                onChange={(e) => onUpdateField("phone", e.target.value)}
-                                className="w-full rounded-2xl border border-gray-200 pl-11 pr-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                                placeholder="6641234567"
-                            />
+                        <div>
+                            <h2 className="font-black text-gray-900">
+                                Información básica
+                            </h2>
+                            <p className="text-xs text-gray-500">
+                                Datos principales de tu negocio.
+                            </p>
                         </div>
                     </div>
 
                     <div>
                         <label className="text-xs font-black text-gray-500  ">
-                            Dirección
+                            Nombre del negocio
                         </label>
 
-                        <div className="relative mt-2">
-                            <MapPin
-                                size={16}
-                                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                            />
+                        <input
+                            value={form.name}
+                            onChange={(e) => onUpdateField("name", e.target.value)}
+                            className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                            placeholder="Barbería El Nuevo Rey"
+                            required
+                        />
+                    </div>
 
-                            <input
-                                value={form.address}
-                                onChange={(e) => onUpdateField("address", e.target.value)}
-                                className="w-full rounded-2xl border border-gray-200 pl-11 pr-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                                placeholder="Tijuana, Baja California"
-                            />
+                    <div>
+                        <label className="text-xs font-black text-gray-500  ">
+                            Descripción
+                        </label>
+
+                        <textarea
+                            value={form.description}
+                            onChange={(e) => onUpdateField("description", e.target.value)}
+                            className="mt-2 w-full min-h-32 rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 resize-none"
+                            placeholder="Describe brevemente tu negocio, estilo, servicios o experiencia."
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-xs font-black text-gray-500  ">
+                                Teléfono
+                            </label>
+
+                            <div className="relative mt-2">
+                                <Phone
+                                    size={16}
+                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                                />
+
+                                <input
+                                    value={form.phone}
+                                    onChange={(e) => onUpdateField("phone", e.target.value)}
+                                    className="w-full rounded-2xl border border-gray-200 pl-11 pr-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                                    placeholder="6641234567"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="text-xs font-black text-gray-500  ">
+                                Dirección
+                            </label>
+
+                            <div className="relative mt-2">
+                                <MapPin
+                                    size={16}
+                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                                />
+
+                                <input
+                                    value={form.address}
+                                    onChange={(e) => onUpdateField("address", e.target.value)}
+                                    className="w-full rounded-2xl border border-gray-200 pl-11 pr-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                                    placeholder="Tijuana, Baja California"
+                                />
+                            </div>
                         </div>
                     </div>
-                </div>
-            </motion.section>
+                </motion.section>
+
+                <BusinessThemePicker
+                    businessName={form.name}
+                    primary={form.themePrimary}
+                    accent={form.themeAccent}
+                    onChange={onUpdateField}
+                />
+            </div>
 
             <div className="space-y-6">
                 <motion.section
@@ -265,7 +278,10 @@ export default function BusinessProfileForm({
                             {form.logoUrl && (
                                 <button
                                     type="button"
-                                    onClick={() => onUpdateField("logoUrl", "")}
+                                    onClick={async () => {
+                                        if (await onSaveImage("logoUrl", "")) toast.success("Logo quitado");
+                                    }}
+                                    disabled={isUploadingAnyImage}
                                     className="text-red-400 hover:text-red-600"
                                     title="Quitar logo"
                                 >
@@ -336,7 +352,10 @@ export default function BusinessProfileForm({
                             {form.coverUrl && (
                                 <button
                                     type="button"
-                                    onClick={() => onUpdateField("coverUrl", "")}
+                                    onClick={async () => {
+                                        if (await onSaveImage("coverUrl", "")) toast.success("Portada quitada");
+                                    }}
+                                    disabled={isUploadingAnyImage}
                                     className="text-red-400 hover:text-red-600"
                                     title="Quitar portada"
                                 >

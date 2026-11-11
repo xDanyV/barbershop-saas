@@ -67,6 +67,19 @@ export const changePasswordSchema = z.object({
     newPassword: z.string().min(8).max(72),
 });
 
+export const resetPasswordSchema = z.object({
+    token: z.string().min(20).max(200),
+    newPassword: z.string().min(8).max(72),
+});
+
+export const resetLinkForBarberSchema = z.object({
+    barberId: z.string().min(1),
+});
+
+export const resetLinkForEmailSchema = z.object({
+    email: z.string().trim().toLowerCase().email().max(200),
+});
+
 export const deleteAccountSchema = z.object({
     password: z.string().min(1).max(200),
 });
@@ -154,7 +167,15 @@ export const createBusinessSchema = z.object({
     coverUrl: optionalUrl,
 });
 
-export const updateBusinessSchema = createBusinessSchema.extend({
+const optionalHexColor = z
+    .union([z.string().regex(/^#[0-9a-fA-F]{6}$/, "must be a #rrggbb color"), z.null()])
+    .optional()
+    .transform((value) => (value === undefined ? undefined : value?.toLowerCase() ?? null));
+
+// Todo es opcional: lo que no llega se queda igual (así el logo se guarda solo, sin el resto del formulario)
+export const updateBusinessSchema = createBusinessSchema.partial().extend({
+    themePrimary: optionalHexColor,
+    themeAccent: optionalHexColor,
     isServiceActive: z.boolean().optional(),
     autoConfirm: z.boolean().optional(),
     maintenanceMessage: z.string().trim().max(300).optional(),
@@ -198,6 +219,7 @@ export const systemSettingsSchema = z.object({
     autoConfirm: z.boolean().optional(),
     maintenanceMessage: z.string().trim().max(300).optional(),
     paymentInstructions: z.string().trim().max(1000).nullish(),
+    supportPhone: optionalMxPhone,
 });
 
 export const updateBusinessActiveSchema = z.object({

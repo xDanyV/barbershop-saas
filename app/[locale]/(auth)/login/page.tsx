@@ -128,9 +128,14 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ re
             </div>
 
             <div>
-              <label className="text-xs font-medium text-gray-400 block mb-1.5">
-                {t("form.password")}
-              </label>
+              <div className="mb-1.5 flex items-center justify-between gap-3">
+                <label className="text-xs font-medium text-gray-400 block">
+                  {t("form.password")}
+                </label>
+                <Link href={`/${locale}/forgot-password`} className="text-xs font-bold text-indigo-400 transition-colors hover:text-indigo-300">
+                  {t("forgot")}
+                </Link>
+              </div>
 
               <div className="relative">
                 <input

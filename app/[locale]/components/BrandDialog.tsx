@@ -17,7 +17,7 @@ export const brandInput =
     "mt-2 block min-h-12 w-full border border-[var(--brand-surface)] bg-[var(--brand-paper)] px-4 text-[var(--brand-ink)] outline-none transition-colors focus:border-[var(--brand-ink)]";
 
 export const brandPrimaryButton =
-    "inline-flex min-h-12 w-full items-center justify-center bg-[var(--brand-ink)] px-6 font-semibold text-[var(--brand-paper)] transition-[opacity,transform] duration-150 hover:opacity-90 active:translate-y-px disabled:opacity-50";
+    "inline-flex min-h-12 w-full items-center justify-center bg-[var(--brand-primary)] px-6 font-semibold text-[var(--brand-on-primary)] transition-[opacity,transform] duration-150 hover:opacity-90 active:translate-y-px disabled:opacity-50";
 
 // Ventana con el estilo de la marca. La clase .brand va en el panel porque pinta su propio fondo.
 export default function BrandDialog({ title, subtitle, closeLabel, onClose, children }: Props) {
