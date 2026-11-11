@@ -29,6 +29,25 @@ model User {
 
   paymentsRecorded BusinessPayment[]
   auditEntries     AuditLog[]
+
+  passwordResetTokens  PasswordResetToken[] @relation("ResetTokenUser")
+  resetTokensGenerated PasswordResetToken[] @relation("ResetTokenCreator")
+}
+
+// Enlace de un solo uso para elegir una contraseña nueva. Lo genera el dueño (para su equipo)
+// o el administrador de la plataforma, y lo comparte con la persona; solo se guarda su hash.
+model PasswordResetToken {
+  id          String    @id @default(uuid())
+  tokenHash   String    @unique
+  userId      String
+  user        User      @relation("ResetTokenUser", fields: [userId], references: [id], onDelete: Cascade)
+  createdById String?
+  createdBy   User?     @relation("ResetTokenCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
 }
 
 enum Role {
@@ -39,16 +58,19 @@ enum Role {
 }
 
 model Business {
-  id          String  @id @default(uuid())
-  name        String
-  slug        String  @unique
-  description String?
-  phone       String?
-  address     String?
-  logoUrl     String?
-  coverUrl    String?
-  active      Boolean @default(true)
-  timezone    String  @default("America/Tijuana")
+  id           String  @id @default(uuid())
+  name         String
+  slug         String  @unique
+  description  String?
+  phone        String?
+  address      String?
+  logoUrl      String?
+  coverUrl     String?
+  // Colores que el dueño elige para su página pública (#rrggbb); null usa los de la plataforma
+  themePrimary String?
+  themeAccent  String?
+  active       Boolean @default(true)
+  timezone     String  @default("America/Tijuana")
 
   ownerId String
   owner   User   @relation("BusinessOwner", fields: [ownerId], references: [id])
@@ -132,10 +154,10 @@ model Appointment {
   barberId String
   barber   Barber @relation(fields: [barberId], references: [id])
 
-  status    AppointmentStatus @default(PENDING)
+  status      AppointmentStatus     @default(PENDING)
   // Solo en citas canceladas: para explicarle al cliente qué pasó
   cancelledBy AppointmentCanceller?
-  createdAt DateTime          @default(now())
+  createdAt   DateTime              @default(now())
 
   @@index([businessId])
   @@index([barberId])
@@ -238,12 +260,14 @@ model BarberException {
 }
 
 model SystemSettings {
-  id                 String   @id @default("global")
-  isServiceActive    Boolean  @default(true)
-  maintenanceMessage String   @default("El servicio está temporalmente inactivo. Por favor, vuelve más tarde.")
+  id                  String   @id @default("global")
+  isServiceActive     Boolean  @default(true)
+  maintenanceMessage  String   @default("El servicio está temporalmente inactivo. Por favor, vuelve más tarde.")
   // Cómo pagar la membresía; solo lo ven los dueños con sesión iniciada
   paymentInstructions String?
-  updatedAt          DateTime @updatedAt
+  // WhatsApp de soporte: lo ve quien olvidó su contraseña para pedir un enlace nuevo
+  supportPhone        String?
+  updatedAt           DateTime @updatedAt
 }
 
 model BusinessGallery {

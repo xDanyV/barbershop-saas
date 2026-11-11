@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { getBookingBusiness } from "@/lib/cache/business-pages";
 import { canBusinessAcceptBookings, getBillingStatus } from "@/lib/billing/status";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import { SESSION_COOKIE, getSessionFromToken } from "@/lib/auth/session";
 import { isBusinessStaff } from "@/lib/services/appointment.service";
 import { getTranslations } from "next-intl/server";
 import { brandFontClasses } from "@/[locale]/brand";
+import { businessThemeStyle } from "@/lib/theme";
 import { resolveTimezone } from "@/lib/time/zoned";
 import BusinessBookingClient from "./BusinessBookingClient";
 import { getWhatsAppUrl } from "../lib/business-page.utils";
@@ -36,9 +37,9 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
 const single = (value: string | string[] | undefined) => (typeof value === "string" ? value : null);
 
 // Aviso a pantalla completa con el estilo de la marca (reservas pausadas, tu propia barbería, etc.)
-function Notice({ title, text, children }: { title: string; text: string; children?: ReactNode }) {
+function Notice({ title, text, theme, children }: { title: string; text: string; theme?: CSSProperties; children?: ReactNode }) {
     return (
-        <main className={`brand ${brandFontClasses} flex min-h-screen items-center justify-center px-4 py-10`}>
+        <main className={`brand ${brandFontClasses} flex min-h-screen items-center justify-center px-4 py-10`} style={theme}>
             <div className="w-full max-w-md bg-[var(--brand-paper)] p-6 sm:p-8">
                 <h1 className="brand-display text-[length:var(--step-head)]">{title}</h1>
                 <p className="mt-3 text-[var(--brand-muted)]">{text}</p>
@@ -49,7 +50,7 @@ function Notice({ title, text, children }: { title: string; text: string; childr
 }
 
 const primaryLink =
-    "inline-flex min-h-12 items-center justify-center bg-[var(--brand-ink)] px-6 font-semibold text-[var(--brand-paper)] transition-opacity hover:opacity-90";
+    "inline-flex min-h-12 items-center justify-center bg-[var(--brand-primary)] px-6 font-semibold text-[var(--brand-on-primary)] transition-opacity hover:opacity-90";
 const secondaryLink = "inline-flex min-h-12 items-center justify-center border border-[var(--brand-ink)] px-6 font-semibold";
 
 export default async function BusinessBookPage({ params, searchParams }: BookPageProps) {
@@ -64,6 +65,7 @@ export default async function BusinessBookPage({ params, searchParams }: BookPag
 
     const t = await getTranslations("BookingPage");
     const profileUrl = `/${locale}/business/${business.slug}`;
+    const theme = businessThemeStyle(business.themePrimary, business.themeAccent);
     const whatsappUrl = business.phone ? getWhatsAppUrl(business.phone, t("whatsappMessage")) : null;
     const contactLinks = (
         <>
@@ -80,7 +82,7 @@ export default async function BusinessBookPage({ params, searchParams }: BookPag
 
     if (!canBusinessAcceptBookings(getBillingStatus(business.subscription))) {
         return (
-            <Notice title={business.name} text={`${t("paused")} ${t("pausedHint")}`}>
+            <Notice title={business.name} text={`${t("paused")} ${t("pausedHint")}`} theme={theme}>
                 {contactLinks}
             </Notice>
         );
@@ -92,7 +94,7 @@ export default async function BusinessBookPage({ params, searchParams }: BookPag
 
     if (session && (await isBusinessStaff(session.userId, business.id))) {
         return (
-            <Notice title={t("ownBusiness.title")} text={t("ownBusiness.text")}>
+            <Notice title={t("ownBusiness.title")} text={t("ownBusiness.text")} theme={theme}>
                 <Link href={`/${locale}/dashboard/barber`} className={primaryLink}>
                     {t("ownBusiness.action")}
                 </Link>
@@ -102,7 +104,7 @@ export default async function BusinessBookPage({ params, searchParams }: BookPag
 
     if (business.settings && !business.settings.isServiceActive) {
         return (
-            <Notice title={business.name} text={business.settings.maintenanceMessage || t("inactive")}>
+            <Notice title={business.name} text={business.settings.maintenanceMessage || t("inactive")} theme={theme}>
                 {contactLinks}
             </Notice>
         );
@@ -110,7 +112,7 @@ export default async function BusinessBookPage({ params, searchParams }: BookPag
 
     if (business.barbers.length === 0) {
         return (
-            <Notice title={business.name} text={t("noBarbers")}>
+            <Notice title={business.name} text={t("noBarbers")} theme={theme}>
                 {contactLinks}
             </Notice>
         );
@@ -123,6 +125,8 @@ export default async function BusinessBookPage({ params, searchParams }: BookPag
                 slug: business.slug,
                 logoUrl: business.logoUrl,
                 autoConfirm: business.settings?.autoConfirm ?? true,
+                themePrimary: business.themePrimary,
+                themeAccent: business.themeAccent,
                 timezone: resolveTimezone(business.timezone),
                 barbers: business.barbers.map((barber) => ({
                     id: barber.id,

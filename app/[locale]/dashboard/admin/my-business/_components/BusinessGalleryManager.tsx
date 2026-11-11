@@ -326,7 +326,7 @@ export default function BusinessGalleryManager() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm px-4 flex items-center justify-center"
+                        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm p-4 flex items-center justify-center"
                         onClick={handleCloseModal}
                     >
                         <motion.div
@@ -334,10 +334,10 @@ export default function BusinessGalleryManager() {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 24, scale: 0.96 }}
                             transition={{ duration: 0.2 }}
-                            className="w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden"
+                            className="flex max-h-full w-full max-w-xl flex-col bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="flex items-start justify-between gap-4 p-5 border-b border-gray-100">
+                            <div className="flex shrink-0 items-start justify-between gap-4 p-5 border-b border-gray-100">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
                                         <ImageIcon size={20} />
@@ -363,7 +363,8 @@ export default function BusinessGalleryManager() {
                                 </button>
                             </div>
 
-                            <form onSubmit={handleCreateImage} className="p-5 space-y-4">
+                            <form onSubmit={handleCreateImage} className="flex min-h-0 flex-1 flex-col">
+                                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
                                 <div className="rounded-3xl border border-dashed border-purple-200 bg-purple-50/40 p-5">
                                     <input
                                         id="business-gallery-upload"
@@ -412,7 +413,7 @@ export default function BusinessGalleryManager() {
                                         <img
                                             src={imageUrl}
                                             alt="Vista previa"
-                                            className="w-full max-h-64 object-cover rounded-xl border border-gray-100"
+                                            className="w-full max-h-48 object-contain bg-white rounded-xl border border-gray-100"
                                         />
                                     </div>
                                 )}
@@ -430,7 +431,9 @@ export default function BusinessGalleryManager() {
                                     />
                                 </div>
 
-                                <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                                </div>
+
+                                <div className="flex shrink-0 flex-col gap-2 border-t border-gray-100 p-5 sm:flex-row">
                                     <button
                                         type="button"
                                         onClick={handleCloseModal}

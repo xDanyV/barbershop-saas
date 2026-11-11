@@ -12,6 +12,7 @@ export const RATE_LIMITS = {
     registerIp: { limit: 5, windowSeconds: 60 * 60 },
     bookingUser: { limit: 10, windowSeconds: 60 * 60 },
     passwordUser: { limit: 5, windowSeconds: 15 * 60 },
+    passwordResetIp: { limit: 10, windowSeconds: 15 * 60 },
 } satisfies Record<string, Rule>;
 
 type Hit = { count: number; windowStart: Date };

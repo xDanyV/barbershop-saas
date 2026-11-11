@@ -193,6 +193,9 @@ button:not(:disabled),
   --brand-accent: #e8603a;
   --brand-sand: #e4dccb;
   --brand-paper: #ffffff;
+  /* Botones y bloques de color; la página de cada negocio puede cambiarlos (lib/theme.ts) */
+  --brand-primary: var(--brand-ink);
+  --brand-on-primary: var(--brand-paper);
   --step-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
   --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
   --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);

@@ -6,6 +6,7 @@ import { ArrowLeft, Check } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import toast from "react-hot-toast";
 import { brandFontClasses } from "@/[locale]/brand";
+import { businessThemeStyle } from "@/lib/theme";
 import BrandDialog, { brandPrimaryButton } from "@/[locale]/components/BrandDialog";
 import { useApiError } from "@/[locale]/components/useApiError";
 import { formatPriceFromCents } from "@/lib/billing/pricing";
@@ -32,6 +33,8 @@ type Props = {
         logoUrl: string | null;
         // Si la barbería confirma sola, el cliente reserva; si no, envía una solicitud
         autoConfirm: boolean;
+        themePrimary: string | null;
+        themeAccent: string | null;
         timezone: string;
         barbers: Barber[];
     };
@@ -246,12 +249,12 @@ export default function BusinessBookingClient({ business, initial }: Props) {
 
     const optionClass = (selected: boolean) =>
         `border text-left transition-colors ${selected
-            ? "border-[var(--brand-ink)] bg-[var(--brand-ink)] text-[var(--brand-paper)]"
+            ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-[var(--brand-on-primary)]"
             : "border-[var(--brand-surface)] bg-[var(--brand-paper)] hover:border-[var(--brand-ink)]"
         }`;
 
     return (
-        <main className={`brand ${brandFontClasses} min-h-screen pb-40`}>
+        <main className={`brand ${brandFontClasses} min-h-screen pb-40`} style={businessThemeStyle(business.themePrimary, business.themeAccent)}>
             <header className="sticky top-0 z-40 border-b border-[var(--brand-surface)] bg-[var(--brand-paper)]">
                 <div className="mx-auto flex h-16 max-w-4xl items-center gap-3 px-4 md:px-8">
                     <Link
@@ -464,7 +467,7 @@ function Step({ number, title, done, children, ref }: StepProps) {
         <section ref={ref} className="scroll-mt-20 border-t border-[var(--brand-surface)] py-6 first-of-type:border-t-0 md:py-8">
             <h2 className="mb-4 flex items-center gap-3 text-[length:var(--step-lead)] font-semibold">
                 <span
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center text-base ${done ? "bg-[var(--brand-ink)] text-[var(--brand-paper)]" : "border border-[var(--brand-ink)]"}`}
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center text-base ${done ? "bg-[var(--brand-primary)] text-[var(--brand-on-primary)]" : "border border-[var(--brand-ink)]"}`}
                     aria-hidden="true"
                 >
                     {done ? <Check size={16} /> : number}

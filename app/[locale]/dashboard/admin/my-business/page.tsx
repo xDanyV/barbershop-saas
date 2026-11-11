@@ -13,6 +13,7 @@ import { QRCodeCanvas } from "qrcode.react";
 
 import BusinessProfileForm, {
     type BusinessForm,
+    type ImageField,
 } from "./_components/BusinessProfileForm";
 import BusinessPostsManager from "./_components/BusinessPostsManager";
 import BusinessGalleryManager from "./_components/BusinessGalleryManager";
@@ -36,6 +37,8 @@ type Business = {
     address: string | null;
     logoUrl: string | null;
     coverUrl: string | null;
+    themePrimary: string | null;
+    themeAccent: string | null;
     billingStatus: BusinessBillingStatus;
     billingPlan: BusinessPlanType;
     subscriptionEndsAt: string | null;
@@ -57,6 +60,8 @@ export default function MyBusinessPage() {
         isServiceActive: true,
         autoConfirm: true,
         maintenanceMessage: "",
+        themePrimary: null,
+        themeAccent: null,
     });
 
     // El aviso de membresía enlaza directo a esta pestaña (?tab=membership)
@@ -108,6 +113,8 @@ export default function MyBusinessPage() {
                     isServiceActive: data.settings?.isServiceActive ?? true,
                     autoConfirm: data.settings?.autoConfirm ?? true,
                     maintenanceMessage: data.settings?.maintenanceMessage ?? "",
+                    themePrimary: data.themePrimary ?? null,
+                    themeAccent: data.themeAccent ?? null,
                 });
             } catch {
                 toast.error("Error al cargar tu negocio");
@@ -156,6 +163,30 @@ export default function MyBusinessPage() {
         document.body.removeChild(downloadLink);
 
         toast.success("Código QR descargado exitosamente");
+    };
+
+    // Guarda solo la imagen; el resto del formulario sigue pendiente de "Guardar cambios"
+    const saveImage = async (field: ImageField, url: string) => {
+        try {
+            const res = await fetch("/api/protected/businesses/me", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ [field]: url }),
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                toast.error(apiError(data, "No se pudo guardar la imagen"));
+                return false;
+            }
+
+            setBusiness(data);
+            updateField(field, url);
+            return true;
+        } catch {
+            toast.error("Error al guardar la imagen");
+            return false;
+        }
     };
 
     const handleSave = async (e: FormEvent<HTMLFormElement>) => {
@@ -299,6 +330,7 @@ export default function MyBusinessPage() {
                         saving={saving}
                         onSubmit={handleSave}
                         onUpdateField={updateField}
+                        onSaveImage={saveImage}
                     />
                 )}
 

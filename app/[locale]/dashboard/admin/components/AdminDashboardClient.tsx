@@ -7,6 +7,7 @@ import PageHeader from "@/[locale]/components/PageHeader";
 import AuditLogList from "./AuditLogList";
 import BusinessBillingManager from "./BusinessBillingManager";
 import CustomersList from "./CustomersList";
+import PasswordResetTool from "./PasswordResetTool";
 import PlatformBusinesses from "./PlatformBusinesses";
 import SystemSettings from "./SystemSettings";
 
@@ -62,6 +63,7 @@ export default function AdminDashboardClient() {
                 {activeTab === "billing" && <BusinessBillingManager />}
                 {activeTab === "moderation" && (
                     <>
+                        <PasswordResetTool />
                         <p className="mb-4 max-w-[70ch] text-gray-600">{t("moderationHint")}</p>
                         <CustomersList />
                     </>

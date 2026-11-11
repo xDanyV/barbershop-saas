@@ -10,7 +10,8 @@ export type AuditAction =
     | "customer_unbanned"
     | "barber_updated"
     | "business_activated"
-    | "business_deactivated";
+    | "business_deactivated"
+    | "password_reset_link_created";
 
 type AuditEntry = {
     actorId: string;

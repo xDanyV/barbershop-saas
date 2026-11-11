@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
-import { CalendarDays, ImageIcon, MoreVertical, Scissors, Trash2, UserMinus, UserPlus } from "lucide-react";
+import { CalendarDays, ImageIcon, KeyRound, MoreVertical, Scissors, Trash2, UserMinus, UserPlus } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import toast from "react-hot-toast";
 import BrandDialog, { brandPrimaryButton } from "@/[locale]/components/BrandDialog";
 import { useApiError } from "@/[locale]/components/useApiError";
 import { useUploadThing } from "@/lib/uploadthing";
 import { compressImage } from "@/lib/compress-image";
+import ResetLinkDialog from "@/[locale]/components/ResetLinkDialog";
 
 type Member = {
     id: string;
@@ -35,6 +36,7 @@ export default function TeamList() {
     const [leaving, setLeaving] = useState<Member | null>(null);
     const [working, setWorking] = useState(false);
     const [uploadingId, setUploadingId] = useState<string | null>(null);
+    const [resetLink, setResetLink] = useState<{ member: Member; token: string; expiresAt: string } | null>(null);
     const uploadTarget = useRef<string | null>(null);
     const fileInput = useRef<HTMLInputElement>(null);
 
@@ -68,6 +70,31 @@ export default function TeamList() {
         } catch {
             toast.error(failed);
             return null;
+        } finally {
+            setWorking(false);
+        }
+    };
+
+    // Enlace de un solo uso para que el barbero elija una contraseña nueva
+    const createResetLink = async (member: Member) => {
+        setWorking(true);
+
+        try {
+            const res = await fetch("/api/admin/barbers/reset-link", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ barberId: member.id }),
+            });
+            const data = await res.json().catch(() => null);
+
+            if (!res.ok) {
+                toast.error(apiError(data, t("errors.resetLink")));
+                return;
+            }
+
+            setResetLink({ member, token: data.token, expiresAt: data.expiresAt });
+        } catch {
+            toast.error(t("errors.resetLink"));
         } finally {
             setWorking(false);
         }
@@ -208,6 +235,14 @@ export default function TeamList() {
                                                 </button>
                                             </MenuItem>
                                         )}
+                                        {!member.isSelf && member.active && (
+                                            <MenuItem>
+                                                <button type="button" onClick={() => createResetLink(member)} disabled={working} className={menuItemClass}>
+                                                    <KeyRound size={18} aria-hidden="true" />
+                                                    {t("resetLink")}
+                                                </button>
+                                            </MenuItem>
+                                        )}
                                         {!member.isSelf && (
                                             <MenuItem>
                                                 {member.active ? (
@@ -251,6 +286,16 @@ export default function TeamList() {
                     );
                 })}
             </ul>
+
+            {resetLink && (
+                <ResetLinkDialog
+                    name={resetLink.member.user.name ?? resetLink.member.user.email}
+                    phone={resetLink.member.user.phone}
+                    token={resetLink.token}
+                    expiresAt={resetLink.expiresAt}
+                    onClose={() => setResetLink(null)}
+                />
+            )}
 
             {leaving && (
                 <BrandDialog

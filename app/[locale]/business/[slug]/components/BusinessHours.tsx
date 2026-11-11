@@ -31,7 +31,7 @@ export default async function BusinessHours({ hours, timezone }: Props) {
                         <div key={day.dayOfWeek} className="flex items-baseline justify-between gap-4 py-2.5">
                             <dt className={`first-letter:uppercase ${isToday ? "font-semibold" : "text-[var(--brand-field-muted)]"}`}>
                                 {dayName(day.dayOfWeek)}
-                                {isToday && <span className="ml-2 text-[length:var(--step-small)] font-semibold text-[var(--brand-accent)]">{t("today")}</span>}
+                                {isToday && <span className="ml-2 text-[length:var(--step-small)] font-semibold">{t("today")}</span>}
                             </dt>
                             <dd className={`tabular whitespace-nowrap ${isToday ? "font-semibold" : "text-[var(--brand-field-muted)]"}`}>
                                 {day.open && day.close ? `${formatTime(day.open)} – ${formatTime(day.close)}` : t("closed")}

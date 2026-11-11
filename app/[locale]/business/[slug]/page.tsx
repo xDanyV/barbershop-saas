@@ -8,6 +8,7 @@ import { buildBarberShopJsonLd, getSiteUrl, localizedAlternates, serializeJsonLd
 import { computeBusinessHours } from "@/lib/business-hours";
 import { formatPriceFromCents } from "@/lib/billing/pricing";
 import { brandFontClasses } from "@/[locale]/brand";
+import { businessThemeStyle } from "@/lib/theme";
 import BrandMark from "@/[locale]/components/BrandMark";
 import Reveal from "@/[locale]/components/landing/Reveal";
 import BusinessGallery from "./components/BusinessGallery";
@@ -50,9 +51,9 @@ export async function generateMetadata({ params }: BusinessPageProps): Promise<M
 }
 
 const primaryButton =
-    "inline-flex min-h-12 items-center justify-center gap-2 bg-[var(--brand-ink)] px-6 font-semibold text-[var(--brand-paper)] transition-[opacity,transform] duration-150 hover:opacity-90 active:translate-y-px";
+    "inline-flex min-h-12 items-center justify-center gap-2 bg-[var(--brand-primary)] px-6 font-semibold text-[var(--brand-on-primary)] transition-[opacity,transform] duration-150 hover:opacity-90 active:translate-y-px";
 const secondaryButton =
-    "inline-flex min-h-12 items-center justify-center gap-2 border border-[var(--brand-ink)] px-5 font-semibold transition-colors hover:bg-[var(--brand-ink)] hover:text-[var(--brand-paper)]";
+    "inline-flex min-h-12 items-center justify-center gap-2 border border-[var(--brand-ink)] px-5 font-semibold transition-colors hover:border-[var(--brand-primary)] hover:bg-[var(--brand-primary)] hover:text-[var(--brand-on-primary)]";
 const sectionTitle = "brand-display text-[length:var(--step-head)]";
 
 export default async function BusinessPage({ params }: BusinessPageProps) {
@@ -103,7 +104,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
         min === max ? t("services.minutes", { min }) : t("services.minutesRange", { min, max });
 
     return (
-        <main className={`brand ${brandFontClasses} min-h-screen pb-24 md:pb-0`}>
+        <main className={`brand ${brandFontClasses} min-h-screen pb-24 md:pb-0`} style={businessThemeStyle(business.themePrimary, business.themeAccent)}>
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
 
             <header className="sticky top-0 z-40 border-b border-[var(--brand-surface)] bg-[var(--brand-paper)]">
@@ -112,7 +113,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                         {business.logoUrl ? (
                             <img src={business.logoUrl} alt="" className="h-9 w-9 shrink-0 object-cover" />
                         ) : (
-                            <span className="flex h-9 w-9 shrink-0 items-center justify-center bg-[var(--brand-ink)] text-sm font-semibold text-[var(--brand-paper)]">
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center bg-[var(--brand-primary)] text-sm font-semibold text-[var(--brand-on-primary)]">
                                 {getInitials(business.name)}
                             </span>
                         )}
@@ -132,7 +133,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                             {t("nav.visit")}
                         </a>
                         {isServiceActive && (
-                            <Link href={bookUrl} className="ml-2 hidden min-h-11 items-center justify-center bg-[var(--brand-ink)] px-5 font-semibold text-[var(--brand-paper)] transition-opacity hover:opacity-90 md:inline-flex">
+                            <Link href={bookUrl} className="ml-2 hidden min-h-11 items-center justify-center bg-[var(--brand-primary)] px-5 font-semibold text-[var(--brand-on-primary)] transition-opacity hover:opacity-90 md:inline-flex">
                                 {t("nav.book")}
                             </Link>
                         )}
@@ -326,7 +327,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                                     href={mapsUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex min-h-12 items-center justify-center gap-2 bg-[var(--brand-field-ink)] px-5 font-semibold text-[var(--brand-ink)] transition-opacity hover:opacity-90"
+                                    className="inline-flex min-h-12 items-center justify-center gap-2 bg-[var(--brand-field-ink)] px-5 font-semibold text-[var(--brand-field)] transition-opacity hover:opacity-90"
                                 >
                                     <MapPin size={18} aria-hidden="true" />
                                     {t("visit.map")}
@@ -335,7 +336,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                             {business.phone && (
                                 <a
                                     href={`tel:${business.phone.replace(/[^\d+]/g, "")}`}
-                                    className="inline-flex min-h-12 items-center justify-center gap-2 border border-[var(--brand-field-ink)] px-5 font-semibold transition-colors hover:bg-[var(--brand-field-ink)] hover:text-[var(--brand-ink)]"
+                                    className="inline-flex min-h-12 items-center justify-center gap-2 border border-[var(--brand-field-ink)] px-5 font-semibold transition-colors hover:bg-[var(--brand-field-ink)] hover:text-[var(--brand-field)]"
                                 >
                                     <Phone size={18} aria-hidden="true" />
                                     {t("visit.call", { phone: business.phone })}

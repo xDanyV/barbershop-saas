@@ -87,7 +87,8 @@
         "register": {
             "question": "Don't have an account?",
             "action": "Create one"
-        }
+        },
+        "forgot": "Forgot your password?"
     },
     "DashboardNavbar": {
         "menu": {
@@ -479,6 +480,10 @@
             "label": "Payment instructions",
             "help": "Barbershop owners see them in \"My business\". They do not appear on public pages.",
             "placeholder": "E.g.: Transfer to account... and send your receipt to..."
+        },
+        "support": {
+            "label": "Support WhatsApp",
+            "help": "Shown in “Forgot your password?” so customers and owners can ask for their link. Leave it empty to hide it."
         }
     },
     "AdminDashboard": {
@@ -1091,7 +1096,8 @@
                 "barber_updated": "Barber updated",
                 "business_activated": "Business activated",
                 "business_deactivated": "Business deactivated",
-                "admin_created": "Administrator created"
+                "admin_created": "Administrator created",
+                "password_reset_link_created": "Password link created"
             }
         }
     },
@@ -1265,8 +1271,10 @@
             "status": "Could not update the barber.",
             "photo": "Could not save the photo.",
             "notImage": "Choose an image.",
-            "tooBig": "The image must be under {mb} MB."
-        }
+            "tooBig": "The image must be under {mb} MB.",
+            "resetLink": "The link couldn't be created."
+        },
+        "resetLink": "New password link"
     },
     "WhatsAppMessages": {
         "confirmed": "Hi {name}, this is {business}. Your {service} appointment is confirmed for {day} at {time}. If you can't make it, let us know here.",
@@ -1274,5 +1282,66 @@
         "general": "Hi {name}, this is {business}.",
         "cancelled": "Hi {name}, this is {business}. We had to cancel your {service} appointment on {day} at {time}. Sorry for the trouble. You can pick another time here: {link}",
         "customerAbout": "Hi, I'm writing about my {service} appointment on {day} at {time} with {barber}."
+    },
+    "PasswordReset": {
+        "backToLogin": "Back to sign in",
+        "forgot": {
+            "title": "Forgot your password?",
+            "text": "We give you a link to choose a new password. It works once and expires in 24 hours.",
+            "barberTitle": "If you are a barber",
+            "barberText": "Ask your barbershop for the link. The owner creates it from Team and sends it to you on WhatsApp.",
+            "otherTitle": "If you are a customer or a barbershop owner",
+            "otherText": "Message us on WhatsApp from your account's phone number and tell us your email. We'll send you the link.",
+            "otherEmail": "Write to {email} from your account's email. We'll send you the link.",
+            "otherFallback": "Contact the platform team from your account's phone number and tell us your email. We'll send you the link.",
+            "support": "Ask for a link on WhatsApp",
+            "supportMessage": "Hi, I forgot my password. My account email is: "
+        },
+        "reset": {
+            "title": "Choose a new password",
+            "text": "This is for the account {email}. Saving it signs you out on your other devices.",
+            "password": "New password",
+            "confirm": "Repeat the password",
+            "hint": "At least 8 characters.",
+            "show": "Show password",
+            "hide": "Hide password",
+            "save": "Save password",
+            "saving": "Saving...",
+            "done": "Done. You can now sign in with your new password.",
+            "goToLogin": "Sign in",
+            "errors": {
+                "short": "The password must have at least 8 characters.",
+                "mismatch": "The passwords don't match.",
+                "expired": "This link no longer works. Ask for a new one.",
+                "tooMany": "Too many attempts. Wait a few minutes.",
+                "generic": "The password couldn't be saved. Try again."
+            }
+        },
+        "invalid": {
+            "title": "This link no longer works",
+            "text": "It was already used, it expired, or a newer one was created. Ask for another link to choose your password.",
+            "action": "Ask for a new link"
+        }
+    },
+    "ResetLink": {
+        "title": "Link for {name}",
+        "text": "With this link they choose a new password. It expires {expires} and works once.",
+        "linkLabel": "Link",
+        "sendWhatsapp": "Send on WhatsApp",
+        "copy": "Copy link",
+        "copied": "Link copied",
+        "copyFailed": "Couldn't copy it. Select it and copy it by hand.",
+        "close": "Close",
+        "warning": "Share it only with that person: whoever opens it can change their password.",
+        "whatsapp": "Hi {name}, here is the link to choose your new password. It works once: {link}",
+        "tool": {
+            "title": "Reset a password",
+            "text": "For customers and owners who forgot their password. Before sharing the link, confirm they are writing from the account's phone number.",
+            "email": "Account email",
+            "create": "Create link",
+            "creating": "Creating...",
+            "notFound": "No account uses that email.",
+            "failed": "The link couldn't be created."
+        }
     }
 }

@@ -87,7 +87,8 @@
         "register": {
             "question": "¿No tienes una cuenta?",
             "action": "Crear una"
-        }
+        },
+        "forgot": "¿Olvidaste tu contraseña?"
     },
     "DashboardNavbar": {
         "menu": {
@@ -479,6 +480,10 @@
             "label": "Instrucciones de pago",
             "help": "Las ven los dueños de barberías en \"Mi negocio\". No se muestran en páginas públicas.",
             "placeholder": "Ej: Transferencia a la cuenta... y envía tu comprobante a..."
+        },
+        "support": {
+            "label": "WhatsApp de soporte",
+            "help": "Aparece en “¿Olvidaste tu contraseña?” para que clientes y dueños pidan su enlace. Déjalo vacío para ocultarlo."
         }
     },
     "AdminDashboard": {
@@ -1091,7 +1096,8 @@
                 "barber_updated": "Barbero actualizado",
                 "business_activated": "Negocio activado",
                 "business_deactivated": "Negocio desactivado",
-                "admin_created": "Administrador creado"
+                "admin_created": "Administrador creado",
+                "password_reset_link_created": "Enlace de contraseña creado"
             }
         }
     },
@@ -1265,8 +1271,10 @@
             "status": "No se pudo actualizar al barbero.",
             "photo": "No se pudo guardar la foto.",
             "notImage": "Elige una imagen.",
-            "tooBig": "La imagen no debe pesar más de {mb} MB."
-        }
+            "tooBig": "La imagen no debe pesar más de {mb} MB.",
+            "resetLink": "No se pudo crear el enlace."
+        },
+        "resetLink": "Enlace para nueva contraseña"
     },
     "WhatsAppMessages": {
         "confirmed": "Hola {name}, te escribo de {business}. Tu cita de {service} quedó confirmada para el {day} a las {time}. Si no puedes venir, avísanos por aquí.",
@@ -1274,5 +1282,66 @@
         "general": "Hola {name}, te escribo de {business}.",
         "cancelled": "Hola {name}, te escribo de {business}. Tuvimos que cancelar tu cita de {service} del {day} a las {time}. Disculpa las molestias. Puedes elegir otro horario aquí: {link}",
         "customerAbout": "Hola, les escribo por mi cita de {service} del {day} a las {time} con {barber}."
+    },
+    "PasswordReset": {
+        "backToLogin": "Volver a iniciar sesión",
+        "forgot": {
+            "title": "¿Olvidaste tu contraseña?",
+            "text": "Te damos un enlace para que elijas una contraseña nueva. Sirve una sola vez y vence en 24 horas.",
+            "barberTitle": "Si eres barbero",
+            "barberText": "Pídele el enlace a tu barbería. El dueño lo crea desde Equipo y te lo manda por WhatsApp.",
+            "otherTitle": "Si eres cliente o dueño de una barbería",
+            "otherText": "Escríbenos por WhatsApp desde el número de tu cuenta y dinos tu correo. Te mandamos el enlace.",
+            "otherEmail": "Escríbenos a {email} desde el correo de tu cuenta. Te mandamos el enlace.",
+            "otherFallback": "Escríbele al equipo de la plataforma desde el número de tu cuenta y dinos tu correo. Te mandamos el enlace.",
+            "support": "Pedir enlace por WhatsApp",
+            "supportMessage": "Hola, olvidé mi contraseña. El correo de mi cuenta es: "
+        },
+        "reset": {
+            "title": "Elige una contraseña nueva",
+            "text": "Es para la cuenta {email}. Al guardarla se cerrará la sesión en tus otros dispositivos.",
+            "password": "Contraseña nueva",
+            "confirm": "Repite la contraseña",
+            "hint": "Mínimo 8 caracteres.",
+            "show": "Mostrar contraseña",
+            "hide": "Ocultar contraseña",
+            "save": "Guardar contraseña",
+            "saving": "Guardando...",
+            "done": "Listo. Ya puedes entrar con tu contraseña nueva.",
+            "goToLogin": "Iniciar sesión",
+            "errors": {
+                "short": "La contraseña debe tener al menos 8 caracteres.",
+                "mismatch": "Las contraseñas no coinciden.",
+                "expired": "Este enlace ya no sirve. Pide uno nuevo.",
+                "tooMany": "Demasiados intentos. Espera unos minutos.",
+                "generic": "No se pudo guardar la contraseña. Inténtalo de nuevo."
+            }
+        },
+        "invalid": {
+            "title": "Este enlace ya no sirve",
+            "text": "Ya se usó, venció o se creó uno más nuevo. Pide otro enlace para elegir tu contraseña.",
+            "action": "Pedir un enlace nuevo"
+        }
+    },
+    "ResetLink": {
+        "title": "Enlace para {name}",
+        "text": "Con este enlace elige una contraseña nueva. Vence el {expires} y sirve una sola vez.",
+        "linkLabel": "Enlace",
+        "sendWhatsapp": "Enviar por WhatsApp",
+        "copy": "Copiar enlace",
+        "copied": "Enlace copiado",
+        "copyFailed": "No se pudo copiar. Selecciónalo y cópialo a mano.",
+        "close": "Cerrar",
+        "warning": "Compártelo solo con esa persona: quien lo abra puede cambiar su contraseña.",
+        "whatsapp": "Hola {name}, aquí está el enlace para elegir tu contraseña nueva. Sirve una sola vez: {link}",
+        "tool": {
+            "title": "Restablecer contraseña",
+            "text": "Para clientes y dueños que olvidaron su contraseña. Antes de compartir el enlace, confirma que te escriben desde el teléfono de la cuenta.",
+            "email": "Correo de la cuenta",
+            "create": "Crear enlace",
+            "creating": "Creando...",
+            "notFound": "Ninguna cuenta usa ese correo.",
+            "failed": "No se pudo crear el enlace."
+        }
     }
 }
