@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { notifyBarberSetupChanged } from "../../setup-events";
 import { motion } from "framer-motion";
 import { Scissors, DollarSign, Clock, PlusCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -39,6 +40,7 @@ export default function CreateServiceForm({ setView, canApplyToTeam = false }: P
                 return;
             }
             if (canApplyToTeam && applyToTeam) toast.success(t("teamCreated", { count: data?.created ?? 0 }));
+            notifyBarberSetupChanged();
             setView("list");
         } catch (error) {
             console.error("Error creating service:", error);

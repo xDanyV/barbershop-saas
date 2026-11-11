@@ -5,6 +5,7 @@ import { toast } from "react-hot-toast";
 import { Clock } from "lucide-react";
 import { useTranslations } from "next-intl";
 import BrandDialog, { brandPrimaryButton } from "@/[locale]/components/BrandDialog";
+import { OPEN_BARBER_HOURS, notifyBarberSetupChanged } from "../setup-events";
 import { useApiError } from "@/[locale]/components/useApiError";
 
 // Lunes primero, como se lee un horario en México (0 = domingo)
@@ -34,6 +35,22 @@ export default function AvailabilityModal() {
     const [isOpen, setIsOpen] = useState(false);
     const [week, setWeek] = useState<Record<number, Day> | null>(null);
     const [saving, setSaving] = useState(false);
+
+    // Se abre desde el aviso de "completa tu perfil" (en esta pantalla o con ?horario=1 desde otra)
+    useEffect(() => {
+        const open = () => setIsOpen(true);
+        const params = new URLSearchParams(window.location.search);
+
+        if (params.get("horario") === "1") {
+            open();
+            params.delete("horario");
+            const query = params.toString();
+            window.history.replaceState(null, "", window.location.pathname + (query ? `?${query}` : ""));
+        }
+
+        window.addEventListener(OPEN_BARBER_HOURS, open);
+        return () => window.removeEventListener(OPEN_BARBER_HOURS, open);
+    }, []);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -134,6 +151,7 @@ export default function AvailabilityModal() {
 
             toast.success(days.length === 0 ? t("success.closed") : t("success.saved"));
             setIsOpen(false);
+            notifyBarberSetupChanged();
         } catch {
             toast.error(t("errors.saveFailed"));
         } finally {

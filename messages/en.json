@@ -106,9 +106,6 @@
             "platform": "Platform"
         },
         "logout": "Sign out",
-        "errors": {
-            "appointmentLimit": "Maximum 2 active appointments allowed."
-        },
         "home": "Home",
         "mainNav": "Main navigation",
         "accountMenu": "Account",
@@ -436,13 +433,18 @@
         }
     },
     "PendingBarbersList": {
-        "loadingDir": "Loading pending requests...",
+        "loadingDir": "Loading requests...",
+        "empty": "There are no pending requests.",
+        "retry": "Try again",
+        "approved": "{name} is now part of the team.",
+        "rejected": "{name}'s request was rejected.",
+        "rejectTitle": "Reject {name}",
+        "rejectText": "They won't be able to use your barbershop's schedule. If this was a mistake, they'll have to sign up again with your link.",
+        "keep": "Keep",
         "errors": {
-            "format": "Data format error",
-            "connection": "Connection error",
-            "fetchPrefix": "Error"
+            "load": "The requests couldn't be loaded.",
+            "action": "The request couldn't be updated."
         },
-        "empty": "No pending approvals.",
         "barber": {
             "noName": "No name"
         },
@@ -1193,7 +1195,7 @@
         "BOOKINGS_PAUSED": "This barbershop is not taking bookings right now.",
         "BLOCKED_HERE": "You cannot book at this barbershop.",
         "ACCOUNT_SUSPENDED": "Your account is suspended and cannot book.",
-        "TOO_MANY_ACTIVE": "You can only have 2 active appointments at a time.",
+        "TOO_MANY_ACTIVE": "You can only have 2 active appointments at a time at this barbershop.",
         "OWN_BUSINESS": "You cannot book at your own barbershop. Use \"Add appointment\" in your schedule.",
         "TOO_LATE_TO_CANCEL": "It can no longer be canceled: less than 2 hours remain.",
         "TOO_LATE_TO_RESCHEDULE": "It can no longer be changed: less than 2 hours remain.",
@@ -1343,5 +1345,30 @@
             "notFound": "No account uses that email.",
             "failed": "The link couldn't be created."
         }
+    },
+    "BarberSetup": {
+        "title": "Finish your profile to get appointments",
+        "text": "Until both are done, you won’t show up on the barbershop’s booking page.",
+        "done": "Done",
+        "services": {
+            "title": "Add your services",
+            "text": "Which cuts you offer, their price and how long they take.",
+            "action": "Go to catalog"
+        },
+        "hours": {
+            "title": "Set your hours",
+            "text": "The days and hours you work.",
+            "action": "Set hours"
+        }
+    },
+    "CopyServices": {
+        "title": "Start with the barbershop's services",
+        "text": "The barbershop already offers these services. Copy them to your catalog and adjust prices or times later, or create your own from scratch.",
+        "minutes": "{minutes} min",
+        "action": "{count, plural, one {Use this service} other {Use these # services}}",
+        "copying": "Copying...",
+        "hint": "You can edit or delete them later.",
+        "copied": "{count, plural, =0 {You already had those services.} one {# service was added to your catalog.} other {# services were added to your catalog.}}",
+        "failed": "The services couldn't be copied."
     }
 }

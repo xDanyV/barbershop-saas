@@ -138,6 +138,7 @@ export async function createAppointment(data: {
         const activeUpcomingAppointments = await tx.appointment.count({
             where: {
                 userId,
+                businessId: barber.businessId,
                 status: {
                     in: ["PENDING", "CONFIRMED"],
                 },
