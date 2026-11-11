@@ -16,6 +16,7 @@ import {
     X,
 } from "lucide-react";
 import { useUploadThing } from "@/lib/uploadthing";
+import { compressImage } from "@/lib/compress-image";
 
 type BusinessPost = {
     id: string;
@@ -126,13 +127,16 @@ export default function BusinessPostsManager() {
         const maxSizeInMb = 8;
         const maxSizeInBytes = maxSizeInMb * 1024 * 1024;
 
-        if (file.size > maxSizeInBytes) {
+        // Se sube una versión más ligera; el límite se revisa sobre ella
+        const upload = await compressImage(file, { maxSize: 1600 });
+
+        if (upload.size > maxSizeInBytes) {
             toast.error(`La imagen no debe pesar más de ${maxSizeInMb}MB`);
             return;
         }
 
         setUploading(true);
-        await startUpload([file]);
+        await startUpload([upload]);
     };
 
     const handleCreatePost = async (e: FormEvent<HTMLFormElement>) => {

@@ -16,6 +16,7 @@ export type PublicBusinessService = {
     priceCents: number;
     duration: number;
     barber: {
+        id: string;
         user: {
             name: string | null;
         };

@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "react-hot-toast";
-import "react-calendar/dist/Calendar.css";
 import "../globals.css";
 import { brandFontClasses } from "./brand";
 import ServiceWorkerSetup from "./components/ServiceWorkerSetup";

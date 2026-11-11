@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { billingSummarySelect, toBillingSummary } from "@/lib/billing/status";
 import { errorResponse } from "@/lib/errors";
+import { cleanUpUploads } from "@/lib/uploads";
+import { replacedUrls } from "@/lib/upload-keys";
 import { revalidateBusinessPages } from "@/lib/cache/business-pages";
 import { requireOwnerAuth } from "@/lib/api/auth";
 import { parseJsonBody } from "@/lib/api/validation";
@@ -38,6 +40,11 @@ export async function PATCH(req: NextRequest) {
             updateBusinessSchema
         );
 
+        const before = await prisma.business.findUniqueOrThrow({
+            where: { id: businessId },
+            select: { logoUrl: true, coverUrl: true },
+        });
+
         await prisma.$transaction([
             prisma.business.update({
                 where: { id: businessId },
@@ -52,6 +59,8 @@ export async function PATCH(req: NextRequest) {
         ]);
 
         await revalidateBusinessPages(businessId);
+        // El logo o la portada anteriores ya no se usan
+        cleanUpUploads(replacedUrls([[before.logoUrl, profile.logoUrl], [before.coverUrl, profile.coverUrl]]));
 
         return NextResponse.json(await getBusinessWithSettings(businessId));
     } catch (error) {

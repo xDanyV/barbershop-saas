@@ -67,6 +67,7 @@ async function queryPublicBusinessPage(slug: string) {
                     duration: true,
                     barber: {
                         select: {
+                            id: true,
                             user: {
                                 select: {
                                     name: true,
@@ -124,6 +125,9 @@ async function queryBookingBusiness(slug: string) {
             name: true,
             slug: true,
             description: true,
+            phone: true,
+            logoUrl: true,
+            timezone: true,
             active: true,
             subscription: { select: { billingStatus: true } },
             settings: {
@@ -147,6 +151,15 @@ async function queryBookingBusiness(slug: string) {
                         select: {
                             name: true,
                         },
+                    },
+                    // El cliente elige el servicio antes que la hora y solo ve los días que el barbero trabaja
+                    services: {
+                        where: { active: true },
+                        select: { id: true, name: true, priceCents: true, duration: true },
+                        orderBy: { priceCents: "asc" },
+                    },
+                    availability: {
+                        select: { dayOfWeek: true },
                     },
                 },
                 orderBy: {

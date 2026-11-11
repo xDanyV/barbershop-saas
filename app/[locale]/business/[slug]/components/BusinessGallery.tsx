@@ -1,143 +1,44 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, ImageIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { PublicBusinessGalleryItem } from "../lib/business-page.types";
-import LightboxImage from "./LightboxImage";
+import type { PublicBusinessGalleryItem } from "../lib/business-page.types";
+import Lightbox from "./LightboxImage";
 
 type Props = {
     gallery: PublicBusinessGalleryItem[];
 };
 
+// Cuadrícula de fotos; al tocar una se abre en grande
 export default function BusinessGallery({ gallery }: Props) {
     const t = useTranslations("BusinessPage.gallery");
-    const [activeIndex, setActiveIndex] = useState(0);
+    const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-    if (gallery.length === 0) {
-        return (
-            <div className="bg-white/6 border border-white/10 rounded-4xl p-6">
-                <div className="flex items-center gap-3 mb-5">
-                    <div className="w-11 h-11 rounded-2xl bg-indigo-500/15 text-indigo-300 flex items-center justify-center">
-                        <ImageIcon size={22} />
-                    </div>
-
-                    <div>
-                        <h2 className="text-xl font-black">{t("title")}</h2>
-                        <p className="text-gray-400 text-sm">{t("subtitle")}</p>
-                    </div>
-                </div>
-
-                <div className="border border-dashed border-white/10 rounded-2xl p-6 text-center">
-                    <ImageIcon className="mx-auto text-gray-600 mb-3" size={34} />
-                    <p className="text-gray-400 text-sm">
-                        {t("empty")}
-                    </p>
-                </div>
-            </div>
-        );
-    }
-
-    const activeImage = gallery[activeIndex];
-
-    const goPrevious = () => {
-        setActiveIndex((current) =>
-            current === 0 ? gallery.length - 1 : current - 1
-        );
-    };
-
-    const goNext = () => {
-        setActiveIndex((current) =>
-            current === gallery.length - 1 ? 0 : current + 1
-        );
-    };
+    const items = gallery.map((item) => ({ src: item.imageUrl, alt: item.caption || t("imageAlt"), caption: item.caption }));
 
     return (
-        <div className="bg-white/6 border border-white/10 rounded-4xl p-6">
-            <div className="flex items-center justify-between gap-3 mb-5">
-                <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-2xl bg-indigo-500/15 text-indigo-300 flex items-center justify-center">
-                        <ImageIcon size={22} />
-                    </div>
-
-                    <div>
-                        <h2 className="text-xl font-black">{t("title")}</h2>
-                        <p className="text-gray-400 text-sm">
-                            {t("count", { count: gallery.length })}
-                        </p>
-                    </div>
-                </div>
-
-                {gallery.length > 1 && (
-                    <div className="flex gap-2">
+        <>
+            <ul className="mt-8 grid grid-cols-2 gap-2 sm:grid-cols-3 md:gap-3">
+                {gallery.map((item, index) => (
+                    <li key={item.id} className={index === 0 && gallery.length >= 5 ? "col-span-2 row-span-2" : ""}>
                         <button
                             type="button"
-                            onClick={goPrevious}
-                            className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors"
-                        >
-                            <ArrowLeft size={15} />
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={goNext}
-                            className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors"
-                        >
-                            <ArrowRight size={15} />
-                        </button>
-                    </div>
-                )}
-            </div>
-
-            <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black/20">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={activeImage.id}
-                        initial={{ opacity: 0, scale: 1.04 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.98 }}
-                        transition={{ duration: 0.25 }}
-                    >
-                        <LightboxImage
-                            src={activeImage.imageUrl}
-                            alt={activeImage.caption || t("imageAlt")}
-                            caption={activeImage.caption}
-                            imageClassName="w-full h-72 object-contain bg-black/30"
-                        />
-                    </motion.div>
-                </AnimatePresence>
-
-                {activeImage.caption && (
-                    <div className="absolute left-0 right-0 bottom-0 bg-linear-to-t from-black/80 to-transparent p-4">
-                        <p className="text-sm text-white font-bold">
-                            {activeImage.caption}
-                        </p>
-                    </div>
-                )}
-            </div>
-
-            {gallery.length > 1 && (
-                <div className="mt-4 grid grid-cols-4 gap-2">
-                    {gallery.slice(0, 8).map((item, index) => (
-                        <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => setActiveIndex(index)}
-                            className={`aspect-square rounded-2xl overflow-hidden border transition-all ${activeIndex === index
-                                ? "border-indigo-300 opacity-100 scale-[1.03]"
-                                : "border-white/10 opacity-55 hover:opacity-100"
-                                }`}
+                            onClick={() => setOpenIndex(index)}
+                            aria-label={t("open", { name: item.caption || t("imageAlt") })}
+                            className="group block aspect-square w-full overflow-hidden bg-[var(--brand-surface)]"
                         >
                             <img
                                 src={item.imageUrl}
                                 alt={item.caption || t("imageAlt")}
-                                className="w-full h-full object-cover"
+                                loading="lazy"
+                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                             />
                         </button>
-                    ))}
-                </div>
-            )}
-        </div>
+                    </li>
+                ))}
+            </ul>
+
+            {openIndex !== null && <Lightbox items={items} index={openIndex} onChange={setOpenIndex} onClose={() => setOpenIndex(null)} />}
+        </>
     );
 }

@@ -396,60 +396,6 @@
         "contactBusiness": "Message the barbershop",
         "titleStaff": "My bookings"
     },
-    "AvailableSlots": {
-        "title": "Available times",
-        "soldOut": "Sold Out!",
-        "noAvailability": {
-            "title": "No availability",
-            "subtitle": "The barber is not working on this day."
-        },
-        "soldOutHint": "Try another date or a different barber to see more times."
-    },
-    "CalendarPickerCustomer": {
-        "legend": {
-            "selected": "Selected",
-            "today": "Today",
-            "unavailable": "Unavailable",
-            "exception": "Blocked"
-        },
-        "hint": "choose an active day to see slots"
-    },
-    "SlotCard": {
-        "availableServices": "Available Services",
-        "loading": "LOADING...",
-        "buttons": {
-            "book": "Book",
-            "close": "Close",
-            "continue": "Continue",
-            "completeBooking": "Complete Booking",
-            "booking": "Booking..."
-        },
-        "modal": {
-            "title": "Confirm Booking",
-            "fields": {
-                "date": "Date",
-                "time": "Time",
-                "service": "Service",
-                "total": "Total"
-            },
-            "subtitle": "Review the details before completing your booking."
-        },
-        "errors": {
-            "noService": "Please select a service",
-            "loadFailed": "Could not load services",
-            "bookFailed": "Could not book appointment",
-            "network": "Network error, please try again",
-            "loginRequired": "Sign in to book this appointment"
-        },
-        "success": {
-            "booked": "{name} booked successfully!"
-        },
-        "noServices": "No services fit this time slot."
-    },
-    "BarberCard": {
-        "fallbackName": "Master Barber",
-        "verified": "Verified"
-    },
     "CustomersList": {
         "loadingDir": "Loading customer database...",
         "errors": {
@@ -556,63 +502,67 @@
         "error": "Could not switch barber"
     },
     "BusinessPage": {
-        "hero": {
-            "profile": "Business profile",
-            "defaultDescription": "Book your appointment with professionals ready to take care of you.",
-            "book": "Book appointment",
-            "paused": "Bookings paused",
-            "inactive": "Online booking is temporarily unavailable.",
+        "nav": {
+            "label": "Sections",
             "services": "Services",
-            "barbers": "Barbers",
-            "photos": "Photos"
+            "team": "Team",
+            "visit": "Location",
+            "book": "Book"
         },
-        "navbar": {
-            "browse": "Browse barbershops"
+        "hero": {
+            "defaultDescription": "Book online and pick the time that suits you.",
+            "book": "Book an appointment",
+            "whatsapp": "WhatsApp",
+            "coverAlt": "Photo of {name}",
+            "pausedTitle": "Online booking is paused",
+            "pausedText": "Appointments can't be booked here right now. Message the barbershop to schedule.",
+            "openUntil": "Open now · closes at {time}",
+            "opensToday": "Closed now · opens today at {time}",
+            "closedNow": "Closed now"
         },
-        "cta": {
-            "title": "Ready for your next cut?",
-            "subtitle": "Book with {name} and pick the time that works best for you.",
-            "book": "Book appointment",
-            "paused": "Bookings temporarily paused"
+        "services": {
+            "title": "Services and prices",
+            "subtitle": "Pick a service to see the times when it fits.",
+            "from": "from {price}",
+            "minutes": "{min} min",
+            "minutesRange": "{min} to {max} min",
+            "with": "with {names}",
+            "bookLabel": "Book {name}",
+            "note": "Prices in Mexican pesos. You pay at the barbershop.",
+            "empty": "The barbershop hasn't published its services yet."
         },
-        "contact": {
-            "whatsappMobile": "Contact on WhatsApp",
-            "title": "Contact",
-            "whatsapp": "Send WhatsApp"
+        "team": {
+            "title": "Team",
+            "subtitle": "Choose who you'd like to see.",
+            "services": "{count, plural, one {# service} other {# services}}",
+            "bookWith": "Book with {name}",
+            "fallbackName": "Barber"
+        },
+        "visit": {
+            "title": "Visit us",
+            "map": "Open in Google Maps",
+            "call": "Call {phone}"
+        },
+        "hours": {
+            "title": "Hours",
+            "today": "Today",
+            "closed": "Closed"
         },
         "gallery": {
             "title": "Gallery",
-            "subtitle": "Photos of the business.",
-            "empty": "No photos in the gallery yet.",
-            "count": "{count, plural, one {# photo} other {# photos}}.",
-            "imageAlt": "Business photo"
+            "imageAlt": "Barbershop photo",
+            "open": "Enlarge: {name}",
+            "close": "Close",
+            "previous": "Previous photo",
+            "next": "Next photo"
         },
         "posts": {
-            "title": "Posts",
-            "subtitle": "Announcements, promotions and news from the business.",
-            "count": "{count, plural, one {# post} other {# posts}}",
-            "empty": "No posts yet.",
-            "emptyHint": "When the business shares promotions, announcements or news, they will show up here.",
-            "imageAlt": "Post image"
+            "title": "News",
+            "imageAlt": "Post image",
+            "openImage": "Enlarge image"
         },
-        "carousel": {
-            "title": "Our team",
-            "empty": "No barbers available.",
-            "subtitle": "Meet the available barbers.",
-            "play": "Play carousel",
-            "pause": "Pause carousel",
-            "previous": "Previous barber",
-            "next": "Next barber",
-            "role": "Professional barber",
-            "featured": "Featured barber",
-            "description": "Choose your service and an available time to book with this business's team.",
-            "book": "Book appointment",
-            "fallbackName": "Barber"
-        },
-        "hours": {
-            "title": "Opening hours",
-            "today": "Today",
-            "closed": "Closed"
+        "footer": {
+            "platform": "Online booking"
         },
         "meta": {
             "title": "{name}: book your appointment",
@@ -620,27 +570,60 @@
         }
     },
     "BookingPage": {
+        "title": "Book your appointment",
         "barberFallback": "Barber",
-        "noBarbers": "This business has no barbers available for booking yet.",
-        "chooseBarber": "Choose a barber",
-        "seeTimes": "See available times",
-        "changeBarberOrDate": "Change barber or date",
         "backToProfile": "Back to profile",
-        "bookings": "Bookings",
-        "title": "Book appointment",
+        "contactWhatsapp": "Message on WhatsApp",
+        "noBarbers": "This barbershop has no times available for online booking yet.",
+        "paused": "Online booking for this barbershop is paused.",
+        "pausedHint": "Message the barbershop to schedule your appointment.",
+        "inactive": "Appointments can't be booked online right now.",
         "steps": {
-            "details": "Barber and date",
-            "slots": "Time",
-            "confirm": "Confirm"
+            "barber": "Barber",
+            "service": "Service",
+            "date": "Day",
+            "time": "Time"
         },
-        "paused": "Bookings for this business are temporarily paused.",
-        "pausedHint": "Please try again later or contact the barbershop directly.",
-        "inactive": "The service is temporarily unavailable.",
+        "wantedService": "Choose who will do your service: {name}.",
+        "pickBarberFirst": "Choose a barber first.",
+        "pickServiceFirst": "Choose a service to see the available days.",
+        "pickDateFirst": "Choose a day to see the times.",
+        "minutes": "{min} min",
+        "loading": "Loading...",
+        "noDays": "No days available in the next three weeks.",
+        "noTimes": "There's no room for a {duration}-minute service that day. Try another day.",
+        "retry": "Try again",
+        "continue": "Continue",
+        "summary": {
+            "empty": "Choose a service to start.",
+            "noDate": "No day chosen"
+        },
+        "confirm": {
+            "title": "Confirm your appointment",
+            "subtitle": "Check the details before sending.",
+            "service": "Service",
+            "barber": "Barber",
+            "date": "Day",
+            "time": "Time",
+            "price": "Price",
+            "note": "The barbershop receives your request and confirms it. You pay at the shop.",
+            "action": "Send request",
+            "sending": "Sending...",
+            "cancel": "Cancel"
+        },
+        "success": "Done, your request was sent. We'll let you know when the barbershop confirms it.",
+        "errors": {
+            "loginRequired": "Log in to finish your booking. Your selection is saved.",
+            "bookFailed": "Couldn't book. Choose another time.",
+            "network": "No connection. Please try again.",
+            "slots": "Couldn't load the times."
+        },
         "ownBusiness": {
             "title": "This is your barbershop",
             "text": "To hold a time or record a customer, use \"Add appointment\" in your schedule.",
             "action": "Go to my schedule"
-        }
+        },
+        "meta": "Book at {name}"
     },
     "BusinessDirectory": {
         "eyebrow": "Available businesses",

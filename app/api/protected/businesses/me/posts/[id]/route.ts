@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { errorResponse } from "@/lib/errors";
+import { cleanUpUploads } from "@/lib/uploads";
+import { replacedUrls } from "@/lib/upload-keys";
 import { revalidateBusinessPages } from "@/lib/cache/business-pages";
 import { requireOwnerAuth } from "@/lib/api/auth";
 import { parseJsonBody } from "@/lib/api/validation";
@@ -15,7 +17,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         const { id } = await context.params;
         const data = await parseJsonBody(req, businessPostSchema);
 
-        await assertBusinessPost(id, businessId);
+        const current = await assertBusinessPost(id, businessId);
 
         const updatedPost = await prisma.businessPost.update({
             where: { id },
@@ -23,6 +25,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         });
 
         await revalidateBusinessPages(businessId);
+        cleanUpUploads(replacedUrls([[current.imageUrl, data.imageUrl]]));
 
         return NextResponse.json(updatedPost);
     } catch (error) {
@@ -35,7 +38,7 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
         const { businessId } = requireOwnerAuth(req);
         const { id } = await context.params;
 
-        await assertBusinessPost(id, businessId);
+        const current = await assertBusinessPost(id, businessId);
 
         await prisma.businessPost.update({
             where: { id },
@@ -43,6 +46,7 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
         });
 
         await revalidateBusinessPages(businessId);
+        cleanUpUploads([current.imageUrl]);
 
         return NextResponse.json({ message: "Post deleted successfully" });
     } catch (error) {

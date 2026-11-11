@@ -1,3 +1,5 @@
+import { cleanUpUploads } from "@/lib/uploads";
+import { replacedUrls } from "@/lib/upload-keys";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { AppError, errorResponse } from "@/lib/errors";
@@ -61,7 +63,7 @@ export async function PATCH(request: NextRequest) {
 
         const existingBarber = await prisma.barber.findUnique({
             where: { id: barberId },
-            select: { businessId: true, userId: true, status: true },
+            select: { businessId: true, userId: true, status: true, profileImageUrl: true },
         });
 
         if (!existingBarber) {
@@ -120,6 +122,7 @@ export async function PATCH(request: NextRequest) {
         });
 
         await revalidateBusinessPages(existingBarber.businessId);
+        cleanUpUploads(replacedUrls([[existingBarber.profileImageUrl, profileImageUrl === undefined ? undefined : profileImageUrl || null]]));
 
         const { cancelledCount, ...barber } = updatedBarber;
 
