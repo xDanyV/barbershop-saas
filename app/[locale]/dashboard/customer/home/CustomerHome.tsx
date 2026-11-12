@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Clock, User, Calendar as CalendarIcon, History, AlertTriangle } from "lucide-react";
+import { Plus, Clock, User, Calendar as CalendarIcon, History, AlertTriangle, MessageCircle } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { formatPriceFromCents } from "@/lib/billing/pricing";
 import RescheduleDialog from "@/[locale]/components/RescheduleDialog";
@@ -415,16 +415,6 @@ export default function CustomerHome({ isStaff = false }: { isStaff?: boolean })
                               )}
                             </>
                           )}
-                          {(a.status === "PENDING" || a.status === "CONFIRMED") && date.getTime() > Date.now() && a.business.phone && (
-                            <a
-                              href={getWhatsAppUrl(a.business.phone, aboutMessage(a))}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex min-h-11 w-full items-center justify-center px-4 text-xs font-bold text-[#0f2733] transition-colors hover:bg-gray-100 sm:w-auto"
-                            >
-                              {t("contactBusiness")}
-                            </a>
-                          )}
                           {(a.status === "PENDING" || a.status === "CONFIRMED") && date.getTime() > Date.now() && (
                             <button
                               type="button"
@@ -433,6 +423,18 @@ export default function CustomerHome({ isStaff = false }: { isStaff?: boolean })
                             >
                               {t("reschedule")}
                             </button>
+                          )}
+                          {(a.status === "PENDING" || a.status === "CONFIRMED") && date.getTime() > Date.now() && a.business.phone && (
+                            <a
+                              href={getWhatsAppUrl(a.business.phone, aboutMessage(a))}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title={t("contactHint")}
+                              className="flex min-h-11 w-full items-center justify-center gap-1.5 px-4 text-xs font-semibold text-gray-600 transition-colors hover:text-[#0f2733] sm:w-auto"
+                            >
+                              <MessageCircle size={16} aria-hidden="true" />
+                              {t("contactBusiness")}
+                            </a>
                           )}
                           {a.status !== "CANCELLED" && <motion.button
                             whileTap={{ scale: 0.95 }}

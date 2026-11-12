@@ -22,6 +22,7 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import BrandMark from "@/[locale]/components/BrandMark";
 import BrandDialog from "@/[locale]/components/BrandDialog";
+import LocaleSwitch from "@/[locale]/components/LocaleSwitch";
 
 type NavItem = { label: string; path: string; icon: LucideIcon };
 
@@ -113,6 +114,8 @@ export default function DashboardNavbar({ role }: { role: string }) {
                             })}
                         </nav>
                     </div>
+
+                    <LocaleSwitch tone="dark" className="ml-auto -mr-2 md:mr-0" />
 
                     <Menu as="div" className="relative hidden md:block">
                         <MenuButton className="flex min-h-11 items-center gap-2 px-3 text-sm text-[#a9b7bc] transition-colors hover:text-white data-[open]:text-white">

@@ -1,21 +1,13 @@
 "use client";
 
-import { useApiError } from "@/[locale]/components/useApiError";
 import type { ChangeEvent, FormEvent } from "react";
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { Loader2, Plus, Trash2, UploadCloud } from "lucide-react";
+import { useTranslations } from "next-intl";
 import toast from "react-hot-toast";
-import {
-    CalendarDays,
-    ImageIcon,
-    Loader2,
-    Plus,
-    Trash2,
-    UploadCloud,
-    X,
-} from "lucide-react";
-import { useUploadThing } from "@/lib/uploadthing";
-import { compressImage } from "@/lib/compress-image";
+import BrandDialog, { brandPrimaryButton } from "@/[locale]/components/BrandDialog";
+import { useApiError } from "@/[locale]/components/useApiError";
+import { card, fieldInput, fieldLabel, primaryButton, secondaryButton, sectionHint, sectionTitle, useImageUpload } from "./ui";
 
 type GalleryItem = {
     id: string;
@@ -24,448 +16,187 @@ type GalleryItem = {
     createdAt: string;
 };
 
+// Fotos del local y de los cortes que aparecen en "Galería" de la página pública
 export default function BusinessGalleryManager() {
+    const t = useTranslations("MyBusiness.gallery");
     const apiError = useApiError();
-    const [gallery, setGallery] = useState<GalleryItem[]>([]);
+    const [items, setItems] = useState<GalleryItem[] | null>(null);
+    const [adding, setAdding] = useState(false);
     const [imageUrl, setImageUrl] = useState("");
     const [caption, setCaption] = useState("");
-    const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [uploading, setUploading] = useState(false);
-    const [deletingId, setDeletingId] = useState<string | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-
-    const { startUpload } = useUploadThing("businessGalleryImage", {
-        onClientUploadComplete: (res) => {
-            const uploadedUrl = res?.[0]?.serverData?.url ?? res?.[0]?.url;
-
-            if (!uploadedUrl) {
-                toast.error("No se pudo obtener la URL de la imagen");
-                setUploading(false);
-                return;
-            }
-
-            setImageUrl(uploadedUrl);
-            toast.success("Imagen subida. Ahora puedes agregarla a la galería.");
-            setUploading(false);
-        },
-        onUploadError: (error) => {
-            console.error("Gallery upload error:", error);
-            toast.error(error.message || "No se pudo subir la imagen");
-            setUploading(false);
-        },
-    });
-
-    const loadGallery = async () => {
-        try {
-            const res = await fetch("/api/protected/businesses/me/gallery");
-            const data = await res.json();
-
-            if (!res.ok) {
-                toast.error(apiError(data, "No se pudo cargar la galería"));
-                return;
-            }
-
-            if (Array.isArray(data)) {
-                setGallery(data);
-            }
-        } catch {
-            toast.error("Error al cargar galería");
-        } finally {
-            setLoading(false);
-        }
-    };
+    const [deleting, setDeleting] = useState<GalleryItem | null>(null);
+    const [deletingNow, setDeletingNow] = useState(false);
+    const image = useImageUpload("businessGalleryImage", { maxSize: 1600, maxMb: 8 });
 
     useEffect(() => {
-        loadGallery();
-    }, []);
+        fetch("/api/protected/businesses/me/gallery")
+            .then(async (res) => {
+                const data = await res.json().catch(() => null);
+                if (!res.ok || !Array.isArray(data)) throw new Error(apiError(data, t("errors.load")));
+                setItems(data);
+            })
+            .catch((error: Error) => {
+                setItems([]);
+                toast.error(error.message || t("errors.load"));
+            });
+    }, [apiError, t]);
 
-    useEffect(() => {
-        const handleEscape = (event: KeyboardEvent) => {
-            if (event.key === "Escape") {
-                setIsModalOpen(false);
-            }
-        };
-
-        window.addEventListener("keydown", handleEscape);
-
-        return () => window.removeEventListener("keydown", handleEscape);
-    }, []);
-
-    const resetForm = () => {
+    const open = () => {
         setImageUrl("");
         setCaption("");
-        setUploading(false);
+        setAdding(true);
     };
 
-    const handleOpenModal = () => {
-        resetForm();
-        setIsModalOpen(true);
+    const close = () => {
+        if (saving || image.uploading) return;
+        setAdding(false);
     };
 
-    const handleCloseModal = () => {
-        if (saving || uploading) return;
-
-        setIsModalOpen(false);
-        resetForm();
-    };
-
-    const handleUploadSelected = async (event: ChangeEvent<HTMLInputElement>) => {
+    const pick = async (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-
         event.target.value = "";
-
-        if (!file) return;
-
-        if (!file.type.startsWith("image/")) {
-            toast.error("Selecciona una imagen válida");
-            return;
-        }
-
-        const maxSizeInMb = 8;
-        const maxSizeInBytes = maxSizeInMb * 1024 * 1024;
-
-        // Se sube una versión más ligera; el límite se revisa sobre ella
-        const upload = await compressImage(file, { maxSize: 1600 });
-
-        if (upload.size > maxSizeInBytes) {
-            toast.error(`La imagen no debe pesar más de ${maxSizeInMb}MB`);
-            return;
-        }
-
-        setUploading(true);
-        await startUpload([upload]);
+        const url = await image.upload(file);
+        if (url) setImageUrl(url);
     };
 
-    const handleCreateImage = async (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
-        if (!imageUrl.trim()) {
-            toast.error("Primero sube una imagen");
-            return;
-        }
-
+    const add = async (event: FormEvent) => {
+        event.preventDefault();
+        if (!imageUrl) return;
         setSaving(true);
 
         try {
             const res = await fetch("/api/protected/businesses/me/gallery", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    imageUrl,
-                    caption,
-                }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ imageUrl, caption }),
             });
-
-            const data = await res.json();
+            const data = await res.json().catch(() => null);
 
             if (!res.ok) {
-                toast.error(apiError(data, "No se pudo agregar la imagen"));
+                toast.error(apiError(data, t("errors.create")));
                 return;
             }
 
-            setGallery((prev) => [data, ...prev]);
-
-            setIsModalOpen(false);
-            resetForm();
-            toast.success("Imagen agregada a la galería");
+            setItems((prev) => [data, ...(prev ?? [])]);
+            setAdding(false);
+            toast.success(t("created"));
         } catch {
-            toast.error("Error al agregar imagen");
+            toast.error(t("errors.create"));
         } finally {
             setSaving(false);
         }
     };
 
-    const handleDeleteImage = async (itemId: string) => {
-        const confirmed = window.confirm("¿Eliminar esta imagen de la galería?");
-
-        if (!confirmed) return;
-
-        setDeletingId(itemId);
+    const remove = async () => {
+        if (!deleting) return;
+        setDeletingNow(true);
 
         try {
-            const res = await fetch(`/api/protected/businesses/me/gallery/${itemId}`, {
-                method: "DELETE",
-            });
-
+            const res = await fetch(`/api/protected/businesses/me/gallery/${deleting.id}`, { method: "DELETE" });
             const data = await res.json().catch(() => null);
 
             if (!res.ok) {
-                toast.error(apiError(data, "No se pudo eliminar la imagen"));
+                toast.error(apiError(data, t("errors.delete")));
                 return;
             }
 
-            setGallery((prev) => prev.filter((item) => item.id !== itemId));
-            toast.success("Imagen eliminada");
+            setItems((prev) => (prev ?? []).filter((item) => item.id !== deleting.id));
+            setDeleting(null);
+            toast.success(t("deleted"));
         } catch {
-            toast.error("Error al eliminar imagen");
+            toast.error(t("errors.delete"));
         } finally {
-            setDeletingId(null);
+            setDeletingNow(false);
         }
     };
 
     return (
-        <>
-            <motion.section
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white border border-gray-100 rounded-3xl p-5 md:p-7 shadow-sm"
-            >
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                            <ImageIcon size={21} />
-                        </div>
-
-                        <div>
-                            <h2 className="text-xl font-black text-gray-900">
-                                Galería
-                            </h2>
-                            <p className="text-xs text-gray-500">
-                                Administra las fotos que aparecerán en la página pública.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-2">
-                        <div className="px-4 py-2 rounded-xl bg-gray-50 border border-gray-100 text-xs font-black text-gray-500 flex items-center justify-center">
-                            {gallery.length} foto{gallery.length === 1 ? "" : "s"}
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={handleOpenModal}
-                            className="px-4 py-2.5 rounded-xl bg-purple-600 text-white text-xs font-black hover:bg-purple-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-100"
-                        >
-                            <Plus size={15} />
-                            Agregar imagen
-                        </button>
-                    </div>
+        <section className={card}>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <h2 className={sectionTitle}>{t("title")}</h2>
+                    <p className={sectionHint}>{t("hint")}</p>
                 </div>
+                <button type="button" onClick={open} className={`${primaryButton} shrink-0`}>
+                    <Plus size={16} aria-hidden="true" />
+                    {t("add")}
+                </button>
+            </div>
 
-                {loading ? (
-                    <div className="min-h-56 flex items-center justify-center text-gray-400 text-sm font-bold">
-                        <Loader2 className="animate-spin mr-2" size={16} />
-                        Cargando galería...
-                    </div>
-                ) : gallery.length === 0 ? (
-                    <div className="min-h-72 rounded-3xl bg-gray-50 border border-dashed border-gray-200 flex flex-col items-center justify-center text-center px-6">
-                        <div className="w-14 h-14 rounded-2xl bg-white text-gray-400 flex items-center justify-center mb-4 shadow-sm">
-                            <ImageIcon size={26} />
-                        </div>
-
-                        <h3 className="text-lg font-black text-gray-800">
-                            Aún no hay imágenes
-                        </h3>
-
-                        <p className="text-sm text-gray-500 mt-2 max-w-md">
-                            Agrega fotos de cortes, interior del negocio, fachada o trabajos realizados.
-                        </p>
-
-                        <button
-                            type="button"
-                            onClick={handleOpenModal}
-                            className="mt-5 px-5 py-3 rounded-2xl bg-purple-600 text-white text-sm font-black hover:bg-purple-700 transition-all flex items-center gap-2"
-                        >
-                            <Plus size={16} />
-                            Agregar primera imagen
-                        </button>
-                    </div>
-                ) : (
-                    <div className="max-h-162.5 overflow-y-auto pr-1 pb-24 md:pb-2">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {gallery.map((item) => (
-                                <article
-                                    key={item.id}
-                                    className="rounded-3xl border border-gray-100 bg-gray-50 overflow-hidden hover:shadow-sm transition-all"
-                                >
-                                    <div className="relative">
-                                        <img
-                                            src={item.imageUrl}
-                                            alt={item.caption || "Imagen de galería"}
-                                            className="w-full aspect-4/3 object-cover"
-                                        />
-
-                                        <button
-                                            type="button"
-                                            onClick={() => handleDeleteImage(item.id)}
-                                            disabled={deletingId === item.id}
-                                            className="absolute top-3 right-3 w-9 h-9 rounded-xl bg-white/95 text-red-500 flex items-center justify-center shadow-sm hover:bg-red-50 disabled:opacity-50 transition-all"
-                                            aria-label="Eliminar imagen"
-                                        >
-                                            {deletingId === item.id ? (
-                                                <Loader2 className="animate-spin" size={15} />
-                                            ) : (
-                                                <Trash2 size={15} />
-                                            )}
-                                        </button>
-                                    </div>
-
-                                    <div className="p-4">
-                                        <p className="text-sm font-bold text-gray-800 line-clamp-2 min-h-10">
-                                            {item.caption || "Imagen de galería"}
-                                        </p>
-
-                                        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100 text-xs text-gray-400 font-bold">
-                                            <CalendarDays size={13} />
-                                            {new Date(item.createdAt).toLocaleDateString("es-MX")}
-                                        </div>
-                                    </div>
-                                </article>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </motion.section>
-
-            <AnimatePresence>
-                {isModalOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm p-4 flex items-center justify-center"
-                        onClick={handleCloseModal}
-                    >
-                        <motion.div
-                            initial={{ opacity: 0, y: 24, scale: 0.96 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 24, scale: 0.96 }}
-                            transition={{ duration: 0.2 }}
-                            className="flex max-h-full w-full max-w-xl flex-col bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="flex shrink-0 items-start justify-between gap-4 p-5 border-b border-gray-100">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                                        <ImageIcon size={20} />
-                                    </div>
-
-                                    <div>
-                                        <h3 className="font-black text-gray-900">
-                                            Agregar imagen
-                                        </h3>
-                                        <p className="text-xs text-gray-500 mt-0.5">
-                                            Sube una foto para la galería pública.
-                                        </p>
-                                    </div>
-                                </div>
-
+            {items === null ? (
+                <p className="mt-6 text-gray-600">{t("loading")}</p>
+            ) : items.length === 0 ? (
+                <div className="mt-6 border border-dashed border-gray-300 p-8 text-center">
+                    <p className="font-semibold text-gray-900">{t("emptyTitle")}</p>
+                    <p className="mx-auto mt-1 max-w-md text-gray-600">{t("emptyText")}</p>
+                </div>
+            ) : (
+                <ul className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
+                    {items.map((item) => (
+                        <li key={item.id} className="group relative">
+                            <img src={item.imageUrl} alt={item.caption || t("photoAlt")} className="aspect-square w-full bg-[#f1f3f2] object-cover" />
+                            <div className="flex items-start justify-between gap-2 pt-2">
+                                <p className="min-w-0 break-words text-sm text-gray-700">{item.caption}</p>
                                 <button
                                     type="button"
-                                    onClick={handleCloseModal}
-                                    disabled={saving || uploading}
-                                    className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-500 flex items-center justify-center disabled:opacity-50"
+                                    onClick={() => setDeleting(item)}
+                                    aria-label={t("deleteLabel", { caption: item.caption || t("photoAlt") })}
+                                    className="-mr-2 -mt-2 flex h-11 w-11 shrink-0 items-center justify-center text-[#b8431f]"
                                 >
-                                    <X size={17} />
+                                    <Trash2 size={18} aria-hidden="true" />
                                 </button>
                             </div>
+                        </li>
+                    ))}
+                </ul>
+            )}
 
-                            <form onSubmit={handleCreateImage} className="flex min-h-0 flex-1 flex-col">
-                                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
-                                <div className="rounded-3xl border border-dashed border-purple-200 bg-purple-50/40 p-5">
-                                    <input
-                                        id="business-gallery-upload"
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        disabled={saving || uploading}
-                                        onChange={handleUploadSelected}
-                                    />
+            {adding && (
+                <BrandDialog title={t("add")} subtitle={t("addHint")} closeLabel={t("cancel")} onClose={close}>
+                    <form onSubmit={add} className="space-y-5">
+                        {imageUrl ? (
+                            <div>
+                                {/* Altura limitada: una foto vertical no empuja los botones fuera de la pantalla */}
+                                <img src={imageUrl} alt="" className="max-h-56 w-full border border-gray-200 bg-[#f1f3f2] object-contain" />
+                                <label className={`${secondaryButton} mt-2 cursor-pointer has-[:disabled]:opacity-50`}>
+                                    <input type="file" accept="image/*" className="sr-only" disabled={image.uploading || saving} onChange={pick} />
+                                    {image.uploading ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <UploadCloud size={16} aria-hidden="true" />}
+                                    {image.uploading ? t("uploading") : t("changeImage")}
+                                </label>
+                            </div>
+                        ) : (
+                            <label className="flex min-h-32 cursor-pointer flex-col items-center justify-center gap-1 border border-dashed border-gray-300 bg-[#f1f3f2] px-4 text-center transition-colors hover:border-gray-900 has-[:disabled]:opacity-50">
+                                <input type="file" accept="image/*" className="sr-only" disabled={image.uploading || saving} onChange={pick} />
+                                {image.uploading ? <Loader2 size={20} className="animate-spin" aria-hidden="true" /> : <UploadCloud size={20} aria-hidden="true" />}
+                                <span className="font-semibold">{image.uploading ? t("uploading") : t("pickImage")}</span>
+                                <span className="text-sm text-gray-600">{t("imageHint")}</span>
+                            </label>
+                        )}
 
-                                    <label
-                                        htmlFor="business-gallery-upload"
-                                        className={`flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-3xl border border-purple-100 bg-white px-5 py-8 text-center transition-all ${saving || uploading
-                                                ? "opacity-60 pointer-events-none"
-                                                : "hover:border-purple-300 hover:bg-purple-50/40"
-                                            }`}
-                                    >
-                                        <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mb-4">
-                                            {uploading ? (
-                                                <Loader2 className="animate-spin" size={24} />
-                                            ) : (
-                                                <UploadCloud size={25} />
-                                            )}
-                                        </div>
+                        <label className={fieldLabel}>
+                            {t("caption")}
+                            <input value={caption} onChange={(event) => setCaption(event.target.value)} maxLength={200} placeholder={t("captionPlaceholder")} className={fieldInput} />
+                        </label>
 
-                                        <p className="text-sm font-black text-gray-900">
-                                            {uploading
-                                                ? "Subiendo imagen..."
-                                                : imageUrl
-                                                    ? "Cambiar imagen"
-                                                    : "Subir imagen"}
-                                        </p>
+                        {/* Fijo abajo de la ventana: con una foto alta el botón sigue a la vista */}
+                        <div className="sticky bottom-0 -mx-5 border-t border-[var(--brand-surface)] bg-[var(--brand-paper)] px-5 py-3 sm:-mx-8 sm:px-8">
+                            <button type="submit" disabled={saving || image.uploading || !imageUrl} className={`${brandPrimaryButton} gap-2`}>
+                                {saving && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
+                                {saving ? t("adding") : t("add")}
+                            </button>
+                        </div>
+                    </form>
+                </BrandDialog>
+            )}
 
-                                        <p className="text-xs text-gray-400 font-bold mt-1">
-                                            PNG, JPG o WEBP. Máximo 8MB.
-                                        </p>
-                                    </label>
-                                </div>
-
-                                {imageUrl.trim() && (
-                                    <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3">
-                                        <p className="text-xs font-black text-gray-500   mb-2">
-                                            Vista previa
-                                        </p>
-
-                                        <img
-                                            src={imageUrl}
-                                            alt="Vista previa"
-                                            className="w-full max-h-48 object-contain bg-white rounded-xl border border-gray-100"
-                                        />
-                                    </div>
-                                )}
-
-                                <div>
-                                    <label className="text-xs font-black text-gray-500  ">
-                                        Descripción opcional
-                                    </label>
-
-                                    <input
-                                        value={caption}
-                                        onChange={(e) => setCaption(e.target.value)}
-                                        className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
-                                        placeholder="Ej. Corte clásico, fachada, interior..."
-                                    />
-                                </div>
-
-                                </div>
-
-                                <div className="flex shrink-0 flex-col gap-2 border-t border-gray-100 p-5 sm:flex-row">
-                                    <button
-                                        type="button"
-                                        onClick={handleCloseModal}
-                                        disabled={saving || uploading}
-                                        className="w-full py-3 rounded-2xl bg-gray-100 text-gray-600 text-sm font-black hover:bg-gray-200 disabled:opacity-50 transition-all"
-                                    >
-                                        Cancelar
-                                    </button>
-
-                                    <button
-                                        type="submit"
-                                        disabled={saving || uploading || !imageUrl.trim()}
-                                        className="w-full py-3 rounded-2xl bg-purple-600 text-white text-sm font-black hover:bg-purple-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        {saving ? (
-                                            <>
-                                                <Loader2 className="animate-spin" size={17} />
-                                                Agregando...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Plus size={17} />
-                                                Agregar imagen
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </>
+            {deleting && (
+                <BrandDialog title={t("deleteTitle")} subtitle={t("deleteText")} closeLabel={t("keep")} onClose={() => !deletingNow && setDeleting(null)}>
+                    <button type="button" onClick={remove} disabled={deletingNow} className={brandPrimaryButton}>
+                        {t("delete")}
+                    </button>
+                </BrandDialog>
+            )}
+        </section>
     );
 }

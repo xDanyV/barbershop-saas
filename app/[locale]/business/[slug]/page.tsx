@@ -16,6 +16,7 @@ import BusinessHours from "./components/BusinessHours";
 import BusinessPosts from "./components/BusinessPosts";
 import OpenNow from "./components/OpenNow";
 import { getInitials, getMapsUrl, getWhatsAppUrl, groupServicesByName } from "./lib/business-page.utils";
+import LocaleSwitch from "@/[locale]/components/LocaleSwitch";
 
 type BusinessPageProps = {
     params: Promise<{
@@ -137,6 +138,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                                 {t("nav.book")}
                             </Link>
                         )}
+                        <LocaleSwitch className="ml-1" />
                     </nav>
                 </div>
             </header>

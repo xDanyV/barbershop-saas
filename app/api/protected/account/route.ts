@@ -75,6 +75,8 @@ export async function DELETE(request: NextRequest) {
                 },
                 data: { status: "CANCELLED", cancelledBy: "CUSTOMER" },
             }),
+            prisma.favoriteBusiness.deleteMany({ where: { userId } }),
+            prisma.passwordResetToken.deleteMany({ where: { userId } }),
             // Se borran los datos que identifican a la persona; el historial queda anónimo
             prisma.user.update({
                 where: { id: userId },

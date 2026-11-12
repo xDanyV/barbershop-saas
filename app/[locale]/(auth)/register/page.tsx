@@ -8,6 +8,7 @@ import BrandMark from "@/[locale]/components/BrandMark";
 import { useApiError } from "@/[locale]/components/useApiError";
 import { normalizeMxPhone } from "@/lib/phone";
 import { safeRedirectPath } from "@/lib/safe-redirect";
+import LocaleSwitch from "@/[locale]/components/LocaleSwitch";
 
 type Path = "owner" | "barber" | "customer";
 
@@ -112,6 +113,7 @@ export default function RegisterPage({ searchParams }: { searchParams: Promise<S
 
     return (
         <main className="theme-field flex min-h-screen items-center justify-center bg-[#0f2733] px-4 py-8 text-white md:py-16">
+            <LocaleSwitch tone="dark" className="fixed right-2 top-2 z-20" />
             <div className={`w-full ${showChooser ? "max-w-5xl" : "max-w-xl"}`}>
                 <div className="mb-8 text-center">
                     <Link href={`/${locale}`} className="inline-block">
