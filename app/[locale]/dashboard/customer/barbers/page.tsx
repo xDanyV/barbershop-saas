@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Heart, MapPin, Search, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { Heart, Loader2, MapPin, Navigation, Search, X } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import toast from "react-hot-toast";
 import { Link } from "../../../../../i18n/routing";
 import PageHeader from "@/[locale]/components/PageHeader";
 import { getOpenState, type DayHours } from "@/lib/business-hours";
 import { dayOfWeekFromKey, formatMinutes12h, minutesOfDay, resolveTimezone, toDateKey } from "@/lib/time/zoned";
 import { getInitials } from "@/[locale]/business/[slug]/lib/business-page.utils";
+import { distanceKm, formatDistance, hasLocation, type LatLng } from "@/lib/geo";
 
 type Business = {
     id: string;
@@ -18,6 +19,8 @@ type Business = {
     logoUrl: string | null;
     coverUrl: string | null;
     timezone: string;
+    latitude: number | null;
+    longitude: number | null;
     hours: DayHours[];
     bookable: boolean;
     settings: { isServiceActive: boolean } | null;
@@ -41,6 +44,10 @@ function openState(business: Business, now: Date) {
 // Directorio para reservar: buscar por nombre o zona, ver qué está abierto y guardar favoritas
 export default function BusinessesPage() {
     const t = useTranslations("BusinessDirectory");
+    const locale = useLocale();
+    // La ubicación del cliente se queda en su navegador: solo se usa para ordenar
+    const [here, setHere] = useState<LatLng | null>(null);
+    const [locating, setLocating] = useState(false);
     const [businesses, setBusinesses] = useState<Business[] | null>(null);
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
     const [query, setQuery] = useState("");
@@ -83,6 +90,26 @@ export default function BusinessesPage() {
         }
     };
 
+    const distanceTo = (business: Business) => (here && hasLocation(business) ? distanceKm(here, business) : null);
+
+    const toggleNearMe = () => {
+        if (here) return setHere(null);
+        if (!navigator.geolocation) return toast.error(t("near.unsupported"));
+
+        setLocating(true);
+        navigator.geolocation.getCurrentPosition(
+            ({ coords }) => {
+                setHere({ latitude: coords.latitude, longitude: coords.longitude });
+                setLocating(false);
+            },
+            (error) => {
+                toast.error(error.code === error.PERMISSION_DENIED ? t("near.denied") : t("near.failed"));
+                setLocating(false);
+            },
+            { enableHighAccuracy: false, timeout: 15000, maximumAge: 5 * 60 * 1000 }
+        );
+    };
+
     const visible = useMemo(() => {
         if (!businesses) return [];
         const words = normalize(query).split(/\s+/).filter(Boolean);
@@ -95,8 +122,16 @@ export default function BusinessesPage() {
                 if (filter === "open") return now ? openState(business, now).open : false;
                 return true;
             })
-            .sort((a, b) => Number(favorites.has(b.id)) - Number(favorites.has(a.id)) || a.name.localeCompare(b.name, "es"));
-    }, [businesses, query, filter, favorites, now]);
+            .sort((a, b) => {
+                // Cerca de mí: la más cercana primero; las que no marcan su ubicación, al final
+                if (here) {
+                    const da = hasLocation(a) ? distanceKm(here, a) : Infinity;
+                    const db = hasLocation(b) ? distanceKm(here, b) : Infinity;
+                    if (da !== db) return da - db;
+                }
+                return Number(favorites.has(b.id)) - Number(favorites.has(a.id)) || a.name.localeCompare(b.name, "es");
+            });
+    }, [businesses, query, filter, favorites, now, here]);
 
     const chips: { id: Filter; label: string }[] = [
         { id: "all", label: t("filters.all") },
@@ -132,6 +167,16 @@ export default function BusinessesPage() {
                 </label>
 
                 <div role="group" aria-label={t("filters.label")} className="scroll-strip -mx-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0">
+                    <button
+                        type="button"
+                        aria-pressed={Boolean(here)}
+                        onClick={toggleNearMe}
+                        disabled={locating}
+                        className={`inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap border px-4 text-sm font-semibold transition-colors disabled:opacity-60 ${here ? "border-[#e8603a] bg-[#e8603a] text-white" : "border-gray-200 bg-white text-gray-700 hover:border-gray-900"}`}
+                    >
+                        {locating ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Navigation size={16} aria-hidden="true" />}
+                        {locating ? t("near.locating") : t("near.label")}
+                    </button>
                     {chips.map((chip) => (
                         <button
                             key={chip.id}
@@ -180,7 +225,7 @@ export default function BusinessesPage() {
             ) : (
                 <>
                     <p className="mt-5 text-sm text-gray-600" aria-live="polite">
-                        {t("results", { count: visible.length })}
+                        {here ? t("near.results", { count: visible.length }) : t("results", { count: visible.length })}
                     </p>
                     <ul className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {visible.map((business) => {
@@ -216,10 +261,18 @@ export default function BusinessesPage() {
                                             <h2 className="min-w-0 break-words text-lg font-semibold text-gray-900">{business.name}</h2>
                                         </div>
 
-                                        {business.address && (
+                                        {(business.address || here) && (
                                             <p className="mt-2 flex items-start gap-2 text-sm text-gray-600">
                                                 <MapPin size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
-                                                <span className="min-w-0 break-words">{business.address}</span>
+                                                <span className="min-w-0 break-words">
+                                                    {here && (
+                                                        <strong className="font-semibold text-gray-900">
+                                                            {distanceTo(business) !== null ? formatDistance(distanceTo(business)!, locale) : t("near.noPin")}
+                                                        </strong>
+                                                    )}
+                                                    {here && business.address && " · "}
+                                                    {business.address}
+                                                </span>
                                             </p>
                                         )}
 

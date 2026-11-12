@@ -30,6 +30,8 @@ type Business = {
     coverUrl: string | null;
     themePrimary: string | null;
     themeAccent: string | null;
+    latitude: number | null;
+    longitude: number | null;
     billingStatus: BusinessBillingStatus;
     billingPlan: BusinessPlanType;
     subscriptionEndsAt: string | null;
@@ -48,6 +50,7 @@ const toForm = (data: Business): BusinessForm => ({
     maintenanceMessage: data.settings?.maintenanceMessage ?? "",
     themePrimary: data.themePrimary ?? null,
     themeAccent: data.themeAccent ?? null,
+    location: data.latitude != null && data.longitude != null ? { latitude: data.latitude, longitude: data.longitude } : null,
 });
 
 // Lo que los clientes ven de la barbería: perfil, colores, avisos, fotos y la membresía

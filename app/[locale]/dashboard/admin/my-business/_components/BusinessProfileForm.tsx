@@ -6,6 +6,8 @@ import { ImageIcon, Loader2, MapPin, Phone, Trash2, UploadCloud } from "lucide-r
 import { useTranslations } from "next-intl";
 import toast from "react-hot-toast";
 import BusinessThemePicker from "./BusinessThemePicker";
+import BusinessLocationPicker from "./BusinessLocationPicker";
+import type { LatLng } from "@/lib/geo";
 import { card, fieldInput, fieldLabel, fieldTextarea, primaryButton, sectionHint, sectionTitle, useImageUpload } from "./ui";
 
 export type BusinessForm = {
@@ -20,6 +22,7 @@ export type BusinessForm = {
     maintenanceMessage: string;
     themePrimary: string | null;
     themeAccent: string | null;
+    location: LatLng | null;
 };
 
 export type ImageField = "logoUrl" | "coverUrl";
@@ -132,6 +135,8 @@ export default function BusinessProfileForm({ form, saving, onSubmit, onUpdateFi
                         <p className="text-sm text-gray-600">{t("basics.addressHint")}</p>
                     </div>
                 </section>
+
+                <BusinessLocationPicker address={form.address} value={form.location} onChange={(value) => onUpdateField("location", value)} />
 
                 <BusinessThemePicker businessName={form.name} primary={form.themePrimary} accent={form.themeAccent} onChange={onUpdateField} />
             </div>

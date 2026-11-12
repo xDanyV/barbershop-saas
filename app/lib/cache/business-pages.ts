@@ -19,6 +19,8 @@ async function queryPublicBusinessPage(slug: string) {
             phone: true,
             address: true,
             logoUrl: true,
+            latitude: true,
+            longitude: true,
             themePrimary: true,
             themeAccent: true,
             coverUrl: true,

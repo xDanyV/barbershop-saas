@@ -554,8 +554,9 @@
         },
         "visit": {
             "title": "Visit us",
-            "map": "Open in Google Maps",
-            "call": "Call {phone}"
+            "map": "Get directions",
+            "call": "Call {phone}",
+            "mapLabel": "Map with the location of {name}"
         },
         "hours": {
             "title": "Hours",
@@ -677,7 +678,16 @@
         "view": "View page",
         "book": "Book",
         "paused": "Bookings paused",
-        "notYet": "Not taking bookings yet"
+        "notYet": "Not taking bookings yet",
+        "near": {
+            "label": "Near me",
+            "locating": "Locating...",
+            "results": "{count, plural, one {# barbershop, closest first} other {# barbershops, closest first}}",
+            "noPin": "Not on the map",
+            "unsupported": "Your browser doesn’t share location.",
+            "denied": "To see nearby barbershops, allow location access in your browser.",
+            "failed": "Your location couldn’t be read. Try again."
+        }
     },
     "Metadata": {
         "title": "Barbershop appointments in Tijuana",
@@ -1571,6 +1581,23 @@
                 "create": "The photo couldn't be added.",
                 "delete": "The photo couldn't be deleted."
             }
+        },
+        "location": {
+            "title": "Location on the map",
+            "hint": "Mark where your shop is. You show up when a customer looks for barbershops near them, and your page shows the map.",
+            "search": "Find my address",
+            "here": "Use my current location",
+            "mapLabel": "Map to mark the shop location",
+            "placed": "Location marked. It saves with \"Save changes\".",
+            "missing": "You haven’t marked your location yet.",
+            "remove": "Remove from map",
+            "tapHint": "Tap the map or drag the pin to set it at your shop’s entrance.",
+            "noAddress": "Write your address above first.",
+            "notFound": "We couldn’t find that address. Tap the map to mark it by hand.",
+            "found": "Address found. Check that the pin is on your shop.",
+            "searchFailed": "The address couldn’t be searched.",
+            "noGeolocation": "Your browser doesn’t share location.",
+            "denied": "Your location couldn’t be read. Check the browser permission."
         }
     }
 }
