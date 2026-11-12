@@ -1,510 +1,221 @@
 "use client";
 
-import { useApiError } from "@/[locale]/components/useApiError";
 import type { ChangeEvent, FormEvent } from "react";
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { Loader2, Plus, Trash2, UploadCloud } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import toast from "react-hot-toast";
-import {
-    CalendarDays,
-    Loader2,
-    Megaphone,
-    Newspaper,
-    Plus,
-    Trash2,
-    UploadCloud,
-    X,
-} from "lucide-react";
-import { useUploadThing } from "@/lib/uploadthing";
-import { compressImage } from "@/lib/compress-image";
+import BrandDialog, { brandPrimaryButton } from "@/[locale]/components/BrandDialog";
+import { useApiError } from "@/[locale]/components/useApiError";
+import { card, dangerLink, fieldLabel, fieldTextarea, primaryButton, secondaryButton, sectionHint, sectionTitle, useImageUpload } from "./ui";
 
-type BusinessPost = {
+type Post = {
     id: string;
     content: string;
     imageUrl: string | null;
     createdAt: string;
 };
 
+// Avisos y promociones que aparecen en "Novedades" de la página pública
 export default function BusinessPostsManager() {
+    const t = useTranslations("MyBusiness.posts");
+    const locale = useLocale();
     const apiError = useApiError();
-    const [posts, setPosts] = useState<BusinessPost[]>([]);
+    const [posts, setPosts] = useState<Post[] | null>(null);
+    const [creating, setCreating] = useState(false);
     const [content, setContent] = useState("");
     const [imageUrl, setImageUrl] = useState("");
-    const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [uploading, setUploading] = useState(false);
-    const [deletingId, setDeletingId] = useState<string | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [deleting, setDeleting] = useState<Post | null>(null);
+    const [deletingNow, setDeletingNow] = useState(false);
+    const image = useImageUpload("businessPostImage", { maxSize: 1600, maxMb: 8 });
 
-    const { startUpload } = useUploadThing("businessPostImage", {
-        onClientUploadComplete: (res) => {
-            const uploadedUrl = res?.[0]?.serverData?.url ?? res?.[0]?.url;
-
-            if (!uploadedUrl) {
-                toast.error("No se pudo obtener la URL de la imagen");
-                setUploading(false);
-                return;
-            }
-
-            setImageUrl(uploadedUrl);
-            toast.success("Imagen subida. Ahora puedes crear la publicación.");
-            setUploading(false);
-        },
-        onUploadError: (error) => {
-            console.error("Post image upload error:", error);
-            toast.error(error.message || "No se pudo subir la imagen");
-            setUploading(false);
-        },
-    });
-
-    const loadPosts = async () => {
-        try {
-            const res = await fetch("/api/protected/businesses/me/posts");
-            const data = await res.json();
-
-            if (!res.ok) {
-                toast.error(apiError(data, "No se pudieron cargar las publicaciones"));
-                return;
-            }
-
-            if (Array.isArray(data)) {
+    useEffect(() => {
+        fetch("/api/protected/businesses/me/posts")
+            .then(async (res) => {
+                const data = await res.json().catch(() => null);
+                if (!res.ok || !Array.isArray(data)) throw new Error(apiError(data, t("errors.load")));
                 setPosts(data);
-            }
-        } catch {
-            toast.error("Error al cargar publicaciones");
-        } finally {
-            setLoading(false);
-        }
-    };
+            })
+            .catch((error: Error) => {
+                setPosts([]);
+                toast.error(error.message || t("errors.load"));
+            });
+    }, [apiError, t]);
 
-    useEffect(() => {
-        loadPosts();
-    }, []);
-
-    useEffect(() => {
-        const handleEscape = (event: KeyboardEvent) => {
-            if (event.key === "Escape" && !saving && !uploading) {
-                setIsModalOpen(false);
-                resetForm();
-            }
-        };
-
-        window.addEventListener("keydown", handleEscape);
-
-        return () => window.removeEventListener("keydown", handleEscape);
-    }, [saving, uploading]);
-
-    const resetForm = () => {
+    const open = () => {
         setContent("");
         setImageUrl("");
-        setUploading(false);
+        setCreating(true);
     };
 
-    const handleOpenModal = () => {
-        resetForm();
-        setIsModalOpen(true);
+    const close = () => {
+        if (saving || image.uploading) return;
+        setCreating(false);
     };
 
-    const handleCloseModal = () => {
-        if (saving || uploading) return;
-
-        setIsModalOpen(false);
-        resetForm();
-    };
-
-    const handleUploadSelected = async (event: ChangeEvent<HTMLInputElement>) => {
+    const pick = async (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-
         event.target.value = "";
-
-        if (!file) return;
-
-        if (!file.type.startsWith("image/")) {
-            toast.error("Selecciona una imagen válida");
-            return;
-        }
-
-        const maxSizeInMb = 8;
-        const maxSizeInBytes = maxSizeInMb * 1024 * 1024;
-
-        // Se sube una versión más ligera; el límite se revisa sobre ella
-        const upload = await compressImage(file, { maxSize: 1600 });
-
-        if (upload.size > maxSizeInBytes) {
-            toast.error(`La imagen no debe pesar más de ${maxSizeInMb}MB`);
-            return;
-        }
-
-        setUploading(true);
-        await startUpload([upload]);
+        const url = await image.upload(file);
+        if (url) setImageUrl(url);
     };
 
-    const handleCreatePost = async (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
-        if (content.trim().length < 3) {
-            toast.error("La publicación debe tener al menos 3 caracteres");
-            return;
-        }
-
+    const create = async (event: FormEvent) => {
+        event.preventDefault();
+        if (content.trim().length < 3) return toast.error(t("errors.short"));
         setSaving(true);
 
         try {
             const res = await fetch("/api/protected/businesses/me/posts", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    content,
-                    imageUrl,
-                }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ content, imageUrl }),
             });
-
-            const data = await res.json();
+            const data = await res.json().catch(() => null);
 
             if (!res.ok) {
-                toast.error(apiError(data, "No se pudo crear la publicación"));
+                toast.error(apiError(data, t("errors.create")));
                 return;
             }
 
-            setPosts((prev) => [data, ...prev]);
-            setIsModalOpen(false);
-            resetForm();
-            toast.success("Publicación creada");
+            setPosts((prev) => [data, ...(prev ?? [])]);
+            setCreating(false);
+            toast.success(t("created"));
         } catch {
-            toast.error("Error al crear publicación");
+            toast.error(t("errors.create"));
         } finally {
             setSaving(false);
         }
     };
 
-    const handleDeletePost = async (postId: string) => {
-        const confirmed = window.confirm("¿Eliminar esta publicación?");
-
-        if (!confirmed) return;
-
-        setDeletingId(postId);
+    const remove = async () => {
+        if (!deleting) return;
+        setDeletingNow(true);
 
         try {
-            const res = await fetch(`/api/protected/businesses/me/posts/${postId}`, {
-                method: "DELETE",
-            });
-
+            const res = await fetch(`/api/protected/businesses/me/posts/${deleting.id}`, { method: "DELETE" });
             const data = await res.json().catch(() => null);
 
             if (!res.ok) {
-                toast.error(apiError(data, "No se pudo eliminar"));
+                toast.error(apiError(data, t("errors.delete")));
                 return;
             }
 
-            setPosts((prev) => prev.filter((post) => post.id !== postId));
-            toast.success("Publicación eliminada");
+            setPosts((prev) => (prev ?? []).filter((post) => post.id !== deleting.id));
+            setDeleting(null);
+            toast.success(t("deleted"));
         } catch {
-            toast.error("Error al eliminar publicación");
+            toast.error(t("errors.delete"));
         } finally {
-            setDeletingId(null);
+            setDeletingNow(false);
         }
     };
 
+    const dateLabel = (iso: string) =>
+        new Date(iso).toLocaleDateString(locale === "en" ? "en-US" : "es-MX", { day: "numeric", month: "long", year: "numeric" });
+
     return (
-        <>
-            <motion.section
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white border border-gray-100 rounded-3xl p-5 md:p-7 shadow-sm"
-            >
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                            <Newspaper size={21} />
-                        </div>
-
-                        <div>
-                            <h2 className="text-xl font-black text-gray-900">
-                                Publicaciones
-                            </h2>
-                            <p className="text-xs text-gray-500">
-                                Administra avisos, promociones o novedades visibles en la página pública.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-2">
-                        <div className="px-4 py-2 rounded-xl bg-gray-50 border border-gray-100 text-xs font-black text-gray-500 flex items-center justify-center">
-                            {posts.length} publicación{posts.length === 1 ? "" : "es"}
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={handleOpenModal}
-                            className="px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-black hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
-                        >
-                            <Plus size={15} />
-                            Nueva publicación
-                        </button>
-                    </div>
+        <section className={card}>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <h2 className={sectionTitle}>{t("title")}</h2>
+                    <p className={sectionHint}>{t("hint")}</p>
                 </div>
+                <button type="button" onClick={open} className={`${primaryButton} shrink-0`}>
+                    <Plus size={16} aria-hidden="true" />
+                    {t("new")}
+                </button>
+            </div>
 
-                {loading ? (
-                    <div className="min-h-56 flex items-center justify-center text-gray-400 text-sm font-bold">
-                        <Loader2 className="animate-spin mr-2" size={16} />
-                        Cargando publicaciones...
-                    </div>
-                ) : posts.length === 0 ? (
-                    <div className="min-h-72 rounded-3xl bg-gray-50 border border-dashed border-gray-200 flex flex-col items-center justify-center text-center px-6">
-                        <div className="w-14 h-14 rounded-2xl bg-white text-gray-400 flex items-center justify-center mb-4 shadow-sm">
-                            <Megaphone size={26} />
-                        </div>
-
-                        <h3 className="text-lg font-black text-gray-800">
-                            Aún no hay publicaciones
-                        </h3>
-
-                        <p className="text-sm text-gray-500 mt-2 max-w-md">
-                            Crea una publicación para mostrar promociones, avisos o novedades en la página pública del negocio.
-                        </p>
-
-                        <button
-                            type="button"
-                            onClick={handleOpenModal}
-                            className="mt-5 px-5 py-3 rounded-2xl bg-indigo-600 text-white text-sm font-black hover:bg-indigo-700 transition-all flex items-center gap-2"
-                        >
-                            <Plus size={16} />
-                            Crear primera publicación
-                        </button>
-                    </div>
-                ) : (
-                    <div className="max-h-162.5 overflow-y-auto pr-1 pb-24 md:pb-2">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            {posts.map((post, index) => {
-                                const isFeatured = index === 0 && post.content.length > 140;
-
-                                return (
-                                    <article
-                                        key={post.id}
-                                        className={`rounded-3xl border border-gray-100 bg-gray-50 overflow-hidden hover:shadow-sm transition-all ${isFeatured ? "lg:col-span-2" : ""
-                                            }`}
-                                    >
-                                        <div
-                                            className={`grid grid-cols-1 ${isFeatured ? "md:grid-cols-[280px_1fr]" : ""
-                                                }`}
-                                        >
-                                            {post.imageUrl ? (
-                                                <img
-                                                    src={post.imageUrl}
-                                                    alt="Publicación"
-                                                    className={`w-full object-cover ${isFeatured
-                                                            ? "h-56 md:h-64"
-                                                            : "h-44"
-                                                        }`}
-                                                />
-                                            ) : (
-                                                <div
-                                                    className={`w-full bg-indigo-50 text-indigo-300 flex items-center justify-center ${isFeatured
-                                                            ? "h-44 md:h-64"
-                                                            : "h-32"
-                                                        }`}
-                                                >
-                                                    <Newspaper size={34} />
-                                                </div>
-                                            )}
-
-                                            <div className="p-5 flex flex-col">
-                                                <div className="flex items-center gap-2 text-xs text-gray-400 font-bold mb-3">
-                                                    <CalendarDays size={13} />
-                                                    {new Date(post.createdAt).toLocaleDateString("es-MX")}
-                                                </div>
-
-                                                <p
-                                                    className={`text-sm text-gray-700 whitespace-pre-line leading-relaxed ${isFeatured ? "" : "line-clamp-4"
-                                                        }`}
-                                                >
-                                                    {post.content}
-                                                </p>
-
-                                                <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-end">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleDeletePost(post.id)}
-                                                        disabled={deletingId === post.id}
-                                                        className="text-red-400 hover:text-red-600 text-xs font-black flex items-center gap-1 disabled:opacity-50"
-                                                    >
-                                                        {deletingId === post.id ? (
-                                                            <Loader2 className="animate-spin" size={13} />
-                                                        ) : (
-                                                            <Trash2 size={13} />
-                                                        )}
-                                                        Eliminar
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </article>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-            </motion.section>
-
-            <AnimatePresence>
-                {isModalOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm p-4 flex items-center justify-center"
-                        onClick={handleCloseModal}
-                    >
-                        <motion.div
-                            initial={{ opacity: 0, y: 24, scale: 0.96 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 24, scale: 0.96 }}
-                            transition={{ duration: 0.2 }}
-                            className="flex max-h-full w-full max-w-xl flex-col bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="flex shrink-0 items-start justify-between gap-4 p-5 border-b border-gray-100">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                                        <Newspaper size={20} />
-                                    </div>
-
-                                    <div>
-                                        <h3 className="font-black text-gray-900">
-                                            Nueva publicación
-                                        </h3>
-                                        <p className="text-xs text-gray-500 mt-0.5">
-                                            Agrega un aviso o promoción para tus clientes.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    onClick={handleCloseModal}
-                                    disabled={saving || uploading}
-                                    className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-500 flex items-center justify-center disabled:opacity-50"
-                                >
-                                    <X size={17} />
+            {posts === null ? (
+                <p className="mt-6 text-gray-600">{t("loading")}</p>
+            ) : posts.length === 0 ? (
+                <div className="mt-6 border border-dashed border-gray-300 p-8 text-center">
+                    <p className="font-semibold text-gray-900">{t("emptyTitle")}</p>
+                    <p className="mx-auto mt-1 max-w-md text-gray-600">{t("emptyText")}</p>
+                </div>
+            ) : (
+                <ul className="mt-6 divide-y divide-gray-100 border-y border-gray-100">
+                    {posts.map((post) => (
+                        <li key={post.id} className="flex flex-col gap-4 py-4 sm:flex-row">
+                            {post.imageUrl && <img src={post.imageUrl} alt="" className="aspect-[4/3] w-full shrink-0 object-cover sm:w-40" />}
+                            <div className="min-w-0 flex-1">
+                                <p className="text-sm text-gray-500">{dateLabel(post.createdAt)}</p>
+                                <p className="mt-1 whitespace-pre-line break-words text-gray-900">{post.content}</p>
+                            </div>
+                            <div className="shrink-0 self-start">
+                                <button type="button" onClick={() => setDeleting(post)} className={dangerLink}>
+                                    <Trash2 size={16} aria-hidden="true" />
+                                    {t("delete")}
                                 </button>
                             </div>
+                        </li>
+                    ))}
+                </ul>
+            )}
 
-                            <form onSubmit={handleCreatePost} className="flex min-h-0 flex-1 flex-col">
-                                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
-                                <div>
-                                    <label className="text-xs font-black text-gray-500  ">
-                                        Texto
-                                    </label>
+            {creating && (
+                <BrandDialog title={t("new")} subtitle={t("newHint")} closeLabel={t("cancel")} onClose={close}>
+                    <form onSubmit={create} className="space-y-5">
+                        <label className={fieldLabel}>
+                            {t("text")}
+                            <textarea
+                                value={content}
+                                onChange={(event) => setContent(event.target.value)}
+                                rows={4}
+                                maxLength={2000}
+                                required
+                                placeholder={t("textPlaceholder")}
+                                className={fieldTextarea}
+                            />
+                        </label>
 
-                                    <textarea
-                                        value={content}
-                                        onChange={(e) => setContent(e.target.value)}
-                                        className="mt-2 w-full min-h-36 rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 resize-none"
-                                        placeholder="Ej. Promoción de fin de semana, nuevo horario, aviso especial..."
-                                    />
-                                </div>
-
-                                <div className="rounded-3xl border border-dashed border-indigo-200 bg-indigo-50/40 p-5">
-                                    <input
-                                        id="business-post-upload"
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        disabled={saving || uploading}
-                                        onChange={handleUploadSelected}
-                                    />
-
-                                    <label
-                                        htmlFor="business-post-upload"
-                                        className={`flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-3xl border border-indigo-100 bg-white px-5 py-7 text-center transition-all ${saving || uploading
-                                                ? "opacity-60 pointer-events-none"
-                                                : "hover:border-indigo-300 hover:bg-indigo-50/40"
-                                            }`}
-                                    >
-                                        <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
-                                            {uploading ? (
-                                                <Loader2 className="animate-spin" size={24} />
-                                            ) : (
-                                                <UploadCloud size={25} />
-                                            )}
-                                        </div>
-
-                                        <p className="text-sm font-black text-gray-900">
-                                            {uploading
-                                                ? "Subiendo imagen..."
-                                                : imageUrl
-                                                    ? "Cambiar imagen"
-                                                    : "Subir imagen opcional"}
-                                        </p>
-
-                                        <p className="text-xs text-gray-400 font-bold mt-1">
-                                            PNG, JPG o WEBP. Máximo 8MB.
-                                        </p>
-                                    </label>
-                                </div>
-
-                                {imageUrl.trim() && (
-                                    <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3">
-                                        <div className="flex items-center justify-between gap-3 mb-2">
-                                            <p className="text-xs font-black text-gray-500  ">
-                                                Vista previa
-                                            </p>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => setImageUrl("")}
-                                                disabled={saving || uploading}
-                                                className="text-xs font-black text-red-400 hover:text-red-600 disabled:opacity-50"
-                                            >
-                                                Quitar imagen
-                                            </button>
-                                        </div>
-
-                                        <img
-                                            src={imageUrl}
-                                            alt="Vista previa"
-                                            className="w-full max-h-48 object-contain bg-white rounded-xl border border-gray-100"
-                                        />
+                        <div>
+                            <p className={fieldLabel}>{t("image")}</p>
+                            {imageUrl ? (
+                                <div className="mt-2">
+                                    {/* Altura limitada: una foto vertical no empuja los botones fuera de la pantalla */}
+                                    <img src={imageUrl} alt="" className="max-h-56 w-full border border-gray-200 bg-[#f1f3f2] object-contain" />
+                                    <div className="mt-2 flex gap-2">
+                                        <label className={`${secondaryButton} cursor-pointer has-[:disabled]:opacity-50`}>
+                                            <input type="file" accept="image/*" className="sr-only" disabled={image.uploading || saving} onChange={pick} />
+                                            {image.uploading ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <UploadCloud size={16} aria-hidden="true" />}
+                                            {image.uploading ? t("uploading") : t("changeImage")}
+                                        </label>
+                                        <button type="button" onClick={() => setImageUrl("")} disabled={image.uploading || saving} className={dangerLink}>
+                                            {t("removeImage")}
+                                        </button>
                                     </div>
-                                )}
-
                                 </div>
+                            ) : (
+                                <label className="mt-2 flex min-h-24 cursor-pointer flex-col items-center justify-center gap-1 border border-dashed border-gray-300 bg-[#f1f3f2] px-4 text-center transition-colors hover:border-gray-900 has-[:disabled]:opacity-50">
+                                    <input type="file" accept="image/*" className="sr-only" disabled={image.uploading || saving} onChange={pick} />
+                                    {image.uploading ? <Loader2 size={20} className="animate-spin" aria-hidden="true" /> : <UploadCloud size={20} aria-hidden="true" />}
+                                    <span className="font-semibold">{image.uploading ? t("uploading") : t("addImage")}</span>
+                                    <span className="text-sm text-gray-600">{t("imageHint")}</span>
+                                </label>
+                            )}
+                        </div>
 
-                                <div className="flex shrink-0 flex-col gap-2 border-t border-gray-100 p-5 sm:flex-row">
-                                    <button
-                                        type="button"
-                                        onClick={handleCloseModal}
-                                        disabled={saving || uploading}
-                                        className="w-full py-3 rounded-2xl bg-gray-100 text-gray-600 text-sm font-black hover:bg-gray-200 disabled:opacity-50 transition-all"
-                                    >
-                                        Cancelar
-                                    </button>
+                        {/* Fijo abajo de la ventana: con una foto alta el botón sigue a la vista */}
+                        <div className="sticky bottom-0 -mx-5 border-t border-[var(--brand-surface)] bg-[var(--brand-paper)] px-5 py-3 sm:-mx-8 sm:px-8">
+                            <button type="submit" disabled={saving || image.uploading || content.trim().length < 3} className={`${brandPrimaryButton} gap-2`}>
+                                {saving && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
+                                {saving ? t("publishing") : t("publish")}
+                            </button>
+                        </div>
+                    </form>
+                </BrandDialog>
+            )}
 
-                                    <button
-                                        type="submit"
-                                        disabled={saving || uploading || content.trim().length < 3}
-                                        className="w-full py-3 rounded-2xl bg-indigo-600 text-white text-sm font-black hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        {saving ? (
-                                            <>
-                                                <Loader2 className="animate-spin" size={17} />
-                                                Publicando...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Plus size={17} />
-                                                Crear publicación
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </>
+            {deleting && (
+                <BrandDialog title={t("deleteTitle")} subtitle={t("deleteText")} closeLabel={t("keep")} onClose={() => !deletingNow && setDeleting(null)}>
+                    <button type="button" onClick={remove} disabled={deletingNow} className={brandPrimaryButton}>
+                        {t("delete")}
+                    </button>
+                </BrandDialog>
+            )}
+        </section>
     );
 }

@@ -43,3 +43,19 @@ describe("updateBusinessSchema", () => {
         expect(updateBusinessSchema.safeParse({ themePrimary: "red" }).success).toBe(false);
     });
 });
+
+import { getOpenState } from "@/lib/business-hours";
+
+describe("getOpenState", () => {
+    const hours = [{ dayOfWeek: 1, open: "09:00", close: "19:00" }, { dayOfWeek: 0, open: null, close: null }];
+
+    it("is open between opening and closing", () => {
+        expect(getOpenState(hours, 1, 10 * 60)).toEqual({ open: true, closesAt: 19 * 60 });
+    });
+
+    it("says when it opens later today, and is closed after hours or on days off", () => {
+        expect(getOpenState(hours, 1, 8 * 60)).toEqual({ open: false, opensTodayAt: 9 * 60 });
+        expect(getOpenState(hours, 1, 19 * 60)).toEqual({ open: false, opensTodayAt: null });
+        expect(getOpenState(hours, 0, 12 * 60)).toEqual({ open: false, opensTodayAt: null });
+    });
+});

@@ -2,23 +2,11 @@
 
 import type { ChangeEvent, FormEvent } from "react";
 import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-    Building2,
-    ImageIcon,
-    Loader2,
-    MapPin,
-    Phone,
-    Save,
-    ToggleLeft,
-    ToggleRight,
-    Trash2,
-    UploadCloud,
-} from "lucide-react";
+import { ImageIcon, Loader2, MapPin, Phone, Trash2, UploadCloud } from "lucide-react";
+import { useTranslations } from "next-intl";
 import toast from "react-hot-toast";
-import { useUploadThing } from "@/lib/uploadthing";
-import { compressImage } from "@/lib/compress-image";
 import BusinessThemePicker from "./BusinessThemePicker";
+import { card, fieldInput, fieldLabel, fieldTextarea, primaryButton, sectionHint, sectionTitle, useImageUpload } from "./ui";
 
 export type BusinessForm = {
     name: string;
@@ -34,474 +22,206 @@ export type BusinessForm = {
     themeAccent: string | null;
 };
 
-type UpdateBusinessField = <K extends keyof BusinessForm>(
-    key: K,
-    value: BusinessForm[K]
-) => void;
+export type ImageField = "logoUrl" | "coverUrl";
 
 type Props = {
     form: BusinessForm;
     saving: boolean;
-    onSubmit: (e: FormEvent<HTMLFormElement>) => void;
-    onUpdateField: UpdateBusinessField;
+    onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+    onUpdateField: <K extends keyof BusinessForm>(key: K, value: BusinessForm[K]) => void;
     // El logo y la portada se guardan en cuanto se suben o se quitan
     onSaveImage: (field: ImageField, url: string) => Promise<boolean>;
 };
 
-export type ImageField = "logoUrl" | "coverUrl";
+function Switch({ checked, onChange, label, hint }: { checked: boolean; onChange: () => void; label: string; hint: string }) {
+    return (
+        <button type="button" role="switch" aria-checked={checked} onClick={onChange} className="flex w-full items-center justify-between gap-4 py-3 text-left">
+            <span className="min-w-0">
+                <span className="block font-semibold text-gray-900">{label}</span>
+                <span className="mt-0.5 block text-sm text-gray-600">{hint}</span>
+            </span>
+            <span aria-hidden="true" className={`relative h-7 w-12 shrink-0 transition-colors ${checked ? "bg-[#2f7d5b]" : "bg-gray-300"}`}>
+                <span className={`absolute top-1 h-5 w-5 bg-white transition-transform ${checked ? "translate-x-6" : "translate-x-1"}`} />
+            </span>
+        </button>
+    );
+}
 
-export default function BusinessProfileForm({
-    form,
-    saving,
-    onSubmit,
-    onUpdateField,
-    onSaveImage,
-}: Props) {
-    const [uploadingField, setUploadingField] = useState<ImageField | null>(null);
+export default function BusinessProfileForm({ form, saving, onSubmit, onUpdateField, onSaveImage }: Props) {
+    const t = useTranslations("MyBusiness.profile");
+    const logo = useImageUpload("businessLogoImage", { maxSize: 512, maxMb: 2 });
+    const cover = useImageUpload("businessCoverImage", { maxSize: 1920, maxMb: 8 });
+    const [removing, setRemoving] = useState<ImageField | null>(null);
+    const busy = logo.uploading || cover.uploading || removing !== null;
 
-    const { startUpload: startLogoUpload } = useUploadThing("businessLogoImage", {
-        onClientUploadComplete: async (res) => {
-            const uploadedUrl = res?.[0]?.serverData?.url ?? res?.[0]?.url;
-
-            if (!uploadedUrl) {
-                toast.error("No se pudo obtener la URL del logo");
-                setUploadingField(null);
-                return;
-            }
-
-            if (await onSaveImage("logoUrl", uploadedUrl)) toast.success("Logo guardado. Ya aparece en tu página.");
-            setUploadingField(null);
-        },
-        onUploadError: (error) => {
-            console.error("Logo upload error:", error);
-            toast.error(error.message || "No se pudo subir el logo");
-            setUploadingField(null);
-        },
-    });
-
-    const { startUpload: startCoverUpload } = useUploadThing("businessCoverImage", {
-        onClientUploadComplete: async (res) => {
-            const uploadedUrl = res?.[0]?.serverData?.url ?? res?.[0]?.url;
-
-            if (!uploadedUrl) {
-                toast.error("No se pudo obtener la URL de la portada");
-                setUploadingField(null);
-                return;
-            }
-
-            if (await onSaveImage("coverUrl", uploadedUrl)) toast.success("Portada guardada. Ya aparece en tu página.");
-            setUploadingField(null);
-        },
-        onUploadError: (error) => {
-            console.error("Cover upload error:", error);
-            toast.error(error.message || "No se pudo subir la portada");
-            setUploadingField(null);
-        },
-    });
-
-    const handleUploadSelected = async (
-        field: ImageField,
-        event: ChangeEvent<HTMLInputElement>
-    ) => {
+    const pick = async (field: ImageField, event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-
         event.target.value = "";
-
-        if (!file) return;
-
-        if (!file.type.startsWith("image/")) {
-            toast.error("Selecciona una imagen válida");
-            return;
-        }
-
-        const maxSizeInMb = field === "logoUrl" ? 2 : 8;
-        const maxSizeInBytes = maxSizeInMb * 1024 * 1024;
-
-        // Se sube una versión más ligera; el límite se revisa sobre ella
-        const upload = await compressImage(file, { maxSize: field === "logoUrl" ? 512 : 1920 });
-
-        if (upload.size > maxSizeInBytes) {
-            toast.error(`La imagen no debe pesar más de ${maxSizeInMb}MB`);
-            return;
-        }
-
-        setUploadingField(field);
-
-        if (field === "logoUrl") {
-            await startLogoUpload([upload]);
-            return;
-        }
-
-        await startCoverUpload([upload]);
+        const url = await (field === "logoUrl" ? logo : cover).upload(file);
+        if (url && (await onSaveImage(field, url))) toast.success(t(field === "logoUrl" ? "images.logoSaved" : "images.coverSaved"));
     };
 
-    const isUploadingLogo = uploadingField === "logoUrl";
-    const isUploadingCover = uploadingField === "coverUrl";
-    const isUploadingAnyImage = uploadingField !== null;
+    const remove = async (field: ImageField) => {
+        setRemoving(field);
+        if (await onSaveImage(field, "")) toast.success(t(field === "logoUrl" ? "images.logoRemoved" : "images.coverRemoved"));
+        setRemoving(null);
+    };
+
+    const imageButton = (field: ImageField, uploading: boolean, hasImage: boolean) => (
+        <label className={`inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 bg-gray-900 px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 has-[:disabled]:pointer-events-none has-[:disabled]:opacity-50`}>
+            <input type="file" accept="image/*" className="sr-only" disabled={busy} onChange={(event) => pick(field, event)} />
+            {uploading ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <UploadCloud size={16} aria-hidden="true" />}
+            {uploading ? t("images.uploading") : t(`images.${field === "logoUrl" ? "logo" : "cover"}${hasImage ? "Change" : "Add"}`)}
+        </label>
+    );
 
     return (
-        <form
-            onSubmit={onSubmit}
-            className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6"
-        >
+        <form onSubmit={onSubmit} className="grid gap-6 lg:grid-cols-[1fr_22rem]">
             <div className="space-y-6">
-                <motion.section
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.05 }}
-                    className="bg-white border border-gray-100 rounded-3xl p-5 md:p-7 shadow-sm space-y-5"
-                >
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                            <Building2 size={20} />
-                        </div>
+                <section className={card}>
+                    <h2 className={sectionTitle}>{t("basics.title")}</h2>
+                    <p className={sectionHint}>{t("basics.hint")}</p>
 
-                        <div>
-                            <h2 className="font-black text-gray-900">
-                                Información básica
-                            </h2>
-                            <p className="text-xs text-gray-500">
-                                Datos principales de tu negocio.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="text-xs font-black text-gray-500  ">
-                            Nombre del negocio
+                    <div className="mt-5 space-y-5">
+                        <label className={fieldLabel}>
+                            {t("basics.name")}
+                            <input value={form.name} onChange={(e) => onUpdateField("name", e.target.value)} required minLength={3} maxLength={100} className={fieldInput} />
                         </label>
 
-                        <input
-                            value={form.name}
-                            onChange={(e) => onUpdateField("name", e.target.value)}
-                            className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                            placeholder="Barbería El Nuevo Rey"
-                            required
-                        />
-                    </div>
-
-                    <div>
-                        <label className="text-xs font-black text-gray-500  ">
-                            Descripción
+                        <label className={fieldLabel}>
+                            {t("basics.description")}
+                            <textarea
+                                value={form.description}
+                                onChange={(e) => onUpdateField("description", e.target.value)}
+                                rows={4}
+                                maxLength={1000}
+                                placeholder={t("basics.descriptionPlaceholder")}
+                                className={fieldTextarea}
+                            />
                         </label>
 
-                        <textarea
-                            value={form.description}
-                            onChange={(e) => onUpdateField("description", e.target.value)}
-                            className="mt-2 w-full min-h-32 rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 resize-none"
-                            placeholder="Describe brevemente tu negocio, estilo, servicios o experiencia."
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-xs font-black text-gray-500  ">
-                                Teléfono
+                        <div className="grid gap-5 md:grid-cols-2">
+                            <label className={fieldLabel}>
+                                {t("basics.phone")}
+                                <span className="relative block">
+                                    <Phone size={16} className="pointer-events-none absolute left-4 top-[calc(50%+4px)] -translate-y-1/2 text-gray-500" aria-hidden="true" />
+                                    <input
+                                        type="tel"
+                                        inputMode="tel"
+                                        value={form.phone}
+                                        onChange={(e) => onUpdateField("phone", e.target.value)}
+                                        placeholder="6641234567"
+                                        className={`${fieldInput} pl-11`}
+                                    />
+                                </span>
                             </label>
 
-                            <div className="relative mt-2">
-                                <Phone
-                                    size={16}
-                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                                />
-
-                                <input
-                                    value={form.phone}
-                                    onChange={(e) => onUpdateField("phone", e.target.value)}
-                                    className="w-full rounded-2xl border border-gray-200 pl-11 pr-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                                    placeholder="6641234567"
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="text-xs font-black text-gray-500  ">
-                                Dirección
+                            <label className={fieldLabel}>
+                                {t("basics.address")}
+                                <span className="relative block">
+                                    <MapPin size={16} className="pointer-events-none absolute left-4 top-[calc(50%+4px)] -translate-y-1/2 text-gray-500" aria-hidden="true" />
+                                    <input
+                                        value={form.address}
+                                        onChange={(e) => onUpdateField("address", e.target.value)}
+                                        placeholder={t("basics.addressPlaceholder")}
+                                        className={`${fieldInput} pl-11`}
+                                    />
+                                </span>
                             </label>
-
-                            <div className="relative mt-2">
-                                <MapPin
-                                    size={16}
-                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                                />
-
-                                <input
-                                    value={form.address}
-                                    onChange={(e) => onUpdateField("address", e.target.value)}
-                                    className="w-full rounded-2xl border border-gray-200 pl-11 pr-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                                    placeholder="Tijuana, Baja California"
-                                />
-                            </div>
                         </div>
+                        <p className="text-sm text-gray-600">{t("basics.addressHint")}</p>
                     </div>
-                </motion.section>
+                </section>
 
-                <BusinessThemePicker
-                    businessName={form.name}
-                    primary={form.themePrimary}
-                    accent={form.themeAccent}
-                    onChange={onUpdateField}
-                />
+                <BusinessThemePicker businessName={form.name} primary={form.themePrimary} accent={form.themeAccent} onChange={onUpdateField} />
             </div>
 
             <div className="space-y-6">
-                <motion.section
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4"
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                            <ImageIcon size={20} />
-                        </div>
+                <section className={card}>
+                    <h2 className={sectionTitle}>{t("images.title")}</h2>
+                    <p className={sectionHint}>{t("images.hint")}</p>
 
+                    <div className="mt-5 space-y-6">
                         <div>
-                            <h2 className="font-black text-gray-900">Imágenes</h2>
-                            <p className="text-xs text-gray-500">
-                                Sube el logo y la portada pública.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="rounded-3xl border border-gray-100 bg-gray-50 p-4 space-y-3">
-                        <div className="flex items-center justify-between gap-3">
-                            <div>
-                                <p className="text-xs font-black text-gray-900">
-                                    Logo
-                                </p>
-                                <p className="text-xs font-bold text-gray-400">
-                                    Imagen cuadrada recomendada. Máximo 2MB.
-                                </p>
-                            </div>
-
-                            {form.logoUrl && (
-                                <button
-                                    type="button"
-                                    onClick={async () => {
-                                        if (await onSaveImage("logoUrl", "")) toast.success("Logo quitado");
-                                    }}
-                                    disabled={isUploadingAnyImage}
-                                    className="text-red-400 hover:text-red-600"
-                                    title="Quitar logo"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            )}
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <div className="w-16 h-16 rounded-3xl bg-white border border-gray-100 overflow-hidden flex items-center justify-center text-gray-300 shrink-0">
-                                {form.logoUrl ? (
-                                    <img
-                                        src={form.logoUrl}
-                                        alt="Logo del negocio"
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <ImageIcon size={22} />
+                            <div className="flex items-center justify-between gap-3">
+                                <p className="font-semibold text-gray-900">{t("images.logo")}</p>
+                                {form.logoUrl && (
+                                    <button type="button" onClick={() => remove("logoUrl")} disabled={busy} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-[#b8431f] disabled:opacity-50">
+                                        <Trash2 size={16} aria-hidden="true" />
+                                        {t("images.remove")}
+                                    </button>
                                 )}
                             </div>
-
-                            <div className="flex-1">
-                                <input
-                                    id="business-logo-upload"
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    disabled={isUploadingAnyImage}
-                                    onChange={(event) =>
-                                        handleUploadSelected("logoUrl", event)
-                                    }
-                                />
-
-                                <label
-                                    htmlFor="business-logo-upload"
-                                    className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-4 py-3 text-xs font-black text-white shadow-sm shadow-indigo-100 transition-all ${isUploadingAnyImage
-                                            ? "opacity-50 pointer-events-none cursor-not-allowed"
-                                            : "hover:bg-indigo-500 cursor-pointer"
-                                        }`}
-                                >
-                                    {isUploadingLogo ? (
-                                        <Loader2 size={16} className="animate-spin" />
-                                    ) : (
-                                        <UploadCloud size={16} />
-                                    )}
-
-                                    {isUploadingLogo
-                                        ? "Subiendo..."
-                                        : form.logoUrl
-                                            ? "Cambiar logo"
-                                            : "Subir logo"}
-                                </label>
+                            <p className="text-sm text-gray-600">{t("images.logoHint")}</p>
+                            <div className="mt-3 flex items-center gap-3">
+                                <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden border border-gray-200 bg-[#f1f3f2] text-gray-400">
+                                    {form.logoUrl ? <img src={form.logoUrl} alt={t("images.logoAlt")} className="h-full w-full object-cover" /> : <ImageIcon size={22} aria-hidden="true" />}
+                                </span>
+                                <div className="flex-1 [&>label]:w-full">{imageButton("logoUrl", logo.uploading, Boolean(form.logoUrl))}</div>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="rounded-3xl border border-gray-100 bg-gray-50 p-4 space-y-3">
-                        <div className="flex items-center justify-between gap-3">
-                            <div>
-                                <p className="text-xs font-black text-gray-900">
-                                    Portada
-                                </p>
-                                <p className="text-xs font-bold text-gray-400">
-                                    Imagen horizontal recomendada. Máximo 8MB.
-                                </p>
-                            </div>
-
-                            {form.coverUrl && (
-                                <button
-                                    type="button"
-                                    onClick={async () => {
-                                        if (await onSaveImage("coverUrl", "")) toast.success("Portada quitada");
-                                    }}
-                                    disabled={isUploadingAnyImage}
-                                    className="text-red-400 hover:text-red-600"
-                                    title="Quitar portada"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            )}
-                        </div>
-
-                        <div className="rounded-3xl bg-white border border-gray-100 overflow-hidden h-32 flex items-center justify-center text-gray-300">
-                            {form.coverUrl ? (
-                                <img
-                                    src={form.coverUrl}
-                                    alt="Portada del negocio"
-                                    className="w-full h-full object-cover"
-                                />
-                            ) : (
-                                <ImageIcon size={24} />
-                            )}
-                        </div>
-
-                        <input
-                            id="business-cover-upload"
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            disabled={isUploadingAnyImage}
-                            onChange={(event) =>
-                                handleUploadSelected("coverUrl", event)
-                            }
-                        />
-
-                        <label
-                            htmlFor="business-cover-upload"
-                            className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-4 py-3 text-xs font-black text-white shadow-sm shadow-indigo-100 transition-all ${isUploadingAnyImage
-                                    ? "opacity-50 pointer-events-none cursor-not-allowed"
-                                    : "hover:bg-indigo-500 cursor-pointer"
-                                }`}
-                        >
-                            {isUploadingCover ? (
-                                <Loader2 size={16} className="animate-spin" />
-                            ) : (
-                                <UploadCloud size={16} />
-                            )}
-
-                            {isUploadingCover
-                                ? "Subiendo..."
-                                : form.coverUrl
-                                    ? "Cambiar portada"
-                                    : "Subir portada"}
-                        </label>
-                    </div>
-                </motion.section>
-
-                <motion.section
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15 }}
-                    className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4"
-                >
-                    <button
-                        type="button"
-                        onClick={() =>
-                            onUpdateField("isServiceActive", !form.isServiceActive)
-                        }
-                        className={`w-full flex items-center justify-between rounded-2xl border p-4 transition-all ${form.isServiceActive
-                                ? "bg-emerald-50 border-emerald-100"
-                                : "bg-red-50 border-red-100"
-                            }`}
-                    >
-                        <div className="text-left">
-                            <p
-                                className={`text-sm font-black ${form.isServiceActive
-                                        ? "text-emerald-700"
-                                        : "text-red-700"
-                                    }`}
-                            >
-                                Servicio público
-                            </p>
-                            <p className="text-xs text-gray-500 mt-0.5">
-                                Activa o pausa las reservas.
-                            </p>
-                        </div>
-
-                        {form.isServiceActive ? (
-                            <ToggleRight className="text-emerald-600" size={30} />
-                        ) : (
-                            <ToggleLeft className="text-red-500" size={30} />
-                        )}
-                    </button>
-
-                    <button
-                        type="button"
-                        role="switch"
-                        aria-checked={form.autoConfirm}
-                        onClick={() => onUpdateField("autoConfirm", !form.autoConfirm)}
-                        className="w-full flex items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-gray-50 p-4 text-left transition-all"
-                    >
                         <div>
-                            <p className="text-sm font-black text-gray-900">Confirmar reservas automáticamente</p>
-                            <p className="text-xs text-gray-500 mt-0.5">
-                                {form.autoConfirm
-                                    ? "Las citas en línea quedan confirmadas al instante."
-                                    : "Cada cita en línea espera a que el barbero la confirme."}
-                            </p>
+                            <div className="flex items-center justify-between gap-3">
+                                <p className="font-semibold text-gray-900">{t("images.cover")}</p>
+                                {form.coverUrl && (
+                                    <button type="button" onClick={() => remove("coverUrl")} disabled={busy} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-[#b8431f] disabled:opacity-50">
+                                        <Trash2 size={16} aria-hidden="true" />
+                                        {t("images.remove")}
+                                    </button>
+                                )}
+                            </div>
+                            <p className="text-sm text-gray-600">{t("images.coverHint")}</p>
+                            <div className="mt-3 flex aspect-[16/9] items-center justify-center overflow-hidden border border-gray-200 bg-[#f1f3f2] text-gray-400">
+                                {form.coverUrl ? <img src={form.coverUrl} alt={t("images.coverAlt")} className="h-full w-full object-cover" /> : <ImageIcon size={26} aria-hidden="true" />}
+                            </div>
+                            <div className="mt-3 [&>label]:w-full">{imageButton("coverUrl", cover.uploading, Boolean(form.coverUrl))}</div>
                         </div>
+                    </div>
+                </section>
 
-                        {form.autoConfirm ? (
-                            <ToggleRight className="shrink-0 text-emerald-600" size={30} />
-                        ) : (
-                            <ToggleLeft className="shrink-0 text-gray-400" size={30} />
-                        )}
-                    </button>
-
-                    <div>
-                        <label className="text-xs font-black text-gray-500  ">
-                            Mensaje de mantenimiento
-                        </label>
-
-                        <textarea
-                            value={form.maintenanceMessage}
-                            onChange={(e) =>
-                                onUpdateField("maintenanceMessage", e.target.value)
-                            }
-                            className="mt-2 w-full min-h-24 rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 resize-none"
-                            placeholder="Ej. Estamos actualizando horarios. Vuelve más tarde."
+                <section className={card}>
+                    <h2 className={sectionTitle}>{t("bookings.title")}</h2>
+                    <div className="mt-2 divide-y divide-gray-100">
+                        <Switch
+                            checked={form.isServiceActive}
+                            onChange={() => onUpdateField("isServiceActive", !form.isServiceActive)}
+                            label={t("bookings.active")}
+                            hint={form.isServiceActive ? t("bookings.activeOn") : t("bookings.activeOff")}
+                        />
+                        <Switch
+                            checked={form.autoConfirm}
+                            onChange={() => onUpdateField("autoConfirm", !form.autoConfirm)}
+                            label={t("bookings.autoConfirm")}
+                            hint={form.autoConfirm ? t("bookings.autoConfirmOn") : t("bookings.autoConfirmOff")}
                         />
                     </div>
-                </motion.section>
 
-                <button
-                    type="submit"
-                    disabled={saving || isUploadingAnyImage}
-                    className="w-full py-4 rounded-2xl bg-indigo-600 text-white text-sm font-black hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
-                >
-                    {saving ? (
-                        <>
-                            <Loader2 className="animate-spin" size={18} />
-                            Guardando...
-                        </>
-                    ) : (
-                        <>
-                            <Save size={18} />
-                            Guardar cambios
-                        </>
+                    {!form.isServiceActive && (
+                        <label className={`${fieldLabel} mt-4`}>
+                            {t("bookings.pausedMessage")}
+                            <textarea
+                                value={form.maintenanceMessage}
+                                onChange={(e) => onUpdateField("maintenanceMessage", e.target.value)}
+                                rows={3}
+                                maxLength={300}
+                                placeholder={t("bookings.pausedPlaceholder")}
+                                className={fieldTextarea}
+                            />
+                        </label>
                     )}
-                </button>
+                </section>
+            </div>
+
+            {/* Siempre a la mano, también en el celular (arriba de la barra de navegación) */}
+            <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 -mx-4 border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur md:bottom-0 md:mx-0 md:px-0 lg:col-span-2">
+                <div className="flex items-center justify-between gap-4">
+                    <p className="hidden text-sm text-gray-600 sm:block">{t("saveHint")}</p>
+                    <button type="submit" disabled={saving || busy} className={`${primaryButton} w-full sm:w-auto`}>
+                        {saving && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
+                        {saving ? t("saving") : t("save")}
+                    </button>
+                </div>
             </div>
         </form>
     );

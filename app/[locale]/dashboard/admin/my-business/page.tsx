@@ -1,32 +1,23 @@
 "use client";
 
-import { useApiError } from "@/[locale]/components/useApiError";
 import type { FormEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { ChevronDown, Copy, ExternalLink, Loader2, Store, QrCode, Share2, X, Download } from "lucide-react";
+import { ChevronDown, Copy, Download, ExternalLink, QrCode, Share2 } from "lucide-react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
-import { usePathname } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import type { BusinessBillingStatus, BusinessPlanType } from "@prisma/client";
 import { QRCodeCanvas } from "qrcode.react";
+import { useApiError } from "@/[locale]/components/useApiError";
+import PageHeader from "@/[locale]/components/PageHeader";
+import BrandDialog, { brandPrimaryButton } from "@/[locale]/components/BrandDialog";
 
-import BusinessProfileForm, {
-    type BusinessForm,
-    type ImageField,
-} from "./_components/BusinessProfileForm";
+import BusinessProfileForm, { type BusinessForm, type ImageField } from "./_components/BusinessProfileForm";
 import BusinessPostsManager from "./_components/BusinessPostsManager";
 import BusinessGalleryManager from "./_components/BusinessGalleryManager";
-import MyBusinessTabs, {
-    type BusinessTab,
-} from "./_components/MyBusinessTabs";
+import MyBusinessTabs, { type BusinessTab } from "./_components/MyBusinessTabs";
 import BusinessBillingCard from "./_components/BusinessBillingCard";
-
-type BusinessSettings = {
-    isServiceActive: boolean;
-    autoConfirm: boolean;
-    maintenanceMessage: string | null;
-};
+import { primaryButton, secondaryButton } from "./_components/ui";
 
 type Business = {
     id: string;
@@ -42,363 +33,193 @@ type Business = {
     billingStatus: BusinessBillingStatus;
     billingPlan: BusinessPlanType;
     subscriptionEndsAt: string | null;
-    settings: BusinessSettings | null;
+    settings: { isServiceActive: boolean; autoConfirm: boolean; maintenanceMessage: string | null } | null;
 };
 
-export default function MyBusinessPage() {
-    const pathname = usePathname();
+const toForm = (data: Business): BusinessForm => ({
+    name: data.name ?? "",
+    description: data.description ?? "",
+    phone: data.phone ?? "",
+    address: data.address ?? "",
+    logoUrl: data.logoUrl ?? "",
+    coverUrl: data.coverUrl ?? "",
+    isServiceActive: data.settings?.isServiceActive ?? true,
+    autoConfirm: data.settings?.autoConfirm ?? true,
+    maintenanceMessage: data.settings?.maintenanceMessage ?? "",
+    themePrimary: data.themePrimary ?? null,
+    themeAccent: data.themeAccent ?? null,
+});
 
+// Lo que los clientes ven de la barbería: perfil, colores, avisos, fotos y la membresía
+export default function MyBusinessPage() {
+    const t = useTranslations("MyBusiness");
+    const locale = useLocale();
     const apiError = useApiError();
     const [business, setBusiness] = useState<Business | null>(null);
-    const [form, setForm] = useState<BusinessForm>({
-        name: "",
-        description: "",
-        phone: "",
-        address: "",
-        logoUrl: "",
-        coverUrl: "",
-        isServiceActive: true,
-        autoConfirm: true,
-        maintenanceMessage: "",
-        themePrimary: null,
-        themeAccent: null,
-    });
-
+    const [form, setForm] = useState<BusinessForm | null>(null);
+    const [failed, setFailed] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [showQr, setShowQr] = useState(false);
     // El aviso de membresía enlaza directo a esta pestaña (?tab=membership)
     const [activeTab, setActiveTab] = useState<BusinessTab>(() =>
-        typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab") === "membership"
-            ? "membership"
-            : "profile"
+        typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab") === "membership" ? "membership" : "profile"
     );
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
 
-    const [showQrModal, setShowQrModal] = useState(false);
-
-    const locale = useMemo(() => {
-        const match = pathname.match(/^\/(en|es)/);
-        return match ? match[1] : "es";
-    }, [pathname]);
-
-    const publicUrl = useMemo(() => {
-        if (!business) return "";
-
-        if (typeof window === "undefined") {
-            return `/${locale}/business/${business.slug}`;
-        }
-
-        return `${window.location.origin}/${locale}/business/${business.slug}`;
-    }, [business, locale]);
+    const publicUrl = business && typeof window !== "undefined" ? `${window.location.origin}/${locale}/business/${business.slug}` : "";
 
     useEffect(() => {
-        const loadBusiness = async () => {
-            try {
-                const res = await fetch("/api/protected/businesses/me");
-                const data = await res.json();
-
-                if (!res.ok) {
-                    toast.error(apiError(data, "No se pudo cargar tu negocio"));
-                    return;
-                }
-
+        fetch("/api/protected/businesses/me")
+            .then(async (res) => {
+                const data = await res.json().catch(() => null);
+                if (!res.ok) throw new Error(apiError(data, t("errors.load")));
                 setBusiness(data);
+                setForm(toForm(data));
+            })
+            .catch((error: Error) => {
+                setFailed(true);
+                toast.error(error.message || t("errors.load"));
+            });
+    }, [apiError, t]);
 
-                setForm({
-                    name: data.name ?? "",
-                    description: data.description ?? "",
-                    phone: data.phone ?? "",
-                    address: data.address ?? "",
-                    logoUrl: data.logoUrl ?? "",
-                    coverUrl: data.coverUrl ?? "",
-                    isServiceActive: data.settings?.isServiceActive ?? true,
-                    autoConfirm: data.settings?.autoConfirm ?? true,
-                    maintenanceMessage: data.settings?.maintenanceMessage ?? "",
-                    themePrimary: data.themePrimary ?? null,
-                    themeAccent: data.themeAccent ?? null,
-                });
-            } catch {
-                toast.error("Error al cargar tu negocio");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadBusiness();
-    }, [apiError]);
-
-    const updateField = <K extends keyof BusinessForm>(
-        key: K,
-        value: BusinessForm[K]
-    ) => {
-        setForm((prev) => ({
-            ...prev,
-            [key]: value,
-        }));
+    const updateField = <K extends keyof BusinessForm>(key: K, value: BusinessForm[K]) => {
+        setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
     };
 
-    const handleCopyPublicUrl = async () => {
-        if (!publicUrl) return;
-
-        try {
-            await navigator.clipboard.writeText(publicUrl);
-            toast.success("Link público copiado");
-        } catch {
-            toast.error("No se pudo copiar el link");
-        }
+    const patch = async (body: object) => {
+        const res = await fetch("/api/protected/businesses/me", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
+        const data = await res.json().catch(() => null);
+        return { ok: res.ok, data };
     };
 
-    const handleDownloadQr = () => {
-        const canvas = document.getElementById("business-qr-code") as HTMLCanvasElement;
-        if (!canvas) return;
-
-        const pngUrl = canvas
-            .toDataURL("image/png")
-            .replace("image/png", "image/octet-stream");
-
-        const downloadLink = document.createElement("a");
-        downloadLink.href = pngUrl;
-        downloadLink.download = `QR-${business?.slug || "barberia"}.png`;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-
-        toast.success("Código QR descargado exitosamente");
-    };
-
-    // Guarda solo la imagen; el resto del formulario sigue pendiente de "Guardar cambios"
+    // Solo la imagen; lo demás del formulario sigue pendiente de "Guardar cambios"
     const saveImage = async (field: ImageField, url: string) => {
         try {
-            const res = await fetch("/api/protected/businesses/me", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ [field]: url }),
-            });
-            const data = await res.json();
-
-            if (!res.ok) {
-                toast.error(apiError(data, "No se pudo guardar la imagen"));
+            const { ok, data } = await patch({ [field]: url });
+            if (!ok) {
+                toast.error(apiError(data, t("errors.image")));
                 return false;
             }
-
             setBusiness(data);
             updateField(field, url);
             return true;
         } catch {
-            toast.error("Error al guardar la imagen");
+            toast.error(t("errors.image"));
             return false;
         }
     };
 
-    const handleSave = async (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
+    const handleSave = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!form) return;
         setSaving(true);
 
         try {
-            const res = await fetch("/api/protected/businesses/me", {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(form),
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                toast.error(apiError(data, "No se pudo guardar"));
+            const { ok, data } = await patch(form);
+            if (!ok) {
+                toast.error(apiError(data, t("errors.save")));
                 return;
             }
-
             setBusiness(data);
-            toast.success("Negocio actualizado correctamente");
+            toast.success(t("saved"));
         } catch {
-            toast.error("Error al guardar cambios");
+            toast.error(t("errors.save"));
         } finally {
             setSaving(false);
         }
     };
 
-    if (loading) {
+    const copyLink = async () => {
+        try {
+            await navigator.clipboard.writeText(publicUrl);
+            toast.success(t("share.copied"));
+        } catch {
+            toast.error(t("share.copyFailed"));
+        }
+    };
+
+    const downloadQr = () => {
+        const canvas = document.getElementById("business-qr-code") as HTMLCanvasElement | null;
+        if (!canvas || !business) return;
+
+        const link = document.createElement("a");
+        link.href = canvas.toDataURL("image/png");
+        link.download = `QR-${business.slug}.png`;
+        link.click();
+    };
+
+    if (!business || !form) {
         return (
-            <main className="min-h-[70vh] flex items-center justify-center bg-gray-50">
-                <div className="flex items-center gap-3 text-gray-500 font-bold text-sm">
-                    <Loader2 className="animate-spin" size={18} />
-                    Cargando negocio...
-                </div>
-            </main>
-        );
-    }
-
-    if (!business) {
-        return (
-            <main className="min-h-[70vh] flex items-center justify-center bg-gray-50 px-4">
-                <div className="max-w-md bg-white border border-gray-100 rounded-3xl p-8 text-center shadow-sm">
-                    <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-4">
-                        <Store size={22} />
-                    </div>
-
-                    <h1 className="text-xl font-black text-gray-900">
-                        No se encontró tu negocio
-                    </h1>
-
-                    <p className="text-sm text-gray-500 mt-2">
-                        Crea un negocio primero para poder administrar su información.
-                    </p>
-                </div>
-            </main>
+            <div className="pb-6">
+                <PageHeader title={t("title")} />
+                <p className="text-gray-600">{failed ? t("errors.load") : t("loading")}</p>
+            </div>
         );
     }
 
     return (
-        <main className="py-6">
-            <div className="max-w-5xl mx-auto space-y-6">
-                <motion.div
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col md:flex-row md:items-end justify-between gap-4"
-                >
-                    <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-black   mb-3">
-                            <Store size={14} />
-                            Mi negocio
-                        </div>
-
-                        <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
-                            Configura tu negocio
-                        </h1>
-
-                        <p className="text-sm text-gray-500 mt-2 max-w-2xl">
-                            Edita la información, publicaciones y galería que verán tus clientes en la página pública.
-                        </p>
-                    </div>
-
+        <div className="space-y-6 pb-6">
+            <PageHeader
+                title={t("title")}
+                subtitle={t("subtitle")}
+                actions={
                     <div className="grid grid-cols-2 gap-2 sm:flex">
-                        <a
-                            href={publicUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="min-h-11 px-4 bg-gray-900 text-white text-sm font-semibold transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
-                        >
-                            Ver página
+                        <a href={publicUrl} target="_blank" rel="noopener noreferrer" className={primaryButton}>
+                            {t("share.view")}
                             <ExternalLink size={16} aria-hidden="true" />
                         </a>
-
                         <Menu as="div" className="relative">
-                            <MenuButton className="flex min-h-11 w-full items-center justify-center gap-2 border border-gray-200 bg-white px-4 text-sm font-semibold transition-colors hover:border-gray-900">
+                            <MenuButton className={`${secondaryButton} w-full`}>
                                 <Share2 size={16} aria-hidden="true" />
-                                Compartir
+                                {t("share.label")}
                                 <ChevronDown size={16} aria-hidden="true" />
                             </MenuButton>
-                            <MenuItems
-                                anchor="bottom end"
-                                className="z-50 mt-1 w-56 border border-[#dbe0de] bg-white py-1 text-sm text-[#0f2733] outline-none"
-                            >
+                            <MenuItems anchor="bottom end" className="z-50 mt-1 w-56 border border-[#dbe0de] bg-white py-1 text-sm text-[#0f2733] outline-none">
                                 <MenuItem>
-                                    <button type="button" onClick={handleCopyPublicUrl} className="flex min-h-11 w-full items-center gap-3 px-4 text-left data-[focus]:bg-[#f1f3f2]">
+                                    <button type="button" onClick={copyLink} className="flex min-h-11 w-full items-center gap-3 px-4 text-left data-[focus]:bg-[#f1f3f2]">
                                         <Copy size={18} aria-hidden="true" />
-                                        Copiar enlace
+                                        {t("share.copy")}
                                     </button>
                                 </MenuItem>
                                 <MenuItem>
-                                    <button type="button" onClick={() => setShowQrModal(true)} className="flex min-h-11 w-full items-center gap-3 px-4 text-left data-[focus]:bg-[#f1f3f2]">
+                                    <button type="button" onClick={() => setShowQr(true)} className="flex min-h-11 w-full items-center gap-3 px-4 text-left data-[focus]:bg-[#f1f3f2]">
                                         <QrCode size={18} aria-hidden="true" />
-                                        Código QR
+                                        {t("share.qr")}
                                     </button>
                                 </MenuItem>
                             </MenuItems>
                         </Menu>
                     </div>
-                </motion.div>
+                }
+            />
 
-                <MyBusinessTabs
-                    activeTab={activeTab}
-                    onChange={setActiveTab}
-                />
+            <MyBusinessTabs activeTab={activeTab} onChange={setActiveTab} />
 
-                {activeTab === "membership" && (
-                    <BusinessBillingCard
-                        billingStatus={business.billingStatus}
-                        billingPlan={business.billingPlan}
-                        subscriptionEndsAt={business.subscriptionEndsAt}
-                    />
-                )}
+            {activeTab === "profile" && (
+                <BusinessProfileForm form={form} saving={saving} onSubmit={handleSave} onUpdateField={updateField} onSaveImage={saveImage} />
+            )}
+            {activeTab === "posts" && <BusinessPostsManager />}
+            {activeTab === "gallery" && <BusinessGalleryManager />}
+            {activeTab === "membership" && (
+                <BusinessBillingCard billingStatus={business.billingStatus} billingPlan={business.billingPlan} subscriptionEndsAt={business.subscriptionEndsAt} />
+            )}
 
-                {activeTab === "profile" && (
-                    <BusinessProfileForm
-                        form={form}
-                        saving={saving}
-                        onSubmit={handleSave}
-                        onUpdateField={updateField}
-                        onSaveImage={saveImage}
-                    />
-                )}
-
-                {activeTab === "posts" && (
-                    <div className="w-full">
-                        <BusinessPostsManager />
+            {showQr && (
+                <BrandDialog title={t("share.qrTitle")} subtitle={t("share.qrText", { name: business.name })} closeLabel={t("close")} onClose={() => setShowQr(false)}>
+                    <div className="flex flex-col items-center gap-5">
+                        <div className="border border-[var(--brand-surface)] bg-white p-3">
+                            <QRCodeCanvas id="business-qr-code" value={publicUrl} size={220} level="Q" marginSize={2} />
+                        </div>
+                        <button type="button" onClick={downloadQr} className={`${brandPrimaryButton} gap-2`}>
+                            <Download size={18} aria-hidden="true" />
+                            {t("share.download")}
+                        </button>
                     </div>
-                )}
-
-                {activeTab === "gallery" && (
-                    <div className="max-w-4xl">
-                        <BusinessGalleryManager />
-                    </div>
-                )}
-            </div>
-
-            <AnimatePresence>
-                {showQrModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl text-center relative border border-gray-100"
-                        >
-                            <button
-                                onClick={() => setShowQrModal(false)}
-                                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-all"
-                            >
-                                <X size={18} />
-                            </button>
-
-                            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-4">
-                                <QrCode size={24} />
-                            </div>
-
-                            <h3 className="text-xl font-black text-gray-900">
-                                Código QR de tu negocio
-                            </h3>
-                            <p className="text-xs text-gray-500 mt-1 mb-6">
-                                Escanea este código para ir directo a la página de reservas de <strong className="text-gray-800">{business.name}</strong>.
-                            </p>
-
-                            {/* Contenedor del Canvas QR */}
-                            <div className="bg-white p-4 rounded-2xl border-2 border-dashed border-gray-200 inline-block mb-6 shadow-sm">
-                                <QRCodeCanvas
-                                    id="business-qr-code"
-                                    value={publicUrl}
-                                    size={220} // Tamaño ideal en pantalla
-                                    bgColor={"#ffffff"}
-                                    fgColor={"#000000"}
-                                    level={"Q"} // Nivel de corrección de errores (Q es alto, ideal si luego quieres ponerle un logo al centro)
-                                    marginSize={2} // Margen blanco alrededor para que los celulares lo lean bien
-                                />
-                            </div>
-
-                            <button
-                                type="button"
-                                onClick={handleDownloadQr}
-                                className="w-full py-3 px-4 rounded-xl bg-indigo-600 text-white text-sm font-black hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20"
-                            >
-                                <Download size={16} />
-                                Descargar imagen (PNG)
-                            </button>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-        </main>
+                </BrandDialog>
+            )}
+        </div>
     );
 }

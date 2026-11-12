@@ -8,6 +8,7 @@ import BookingDemo from "./BookingDemo";
 import { DemoStateProvider } from "./DemoState";
 import HowItWorks from "./HowItWorks";
 import Reveal from "./Reveal";
+import LocaleSwitch from "@/[locale]/components/LocaleSwitch";
 
 // Fotos de colecciones abiertas (se acreditan en el pie). Muestran Tijuana y el oficio, nunca a un cliente real.
 const CREDITS = [
@@ -78,6 +79,7 @@ export default async function LandingPage({ locale }: { locale: string }) {
                                         {link.label}
                                     </a>
                                 ))}
+                                <LocaleSwitch className="-mx-2" />
                                 <Link href="/login" className="underline-offset-4 hover:underline">
                                     {t("nav.login")}
                                 </Link>

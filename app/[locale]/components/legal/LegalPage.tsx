@@ -4,6 +4,7 @@ import BrandMark from "@/[locale]/components/BrandMark";
 import { LEGAL_INFO, TERMS_VERSION, isLegalInfoComplete } from "@/lib/legal";
 import { getLegalDocument, type LegalKind } from "@/lib/legal-documents";
 import { brandFontClasses } from "../../brand";
+import LocaleSwitch from "@/[locale]/components/LocaleSwitch";
 
 const OTHER: Record<LegalKind, { href: "/privacy" | "/terms" }> = {
     privacy: { href: "/terms" },
@@ -34,9 +35,12 @@ export default async function LegalPage({ kind, locale }: { kind: LegalKind; loc
                 <Link href="/" aria-label={t("back")}>
                     <BrandMark iconClassName="h-9 w-9 bg-[var(--brand-ink)] text-[var(--brand-paper)]" iconSize={18} />
                 </Link>
-                <Link href="/" className="text-[0.9375rem] underline-offset-4 hover:underline">
-                    {t("back")}
-                </Link>
+                <div className="flex items-center gap-3">
+                    <LocaleSwitch />
+                    <Link href="/" className="text-[0.9375rem] underline-offset-4 hover:underline">
+                        {t("back")}
+                    </Link>
+                </div>
             </header>
 
             <main className="px-5 pb-24 pt-10 sm:px-8 lg:grid lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] lg:gap-16 lg:px-14 lg:pt-16">

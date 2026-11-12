@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Eye, EyeOff } from "lucide-react";
 import BrandMark from "@/[locale]/components/BrandMark";
+import LocaleSwitch from "@/[locale]/components/LocaleSwitch";
 
 export default function LoginPage({ searchParams }: { searchParams: Promise<{ redirectTo?: string }> }) {
   const redirectFromUrl = safeRedirectPath(use(searchParams).redirectTo);
@@ -74,6 +75,7 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ re
 
   return (
     <main className="theme-field min-h-screen bg-[#0f2733] flex items-center justify-center px-4 relative overflow-hidden">
+      <LocaleSwitch tone="dark" className="fixed right-2 top-2 z-20" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-xl h-75 bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-64 h-64 bg-indigo-900/15 blur-[100px] rounded-full pointer-events-none" />
 

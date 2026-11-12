@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { publicBusinessWhere } from "@/lib/billing/status";
+import { computeBusinessHours } from "@/lib/business-hours";
 
 export async function GET() {
     try {
@@ -15,6 +16,7 @@ export async function GET() {
                 address: true,
                 logoUrl: true,
                 coverUrl: true,
+                timezone: true,
                 settings: {
                     select: {
                         isServiceActive: true,
@@ -28,6 +30,8 @@ export async function GET() {
                     },
                     select: {
                         id: true,
+                        availability: { select: { dayOfWeek: true, startTime: true, endTime: true } },
+                        _count: { select: { services: { where: { active: true } } } },
                     },
                 },
                 services: {
@@ -60,6 +64,10 @@ export async function GET() {
             settings: business.settings,
             barberCount: business.barbers.length,
             serviceCount: business.services.length,
+            timezone: business.timezone,
+            // Horario de la barbería (para "Abierto ahora") y si alguien ya se puede reservar
+            hours: computeBusinessHours(business.barbers.flatMap((barber) => barber.availability)),
+            bookable: business.barbers.some((barber) => barber.availability.length > 0 && barber._count.services > 0),
         }));
 
         return NextResponse.json(formattedBusinesses);

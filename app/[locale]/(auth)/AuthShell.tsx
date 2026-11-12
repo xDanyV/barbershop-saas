@@ -1,11 +1,13 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import BrandMark from "@/[locale]/components/BrandMark";
+import LocaleSwitch from "@/[locale]/components/LocaleSwitch";
 
 // Marco de las pantallas de acceso que no son el inicio de sesión (recuperar contraseña)
 export default function AuthShell({ title, text, children }: { title: string; text?: string; children?: ReactNode }) {
     return (
         <main className="theme-field flex min-h-screen items-center justify-center bg-[#0f2733] px-4 py-10">
+            <LocaleSwitch tone="dark" className="fixed right-2 top-2 z-20" />
             <div className="w-full max-w-sm sm:max-w-md">
                 <div className="mb-6 text-center sm:mb-8">
                     <Link href="/" className="inline-block text-2xl font-black text-white">

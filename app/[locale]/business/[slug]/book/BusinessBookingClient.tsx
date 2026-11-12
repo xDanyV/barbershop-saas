@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import toast from "react-hot-toast";
 import { brandFontClasses } from "@/[locale]/brand";
@@ -12,6 +12,7 @@ import { useApiError } from "@/[locale]/components/useApiError";
 import { formatPriceFromCents } from "@/lib/billing/pricing";
 import { addDaysToKey, dayOfWeekFromKey, toDateKey } from "@/lib/time/zoned";
 import { getInitials } from "../lib/business-page.utils";
+import LocaleSwitch from "@/[locale]/components/LocaleSwitch";
 
 type Service = { id: string; name: string; priceCents: number; duration: number };
 
@@ -42,8 +43,10 @@ type Props = {
     initial: { barber: string | null; service: string | null; date: string | null; time: string | null };
 };
 
-// Días que se ofrecen para reservar, a partir de hoy
-const DAYS_AHEAD = 21;
+// Días que se ofrecen para reservar, a partir de hoy: nueve semanas, de tres en tres
+const DAYS_PER_PAGE = 21;
+const PAGES = 3;
+const DAYS_AHEAD = DAYS_PER_PAGE * PAGES;
 
 const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
@@ -75,6 +78,7 @@ export default function BusinessBookingClient({ business, initial }: Props) {
     // Nombre del servicio pedido desde el perfil, para elegirlo cuando se escoja barbero
     const [wantedService, setWantedService] = useState<string | null>(() => (serviceId ? null : initial.service));
     const [date, setDate] = useState<string | null>(initial.date);
+    const [dayPage, setDayPage] = useState(0);
     const [time, setTime] = useState<string | null>(initial.time);
 
     const [exceptions, setExceptions] = useState<{ barberId: string; list: Exception[] } | null>(null);
@@ -123,9 +127,14 @@ export default function BusinessBookingClient({ business, initial }: Props) {
     // Con barbero y servicio elegidos se propone el primer día que trabaja
     useEffect(() => {
         if (!service || !exceptionsReady) return;
-        if (date && days.includes(date) && isOpenDay(date)) return;
+        if (date && days.includes(date) && isOpenDay(date)) {
+            setDayPage(Math.floor(days.indexOf(date) / DAYS_PER_PAGE));
+            return;
+        }
 
-        setDate(days.find(isOpenDay) ?? null);
+        const first = days.find(isOpenDay) ?? null;
+        setDate(first);
+        setDayPage(first ? Math.floor(days.indexOf(first) / DAYS_PER_PAGE) : 0);
         setTime(null);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [service, exceptionsReady, days]);
@@ -206,6 +215,14 @@ export default function BusinessBookingClient({ business, initial }: Props) {
     const dayLabel = (key: string, options: Intl.DateTimeFormatOptions) =>
         new Intl.DateTimeFormat(dateLocale, { ...options, timeZone: "UTC" }).format(new Date(`${key}T12:00:00Z`));
 
+    const pageDays = days.slice(dayPage * DAYS_PER_PAGE, (dayPage + 1) * DAYS_PER_PAGE);
+    const firstMonth = dayLabel(pageDays[0], { month: "long", year: "numeric" });
+    const lastMonth = dayLabel(pageDays[pageDays.length - 1], { month: "long", year: "numeric" });
+    const pageMonths =
+        firstMonth === lastMonth
+            ? firstMonth
+            : `${dayLabel(pageDays[0], pageDays[0].slice(0, 4) === pageDays[pageDays.length - 1].slice(0, 4) ? { month: "long" } : { month: "long", year: "numeric" })} – ${lastMonth}`;
+
     const timeLabel = fittingSlots?.find((slot) => slot.start === time)?.label ?? null;
     const ready = Boolean(barber && service && date && time && timeLabel);
 
@@ -266,6 +283,7 @@ export default function BusinessBookingClient({ business, initial }: Props) {
                     </Link>
                     {business.logoUrl && <img src={business.logoUrl} alt="" className="h-8 w-8 shrink-0 object-cover" />}
                     <span className="truncate font-semibold">{business.name}</span>
+                    <LocaleSwitch className="-mr-2 ml-auto shrink-0" />
                 </div>
             </header>
 
@@ -338,9 +356,33 @@ export default function BusinessBookingClient({ business, initial }: Props) {
                         <p className="text-[var(--brand-muted)]">{t("loading")}</p>
                     ) : (
                         <>
-                            <p className="mb-3 font-semibold first-letter:uppercase">{dayLabel(date ?? days[0], { month: "long", year: "numeric" })}</p>
-                            <ul className="scroll-strip -mx-4 flex gap-2 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-7 md:overflow-visible md:px-0">
-                                {days.map((key) => {
+                            <div className="mb-3 flex items-center justify-between gap-3">
+                                <p className="font-semibold first-letter:uppercase" aria-live="polite">
+                                    {pageMonths}
+                                </p>
+                                <div className="flex shrink-0 gap-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => setDayPage((page) => Math.max(0, page - 1))}
+                                        disabled={dayPage === 0}
+                                        aria-label={t("daysPrevious")}
+                                        className="flex h-11 w-11 items-center justify-center border border-[var(--brand-surface)] bg-[var(--brand-paper)] transition-colors hover:border-[var(--brand-ink)] disabled:border-transparent disabled:bg-transparent disabled:opacity-30"
+                                    >
+                                        <ChevronLeft size={20} aria-hidden="true" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setDayPage((page) => Math.min(PAGES - 1, page + 1))}
+                                        disabled={dayPage === PAGES - 1}
+                                        aria-label={t("daysNext")}
+                                        className="flex h-11 w-11 items-center justify-center border border-[var(--brand-surface)] bg-[var(--brand-paper)] transition-colors hover:border-[var(--brand-ink)] disabled:border-transparent disabled:bg-transparent disabled:opacity-30"
+                                    >
+                                        <ChevronRight size={20} aria-hidden="true" />
+                                    </button>
+                                </div>
+                            </div>
+                            <ul key={dayPage} className="day-page scroll-strip -mx-4 flex gap-2 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-7 md:overflow-visible md:px-0">
+                                {pageDays.map((key) => {
                                     const open = isOpenDay(key);
                                     const selected = key === date;
 
@@ -361,7 +403,11 @@ export default function BusinessBookingClient({ business, initial }: Props) {
                                     );
                                 })}
                             </ul>
-                            {!days.some(isOpenDay) && <p className="mt-3 text-[var(--brand-muted)]">{t("noDays")}</p>}
+                            {!days.some(isOpenDay) ? (
+                                <p className="mt-3 text-[var(--brand-muted)]">{t("noDays")}</p>
+                            ) : (
+                                !pageDays.some(isOpenDay) && <p className="mt-3 text-[var(--brand-muted)]">{t("noDaysHere")}</p>
+                            )}
                         </>
                     )}
                 </Step>

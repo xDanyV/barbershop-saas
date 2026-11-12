@@ -67,6 +67,10 @@ export const changePasswordSchema = z.object({
     newPassword: z.string().min(8).max(72),
 });
 
+export const favoriteBusinessSchema = z.object({
+    businessId: z.string().min(1).max(100),
+});
+
 export const resetPasswordSchema = z.object({
     token: z.string().min(20).max(200),
     newPassword: z.string().min(8).max(72),

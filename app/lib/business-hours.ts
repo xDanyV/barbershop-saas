@@ -34,3 +34,21 @@ export function computeBusinessHours(rows: HoursRow[]): DayHours[] {
         return { dayOfWeek, open, close };
     });
 }
+
+export type OpenState =
+    | { open: true; closesAt: number }
+    | { open: false; opensTodayAt: number | null };
+
+// ¿Está abierta la barbería en este momento? (minutos del día en la zona del negocio)
+export function getOpenState(hours: DayHours[], dayOfWeek: number, minutes: number): OpenState {
+    const today = hours.find((day) => day.dayOfWeek === dayOfWeek);
+
+    if (!today?.open || !today.close) return { open: false, opensTodayAt: null };
+
+    const open = timeToMinutes(today.open);
+    const close = timeToMinutes(today.close);
+
+    if (minutes >= open && minutes < close) return { open: true, closesAt: close };
+
+    return { open: false, opensTodayAt: minutes < open ? open : null };
+}

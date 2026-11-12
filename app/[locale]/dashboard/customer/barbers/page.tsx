@@ -1,277 +1,267 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
+import { Heart, MapPin, Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "../../../../../i18n/routing";
-import {
-    ArrowRight,
-    Building2,
-    CalendarDays,
-    MapPin,
-    Phone,
-    Scissors,
-    Store,
-} from "lucide-react";
+import toast from "react-hot-toast";
+import { Link } from "../../../../../i18n/routing";
+import PageHeader from "@/[locale]/components/PageHeader";
+import { getOpenState, type DayHours } from "@/lib/business-hours";
+import { dayOfWeekFromKey, formatMinutes12h, minutesOfDay, resolveTimezone, toDateKey } from "@/lib/time/zoned";
+import { getInitials } from "@/[locale]/business/[slug]/lib/business-page.utils";
 
 type Business = {
     id: string;
     name: string;
     slug: string;
-    description: string | null;
-    phone: string | null;
     address: string | null;
     logoUrl: string | null;
     coverUrl: string | null;
-    barberCount: number;
-    serviceCount: number;
-    settings: {
-        isServiceActive: boolean;
-        maintenanceMessage: string | null;
-    } | null;
+    timezone: string;
+    hours: DayHours[];
+    bookable: boolean;
+    settings: { isServiceActive: boolean } | null;
 };
 
-export default function BusinessesPage() {
-    // useRouter de next-intl agrega el idioma actual a las rutas
-    const router = useRouter();
-    const t = useTranslations("BusinessDirectory");
+type Filter = "all" | "favorites" | "open";
 
-    const [businesses, setBusinesses] = useState<Business[]>([]);
-    const [loading, setLoading] = useState(true);
+// Sin acentos ni mayúsculas: "barberia" encuentra "Barbería", "otay" encuentra "Otay Universidad"
+const normalize = (value: string) =>
+    value
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .toLowerCase()
+        .trim();
+
+function openState(business: Business, now: Date) {
+    const tz = resolveTimezone(business.timezone);
+    return getOpenState(business.hours, dayOfWeekFromKey(toDateKey(now, tz)), minutesOfDay(now, tz));
+}
+
+// Directorio para reservar: buscar por nombre o zona, ver qué está abierto y guardar favoritas
+export default function BusinessesPage() {
+    const t = useTranslations("BusinessDirectory");
+    const [businesses, setBusinesses] = useState<Business[] | null>(null);
+    const [favorites, setFavorites] = useState<Set<string>>(new Set());
+    const [query, setQuery] = useState("");
+    const [filter, setFilter] = useState<Filter>("all");
+    const [now, setNow] = useState<Date | null>(null);
 
     useEffect(() => {
-        fetch("/api/businesses")
-            .then((res) => res.json())
-            .then((data: Business[]) => {
-                if (Array.isArray(data)) {
-                    setBusinesses(data);
-                }
+        Promise.all([
+            fetch("/api/businesses").then((res) => (res.ok ? res.json() : [])),
+            fetch("/api/protected/favorites").then((res) => (res.ok ? res.json() : [])),
+        ])
+            .then(([list, favoriteIds]) => {
+                setBusinesses(Array.isArray(list) ? list : []);
+                setFavorites(new Set(Array.isArray(favoriteIds) ? favoriteIds : []));
+                setNow(new Date());
             })
-            .catch(() => console.error("Could not load businesses"))
-            .finally(() => setLoading(false));
+            .catch(() => setBusinesses([]));
+
+        const timer = window.setInterval(() => setNow(new Date()), 60_000);
+        return () => window.clearInterval(timer);
     }, []);
 
-    const getInitials = (name: string) => {
-        return name
-            .split(" ")
-            .map((word) => word[0])
-            .join("")
-            .toUpperCase()
-            .slice(0, 2);
+    const toggleFavorite = async (business: Business) => {
+        const isFavorite = favorites.has(business.id);
+        const next = new Set(favorites);
+        if (isFavorite) next.delete(business.id);
+        else next.add(business.id);
+        setFavorites(next);
+
+        try {
+            const res = await fetch("/api/protected/favorites", {
+                method: isFavorite ? "DELETE" : "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ businessId: business.id }),
+            });
+            if (!res.ok) throw new Error();
+        } catch {
+            setFavorites(favorites);
+            toast.error(t("favoriteFailed"));
+        }
     };
 
+    const visible = useMemo(() => {
+        if (!businesses) return [];
+        const words = normalize(query).split(/\s+/).filter(Boolean);
+
+        return businesses
+            .filter((business) => {
+                const text = normalize(`${business.name} ${business.address ?? ""}`);
+                if (!words.every((word) => text.includes(word))) return false;
+                if (filter === "favorites") return favorites.has(business.id);
+                if (filter === "open") return now ? openState(business, now).open : false;
+                return true;
+            })
+            .sort((a, b) => Number(favorites.has(b.id)) - Number(favorites.has(a.id)) || a.name.localeCompare(b.name, "es"));
+    }, [businesses, query, filter, favorites, now]);
+
+    const chips: { id: Filter; label: string }[] = [
+        { id: "all", label: t("filters.all") },
+        { id: "favorites", label: favorites.size ? t("filters.favoritesCount", { count: favorites.size }) : t("filters.favorites") },
+        { id: "open", label: t("filters.open") },
+    ];
+
     return (
-        <div className=" md:p-8 max-w-6xl mx-auto">
-            <header className="mb-8 md:mb-12 text-center md:text-left">
-                <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex items-center justify-center md:justify-start gap-2 text-indigo-600 font-bold   text-xs mb-3"
-                >
-                    <Store size={14} />
-                    <span>{t("eyebrow")}</span>
-                </motion.div>
+        <div className="pb-6">
+            <PageHeader title={t("title")} subtitle={t("subtitle")} />
 
-                <motion.h1
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-3xl md:text-5xl font-black text-gray-900 tracking-tight"
-                >
-                    {t("title")}
-                </motion.h1>
-
-                <motion.p
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="text-gray-500 mt-3 text-base md:text-lg font-medium max-w-2xl mx-auto md:mx-0"
-                >
-                    {t("subtitle")}
-                </motion.p>
-            </header>
-
-            {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                        <div
-                            key={i}
-                            className="bg-white border border-gray-100 rounded-4xl md:rounded-[2.5rem] overflow-hidden animate-pulse shadow-sm"
+            <div className="flex flex-col gap-3 md:flex-row md:items-center">
+                <label className="relative block flex-1">
+                    <span className="sr-only">{t("searchLabel")}</span>
+                    <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" aria-hidden="true" />
+                    <input
+                        type="search"
+                        value={query}
+                        onChange={(event) => setQuery(event.target.value)}
+                        placeholder={t("searchPlaceholder")}
+                        className="min-h-12 w-full border border-gray-200 bg-white pl-11 pr-11 text-base outline-none transition-colors focus:border-gray-900"
+                    />
+                    {query && (
+                        <button
+                            type="button"
+                            onClick={() => setQuery("")}
+                            aria-label={t("clearSearch")}
+                            className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-gray-500 hover:text-gray-900"
                         >
-                            <div className="h-32 bg-gray-100" />
-                            <div className="p-6 space-y-4">
-                                <div className="w-16 h-16 rounded-2xl bg-gray-100" />
-                                <div className="h-5 bg-gray-100 rounded w-3/4" />
-                                <div className="h-4 bg-gray-100 rounded w-full" />
-                                <div className="h-4 bg-gray-100 rounded w-2/3" />
-                                <div className="h-12 bg-gray-100 rounded-2xl w-full mt-4" />
-                            </div>
-                        </div>
+                            <X size={18} aria-hidden="true" />
+                        </button>
+                    )}
+                </label>
+
+                <div role="group" aria-label={t("filters.label")} className="scroll-strip -mx-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0">
+                    {chips.map((chip) => (
+                        <button
+                            key={chip.id}
+                            type="button"
+                            aria-pressed={filter === chip.id}
+                            onClick={() => setFilter(chip.id)}
+                            className={`min-h-11 shrink-0 whitespace-nowrap border px-4 text-sm font-semibold transition-colors ${filter === chip.id ? "border-gray-900 bg-gray-900 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-gray-900"}`}
+                        >
+                            {chip.label}
+                        </button>
                     ))}
                 </div>
-            ) : businesses.length === 0 ? (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-center py-16 md:py-20 bg-gray-50 rounded-[2.5rem] md:rounded-[3rem] border border-dashed border-gray-200 px-6"
-                >
-                    <Building2 className="mx-auto text-gray-300 mb-4" size={48} />
-                    <p className="text-gray-500 font-bold text-xl">
-                        {t("emptyTitle")}
+            </div>
+
+            {businesses === null ? (
+                <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true">
+                    {[0, 1, 2].map((i) => (
+                        <li key={i} className="h-72 animate-pulse bg-gray-100" />
+                    ))}
+                </ul>
+            ) : visible.length === 0 ? (
+                <div className="mt-6 border border-dashed border-gray-300 p-8 text-center">
+                    <p className="font-semibold text-gray-900">
+                        {businesses.length === 0
+                            ? t("empty.none")
+                            : query
+                              ? t("empty.search", { query })
+                              : filter === "favorites"
+                                ? t("empty.favorites")
+                                : t("empty.open")}
                     </p>
-                    <p className="text-gray-400 text-sm mt-1">
-                        {t("emptySubtitle")}
-                    </p>
-                </motion.div>
+                    {businesses.length > 0 && filter === "favorites" && !query && <p className="mt-1 text-gray-600">{t("empty.favoritesHint")}</p>}
+                    {(query || filter !== "all") && businesses.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setQuery("");
+                                setFilter("all");
+                            }}
+                            className="mt-4 min-h-11 border border-gray-200 bg-white px-4 text-sm font-semibold hover:border-gray-900"
+                        >
+                            {t("empty.showAll")}
+                        </button>
+                    )}
+                </div>
             ) : (
-                <motion.div
-                    initial="hidden"
-                    animate="show"
-                    variants={{
-                        hidden: { opacity: 0 },
-                        show: {
-                            opacity: 1,
-                            transition: { staggerChildren: 0.08 },
-                        },
-                    }}
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
-                >
-                    {businesses.map((business) => {
-                        const isServiceActive =
-                            business.settings?.isServiceActive ?? true;
+                <>
+                    <p className="mt-5 text-sm text-gray-600" aria-live="polite">
+                        {t("results", { count: visible.length })}
+                    </p>
+                    <ul className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {visible.map((business) => {
+                            const isFavorite = favorites.has(business.id);
+                            const paused = business.settings?.isServiceActive === false;
+                            const canBook = business.bookable && !paused;
+                            const state = now ? openState(business, now) : null;
 
-                        return (
-                            <motion.div
-                                key={business.id}
-                                variants={{
-                                    hidden: { opacity: 0, y: 20 },
-                                    show: { opacity: 1, y: 0 },
-                                }}
-                                whileHover={{ y: 0 }}
-                                className="group relative bg-white border border-gray-100 rounded-4xl md:rounded-[2.5rem] shadow-sm hover:shadow-2xl hover:shadow-indigo-100 transition-all duration-300 overflow-hidden"
-                            >
-                                <div className="relative h-32 md:h-36 bg-linear-to-br from-indigo-950 via-indigo-900 to-purple-900 overflow-hidden">
-                                    {business.coverUrl ? (
-                                        <img
-                                            src={business.coverUrl}
-                                            alt={business.name}
-                                            className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500"
-                                        />
-                                    ) : (
-                                        <div className="absolute inset-0 opacity-20">
-                                            <div className="absolute -right-8 -top-8">
-                                                <Scissors size={120} className="-rotate-12 text-white" />
-                                            </div>
+                            return (
+                                <li key={business.id} className="flex flex-col border border-gray-200 bg-white">
+                                    <div className="relative aspect-[16/9] bg-[#0f2733]">
+                                        {business.coverUrl ? (
+                                            <img src={business.coverUrl} alt="" className="h-full w-full object-cover" />
+                                        ) : (
+                                            <span className="flex h-full items-center justify-center text-4xl text-[#f1f3f2]" aria-hidden="true">
+                                                {getInitials(business.name)}
+                                            </span>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleFavorite(business)}
+                                            aria-pressed={isFavorite}
+                                            aria-label={isFavorite ? t("unfavorite", { name: business.name }) : t("favorite", { name: business.name })}
+                                            className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center bg-white/95 text-gray-900 transition-transform active:scale-95"
+                                        >
+                                            <Heart size={20} aria-hidden="true" className={isFavorite ? "fill-[#e8603a] text-[#e8603a]" : ""} />
+                                        </button>
+                                    </div>
+
+                                    <div className="flex flex-1 flex-col p-4">
+                                        <div className="flex items-center gap-3">
+                                            {business.logoUrl && <img src={business.logoUrl} alt="" className="h-10 w-10 shrink-0 border border-gray-100 object-cover" />}
+                                            <h2 className="min-w-0 break-words text-lg font-semibold text-gray-900">{business.name}</h2>
                                         </div>
-                                    )}
 
-                                    <div className="absolute inset-0 bg-linear-to-t from-black/45 to-transparent" />
+                                        {business.address && (
+                                            <p className="mt-2 flex items-start gap-2 text-sm text-gray-600">
+                                                <MapPin size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+                                                <span className="min-w-0 break-words">{business.address}</span>
+                                            </p>
+                                        )}
 
-                                    <div className="absolute left-5 bottom-4 flex items-center gap-3">
-                                        <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-black/20 border border-white/20 overflow-hidden">
-                                            {business.logoUrl ? (
-                                                <img
-                                                    src={business.logoUrl}
-                                                    alt={business.name}
-                                                    className="w-full h-full object-cover"
-                                                />
+                                        <p className="mt-2 flex min-h-6 items-center gap-2 text-sm font-semibold text-gray-900">
+                                            {state && (
+                                                <>
+                                                    <span className={`h-2.5 w-2.5 shrink-0 ${state.open ? "bg-[#2f7d5b]" : "bg-gray-400"}`} aria-hidden="true" />
+                                                    {state.open
+                                                        ? t("openUntil", { time: formatMinutes12h(state.closesAt) })
+                                                        : state.opensTodayAt !== null
+                                                          ? t("opensAt", { time: formatMinutes12h(state.opensTodayAt) })
+                                                          : t("closed")}
+                                                </>
+                                            )}
+                                        </p>
+
+                                        <div className="mt-auto grid grid-cols-2 gap-2 pt-4">
+                                            <Link
+                                                href={`/business/${business.slug}`}
+                                                className="inline-flex min-h-11 items-center justify-center border border-gray-200 px-3 text-sm font-semibold transition-colors hover:border-gray-900"
+                                            >
+                                                {t("view")}
+                                            </Link>
+                                            {canBook ? (
+                                                <Link
+                                                    href={`/business/${business.slug}/book`}
+                                                    className="inline-flex min-h-11 items-center justify-center bg-gray-900 px-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                                                >
+                                                    {t("book")}
+                                                </Link>
                                             ) : (
-                                                <span className="text-white font-black text-lg ">
-                                                    {getInitials(business.name)}
+                                                <span className="inline-flex min-h-11 items-center justify-center bg-gray-100 px-3 text-center text-xs font-semibold text-gray-500">
+                                                    {paused ? t("paused") : t("notYet")}
                                                 </span>
                                             )}
                                         </div>
-
-                                        <div>
-                                            <p className="text-white font-black text-lg leading-tight line-clamp-1">
-                                                {business.name}
-                                            </p>
-                                            <p className="text-indigo-100 text-xs font-bold  ">
-                                                {t("badge")}
-                                            </p>
-                                        </div>
                                     </div>
-                                </div>
-
-                                <div className="p-5 md:p-6">
-                                    <p className="text-sm text-gray-500 leading-relaxed line-clamp-3 min-h-15">
-                                        {business.description || t("defaultDescription")}
-                                    </p>
-
-                                    <div className="mt-5 space-y-2">
-                                        {business.address && (
-                                            <div className="flex items-center gap-2 text-xs text-gray-500 font-bold">
-                                                <MapPin size={14} className="text-indigo-400 shrink-0" />
-                                                <span className="truncate">{business.address}</span>
-                                            </div>
-                                        )}
-
-                                        {business.phone && (
-                                            <div className="flex items-center gap-2 text-xs text-gray-500 font-bold">
-                                                <Phone size={14} className="text-indigo-400 shrink-0" />
-                                                <span className="truncate">{business.phone}</span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="mt-5 grid grid-cols-2 gap-2">
-                                        <div className="rounded-2xl bg-gray-50 border border-gray-100 p-3">
-                                            <p className="text-xs text-gray-400   font-black">
-                                                {t("barbers")}
-                                            </p>
-                                            <p className="text-lg font-black text-gray-900">
-                                                {business.barberCount}
-                                            </p>
-                                        </div>
-
-                                        <div className="rounded-2xl bg-gray-50 border border-gray-100 p-3">
-                                            <p className="text-xs text-gray-400   font-black">
-                                                {t("services")}
-                                            </p>
-                                            <p className="text-lg font-black text-gray-900">
-                                                {business.serviceCount}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {!isServiceActive && (
-                                        <div className="mt-4 rounded-2xl bg-amber-50 border border-amber-100 p-3">
-                                            <p className="text-xs text-amber-700 font-bold">
-                                                {business.settings?.maintenanceMessage || t("paused")}
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    <div className="mt-6 grid grid-cols-1 gap-2">
-                                        <motion.button
-                                            whileTap={{ scale: 0.97 }}
-                                            onClick={() =>
-                                                router.push(`/business/${business.slug}`)
-                                            }
-                                            className="w-full py-3 rounded-xl bg-gray-100 text-gray-700 text-xs font-black   hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
-                                        >
-                                            {t("view")}
-                                            <ArrowRight size={16} />
-                                        </motion.button>
-
-                                        <motion.button
-                                            whileTap={{ scale: 0.97 }}
-                                            onClick={() =>
-                                                router.push(
-                                                    `/business/${business.slug}/book`
-                                                )
-                                            }
-                                            disabled={!isServiceActive || business.barberCount === 0}
-                                            className="w-full py-3.5 rounded-xl bg-gray-900 text-white text-xs font-black   hover:bg-indigo-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-                                        >
-                                            <CalendarDays size={16} />
-                                            {t("book")}
-                                        </motion.button>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        );
-                    })}
-                </motion.div>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </>
             )}
         </div>
     );

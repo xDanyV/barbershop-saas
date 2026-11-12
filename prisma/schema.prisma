@@ -30,6 +30,7 @@ model User {
   paymentsRecorded BusinessPayment[]
   auditEntries     AuditLog[]
 
+  favoriteBusinesses   FavoriteBusiness[]
   passwordResetTokens  PasswordResetToken[] @relation("ResetTokenUser")
   resetTokensGenerated PasswordResetToken[] @relation("ResetTokenCreator")
 }
@@ -82,6 +83,7 @@ model Business {
   gallery      BusinessGallery[]
   posts        BusinessPost[]
   customerBans BusinessCustomerBan[]
+  favoritedBy  FavoriteBusiness[]
   payments     BusinessPayment[]
 
   // Única fuente de verdad de plan, estado y vigencia de la suscripción
@@ -395,4 +397,16 @@ model AuditLog {
 
   @@index([createdAt])
   @@index([targetType, targetId])
+}
+
+// Barberías que un cliente marcó como favoritas para encontrarlas rápido al reservar
+model FavoriteBusiness {
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@id([userId, businessId])
+  @@index([businessId])
 }
