@@ -71,6 +71,8 @@ export default async function RootLayout({
           <Toaster
             position="top-center"
             reverseOrder={false}
+            // Por encima de las ventanas (z-[9999]): los avisos no quedan escondidos detrás de un diálogo
+            containerStyle={{ zIndex: 10000 }}
             toastOptions={{
               style: { borderRadius: "6px", background: "#ffffff", color: "#0f2733", border: "1px solid #dbe0de", fontSize: "15px" },
               success: { iconTheme: { primary: "#1f6f5c", secondary: "#ffffff" } },

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { AppointmentStatus } from "@prisma/client";
 import { canBusinessAcceptBookings, getBillingStatus } from "@/lib/billing/status";
 import { AppError } from "@/lib/errors";
-import { getBarberDay, hasScheduleConflict, lockKeys } from "@/lib/services/booking.service";
+import { checkWorkingHours, getBarberDay, hasScheduleConflict, lockKeys } from "@/lib/services/booking.service";
 import { addDaysToKey, resolveTimezone, toDateKey, zonedToUtc } from "@/lib/time/zoned";
 
 const MAX_ACTIVE_APPOINTMENTS = 2;
@@ -185,8 +185,9 @@ export async function createManualAppointment(data: {
     time: string;
     name: string;
     phone?: string | null;
+    allowOutsideHours?: boolean;
 }) {
-    const { barberId, serviceId, date, time, name, phone } = data;
+    const { barberId, serviceId, date, time, name, phone, allowOutsideHours } = data;
 
     const barber = await prisma.barber.findUnique({
         where: { id: barberId },
@@ -226,6 +227,14 @@ export async function createManualAppointment(data: {
     }
 
     const start = zonedToUtc(date, time, timezone);
+
+    // Fuera de horario, en descanso o en día libre se pide confirmar: a veces el barbero sí se queda
+    if (!allowOutsideHours) {
+        const hours = await checkWorkingHours(prisma, barberId, date, start, service.duration, timezone);
+        if (hours !== "inside") {
+            throw new AppError("That time is outside the working hours", 422, `OUTSIDE_HOURS:${hours}`);
+        }
+    }
 
     return prisma.$transaction(async (tx) => {
         await lockKeys(tx, `barber:${barberId}`);

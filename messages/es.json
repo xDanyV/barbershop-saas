@@ -172,7 +172,8 @@
             "services": "Servicios",
             "availability": "Horario"
         },
-        "title": "Mi agenda"
+        "title": "Mi agenda",
+        "titleOf": "Agenda de {name}"
     },
     "AppointmentList": {
         "title": "Citas",
@@ -303,7 +304,9 @@
         "buttons": {
             "createService": "Crear servicio",
             "backToList": "Volver a la lista"
-        }
+        },
+        "titleOf": "Servicios de {name}",
+        "subtitleOf": "Lo que agregues o cambies aquí es solo para {name}."
     },
     "ServiceList": {
         "empty": "Sin servicios aún. Crea tu primer servicio para comenzar tu catálogo.",
@@ -543,7 +546,10 @@
             "with": "con {names}",
             "bookLabel": "Reservar {name}",
             "note": "Precios en pesos mexicanos. El pago se hace en la barbería.",
-            "empty": "La barbería todavía no publica sus servicios."
+            "empty": "La barbería todavía no publica sus servicios.",
+            "all": "Todos",
+            "tabsLabel": "Servicios por barbero",
+            "bookWith": "Reservar {name} con {barber}"
         },
         "team": {
             "title": "Equipo",
@@ -979,6 +985,14 @@
             "phone": "Escribe un teléfono de México de 10 dígitos.",
             "conflict": "Ese horario no está disponible: ya hay una cita o lo marcaste como día libre.",
             "failed": "No se pudo guardar la cita. Revisa los datos."
+        },
+        "outside": {
+            "dayOff": "Ese día no trabajas: no está en tu horario o lo marcaste como día libre.",
+            "outsideHours": "Esa hora queda fuera de tu horario de trabajo.",
+            "onBreak": "Esa hora cae en tu descanso.",
+            "question": "¿La agregas de todos modos? Los clientes no podrán reservar en línea fuera de tu horario.",
+            "confirm": "Agregar de todos modos",
+            "change": "Cambiar fecha u hora"
         }
     },
     "Billing": {
@@ -1599,5 +1613,12 @@
             "noGeolocation": "Tu navegador no comparte la ubicación.",
             "denied": "No se pudo obtener tu ubicación. Revisa el permiso del navegador."
         }
+    },
+    "SignedInNotice": {
+        "asName": "Ya iniciaste sesión como {name}.",
+        "generic": "Ya tienes una sesión iniciada.",
+        "hint": "Para crear otra cuenta, cierra sesión primero.",
+        "goToPanel": "Ir a mi panel",
+        "logout": "Cerrar sesión"
     }
 }

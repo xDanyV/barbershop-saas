@@ -28,6 +28,9 @@ export default function WalkInDialog({ barberId, initialDate, onClose, onCreated
     const [services, setServices] = useState<Service[] | null>(null);
     const [form, setForm] = useState({ name: "", phone: "", serviceId: "", date: initialDate, time: currentTime() });
     const [saving, setSaving] = useState(false);
+    // Avisos dentro de la ventana: un error de datos, o que la hora cae fuera del horario
+    const [error, setError] = useState<string | null>(null);
+    const [outside, setOutside] = useState<"dayOff" | "outsideHours" | "onBreak" | null>(null);
 
     useEffect(() => {
         let ignore = false;
@@ -48,37 +51,53 @@ export default function WalkInDialog({ barberId, initialDate, onClose, onCreated
         };
     }, [barberId]);
 
-    const update = (key: keyof typeof form, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
+    const update = (key: keyof typeof form, value: string) => {
+        setForm((prev) => ({ ...prev, [key]: value }));
+        setError(null);
+        setOutside(null);
+    };
 
-    const submit = async (e: FormEvent) => {
-        e.preventDefault();
-
+    const save = async (allowOutsideHours: boolean) => {
         if (form.phone.trim() && !normalizeMxPhone(form.phone)) {
-            toast.error(t("errors.phone"));
+            setError(t("errors.phone"));
             return;
         }
 
         setSaving(true);
+        setError(null);
 
         try {
             const res = await fetch("/api/protected/appointments/manual", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(form),
+                body: JSON.stringify({ ...form, allowOutsideHours }),
             });
 
             if (!res.ok) {
-                toast.error(res.status === 409 ? t("errors.conflict") : t("errors.failed"));
+                const data = await res.json().catch(() => null);
+                const code: string = data?.code ?? "";
+
+                if (res.status === 422 && code.startsWith("OUTSIDE_HOURS:")) {
+                    setOutside(code.split(":")[1] as "dayOff" | "outsideHours" | "onBreak");
+                    return;
+                }
+
+                setError(res.status === 409 ? t("errors.conflict") : t("errors.failed"));
                 return;
             }
 
             toast.success(t("success", { name: form.name.trim() }));
             onCreated();
         } catch {
-            toast.error(t("errors.failed"));
+            setError(t("errors.failed"));
         } finally {
             setSaving(false);
         }
+    };
+
+    const submit = (e: FormEvent) => {
+        e.preventDefault();
+        save(false);
     };
 
     return (
@@ -157,9 +176,35 @@ export default function WalkInDialog({ barberId, initialDate, onClose, onCreated
                         </label>
                     </div>
 
-                    <button type="submit" disabled={saving || !form.serviceId} className={brandPrimaryButton}>
-                        {saving ? t("saving") : t("save")}
-                    </button>
+                    {error && (
+                        <p role="alert" className="border-l-4 border-[#b8431f] bg-[#fbeee9] px-4 py-3 text-[#7a2c14]">
+                            {error}
+                        </p>
+                    )}
+
+                    {outside ? (
+                        <div role="alert" className="space-y-3 border-l-4 border-[#d4a017] bg-[#fbf4df] px-4 py-3">
+                            <p className="font-semibold">{t(`outside.${outside}`)}</p>
+                            <p className="text-[var(--brand-muted)]">{t("outside.question")}</p>
+                            <div className="grid gap-2 sm:grid-cols-2">
+                                <button type="button" onClick={() => save(true)} disabled={saving} className={brandPrimaryButton}>
+                                    {saving ? t("saving") : t("outside.confirm")}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setOutside(null)}
+                                    disabled={saving}
+                                    className="inline-flex min-h-12 items-center justify-center border border-[var(--brand-ink)] px-4 font-semibold"
+                                >
+                                    {t("outside.change")}
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <button type="submit" disabled={saving || !form.serviceId} className={brandPrimaryButton}>
+                            {saving ? t("saving") : t("save")}
+                        </button>
+                    )}
                 </form>
             )}
         </BrandDialog>

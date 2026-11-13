@@ -8,9 +8,10 @@ import ExceptionModal from "./ExceptionModal";
 
 type Props = {
     onExceptionAdded: () => void;
+    managedName?: string | null;
 };
 
-export default function DashboardHeader({ onExceptionAdded }: Props) {
+export default function DashboardHeader({ onExceptionAdded, managedName }: Props) {
     const t = useTranslations("DashboardHeader");
     const locale = useLocale();
     const [exceptionOpen, setExceptionOpen] = useState(false);
@@ -25,7 +26,7 @@ export default function DashboardHeader({ onExceptionAdded }: Props) {
         <>
             <header className="flex flex-col gap-4 py-6 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{t("title")}</h1>
+                    <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{managedName ? t("titleOf", { name: managedName }) : t("title")}</h1>
                     <p suppressHydrationWarning className="mt-1 text-gray-500 first-letter:uppercase">
                         {today}
                     </p>

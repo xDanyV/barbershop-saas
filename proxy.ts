@@ -10,6 +10,7 @@ import {
   getSessionFromToken,
 } from "@/lib/auth/session";
 import { maintenanceResponse } from "@/lib/maintenance";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 
 // Inicializamos el middleware de idiomas
 const intlMiddleware = createMiddleware(routing);
@@ -50,6 +51,22 @@ export async function proxy(request: NextRequest) {
   const isProtectedApi = pathname.startsWith("/api/protected") || pathname.startsWith("/api/admin");
   const isProtectedPage = pathnameWithoutLocale.startsWith("/dashboard");
 
+  // Con sesión iniciada, "Iniciar sesión" y "Crear cuenta" llevan directo al panel.
+  // Un registro con invitación (?intent=, ?business=) se muestra igual: puede ser para otra cuenta.
+  const isLogin = pathnameWithoutLocale === "/login";
+  const isPlainRegister = pathnameWithoutLocale === "/register" && request.nextUrl.search === "";
+  if ((isLogin || isPlainRegister) && request.cookies.has(SESSION_COOKIE)) {
+    try {
+      const current = await getSessionFromToken(request.cookies.get(SESSION_COOKIE)?.value);
+      if (current) {
+        const target = safeRedirectPath(request.nextUrl.searchParams.get("redirectTo")) ?? `${localePrefix}${getHomePathForRole(current.role)}`;
+        return NextResponse.redirect(new URL(target, request.url));
+      }
+    } catch {
+      // Sin base de datos se muestra la pantalla normal
+    }
+  }
+
   // Si NO es una ruta protegida y NO es una API, solo aplicamos el idioma
   if (!isProtectedApi && !isProtectedPage) {
     return isApiRoute
@@ -59,9 +76,13 @@ export async function proxy(request: NextRequest) {
 
   // --- INICIO DE LÓGICA DE PROTECCIÓN (SESIÓN) ---
   const unauthorized = () => {
+    // Al volver a iniciar sesión regresa a la pantalla donde estaba
+    const loginUrl = new URL(`${localePrefix}/login`, request.url);
+    if (!isProtectedApi) loginUrl.searchParams.set("redirectTo", pathname + request.nextUrl.search);
+
     const response = isProtectedApi
       ? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-      : NextResponse.redirect(new URL(`${localePrefix}/login`, request.url));
+      : NextResponse.redirect(loginUrl);
 
     // Token inválido, expirado o de un usuario eliminado
     if (request.cookies.has(SESSION_COOKIE)) {
