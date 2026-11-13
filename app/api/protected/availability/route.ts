@@ -5,6 +5,7 @@ import { requireBarberAuth } from "@/lib/api/auth";
 import { parseJsonBody } from "@/lib/api/validation";
 import { availabilitySchema } from "@/lib/validations/schemas";
 import { revalidateBusinessPages } from "@/lib/cache/business-pages";
+import { notifyBarberReadyLater } from "@/lib/notifications/appointments";
 
 export async function GET(request: NextRequest) {
     try {
@@ -52,6 +53,7 @@ export async function POST(request: NextRequest) {
             select: { businessId: true },
         });
         await revalidateBusinessPages(barber?.businessId);
+        notifyBarberReadyLater(barberId);
 
         return NextResponse.json(availability);
     } catch (error) {

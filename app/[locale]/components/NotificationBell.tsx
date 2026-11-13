@@ -25,17 +25,26 @@ export default function NotificationBell({ className = "" }: { className?: strin
                 .catch(() => null);
         };
 
+        // Un aviso push que llega con la pantalla abierta actualiza la campana al momento
+        const onWorkerMessage = (event: MessageEvent) => {
+            if (event.data?.type === "notification") load();
+        };
+
         load();
-        // Cada minuto mientras la pantalla está a la vista, y al volver a ella
-        const timer = window.setInterval(load, 60_000);
+        // Además, cada 30 segundos mientras la pantalla está a la vista, y al volver a ella
+        const timer = window.setInterval(load, 30_000);
         document.addEventListener("visibilitychange", load);
         window.addEventListener("inbox-read", load);
+        window.addEventListener("inbox-refresh", load);
+        navigator.serviceWorker?.addEventListener("message", onWorkerMessage);
 
         return () => {
             cancelled = true;
             window.clearInterval(timer);
             document.removeEventListener("visibilitychange", load);
             window.removeEventListener("inbox-read", load);
+            window.removeEventListener("inbox-refresh", load);
+            navigator.serviceWorker?.removeEventListener("message", onWorkerMessage);
         };
     }, [pathname]);
 

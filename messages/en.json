@@ -161,7 +161,8 @@
             "blocked": "Day off",
             "busy": "Has appointments",
             "nonWorking": "Day off",
-            "today": "Today"
+            "today": "Today",
+            "working": "Working day"
         },
         "previousMonth": "Previous month",
         "nextMonth": "Next month"
@@ -406,7 +407,8 @@
         "errors": {
             "load": "Your appointments couldn’t be loaded. Check your connection and reload the page.",
             "cancelFailed": "The appointment couldn’t be cancelled.",
-            "network": "No connection. Try again."
+            "network": "No connection. Try again.",
+            "remove": "The appointment couldn’t be removed."
         },
         "success": {
             "cancelled": "Appointment cancelled"
@@ -422,7 +424,10 @@
         "rateText": "{service}, {date}. Tap the stars to rate it.",
         "rateStars": "{count, plural, one {Rate # star} other {Rate # stars}}",
         "rate": "Rate",
-        "yourRating": "You rated {rating}/5"
+        "yourRating": "You rated {rating}/5",
+        "remove": "Remove from history",
+        "removeLabel": "Remove {service} on {date} from history",
+        "removed": "Appointment removed from history"
     },
     "CustomersList": {
         "loadingDir": "Loading customer database...",
@@ -1698,6 +1703,18 @@
         "newReview": {
             "title": "New review: {rating} out of 5",
             "body": "{customer} rated their {service} with {barber}."
+        },
+        "barberRequest": {
+            "title": "{barber} wants to join your team",
+            "body": "Review their request in Team so they can start taking appointments."
+        },
+        "barberReady": {
+            "title": "You can now take appointments",
+            "body": "Your profile at {business} is complete: customers can book with you now."
+        },
+        "barberReadyTeam": {
+            "title": "{barber} can now take appointments",
+            "body": "They finished their services and hours and now show up for booking."
         }
     },
     "PushSettings": {

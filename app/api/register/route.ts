@@ -9,6 +9,7 @@ import { extractBusinessSlug } from "@/lib/slug";
 import { TERMS_VERSION } from "@/lib/legal";
 import { RATE_LIMITS, consumeRateLimit, getClientIp } from "@/lib/rate-limit";
 import { SESSION_COOKIE, SESSION_MAX_AGE_SECONDS, sessionCookieOptions, signSessionToken } from "@/lib/auth/session";
+import { notifyBarberRequestLater } from "@/lib/notifications/appointments";
 
 function getBootstrapAdminEmail() {
     return process.env.ADMIN_BOOTSTRAP_EMAIL?.trim().toLowerCase() || null;
@@ -87,6 +88,8 @@ export async function POST(req: Request) {
                     : {}),
             },
         });
+
+        if (finalRole === Role.BARBER && barberBusinessId) notifyBarberRequestLater(user.id);
 
         const response = NextResponse.json(
             {

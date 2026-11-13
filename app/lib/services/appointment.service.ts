@@ -449,6 +449,7 @@ export async function getUserAppointments(userId: string) {
     const appointments = await prisma.appointment.findMany({
         where: {
             userId,
+            customerHiddenAt: null,
         },
         orderBy: {
             date: "desc",

@@ -84,6 +84,8 @@ export default function BarberDashboard() {
       const res = await fetch(`/api/protected/appointments/barber?from=${from}&to=${to}`);
       const data = await res.json();
       if (requestId === latestRequest.current) setRaw(Array.isArray(data) ? data : []);
+      // La agenda se actualiza sola: la campana también, por si llegó una cita nueva
+      window.dispatchEvent(new Event("inbox-refresh"));
     } catch (err) {
       console.error("Could not load appointments", err);
       if (isInitial && requestId === latestRequest.current) setRaw([]);

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { AppError, errorResponse } from "@/lib/errors";
 import { revalidateBusinessPages } from "@/lib/cache/business-pages";
+import { notifyBarberReadyLater } from "@/lib/notifications/appointments";
 import { requireAuth } from "@/lib/api/auth";
 import { recordAudit } from "@/lib/services/audit.service";
 import { parseJsonBody } from "@/lib/api/validation";
@@ -125,6 +126,8 @@ export async function PATCH(request: NextRequest) {
         cleanUpUploads(replacedUrls([[existingBarber.profileImageUrl, profileImageUrl === undefined ? undefined : profileImageUrl || null]]));
 
         const { cancelledCount, ...barber } = updatedBarber;
+        // Aprobado o reactivado con todo listo: ya puede recibir citas
+        if (status === "APPROVED" || active === true) notifyBarberReadyLater(barberId);
 
         return NextResponse.json({
             message: "Barber updated successfully",

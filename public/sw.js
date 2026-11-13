@@ -36,15 +36,20 @@ self.addEventListener("push", (event) => {
         data = { title: event.data ? event.data.text() : "" };
     }
 
+    // Las pantallas abiertas actualizan la campana al momento
+    const notifyPages = self.clients
+        .matchAll({ type: "window", includeUncontrolled: true })
+        .then((windows) => windows.forEach((client) => client.postMessage({ type: "notification" })));
+
     event.waitUntil(
-        self.registration.showNotification(data.title || "Citas", {
+        Promise.all([notifyPages, self.registration.showNotification(data.title || "Citas", {
             body: data.body || "",
             tag: data.tag,
             renotify: Boolean(data.tag),
             icon: "/icons/icon-192.png",
             badge: "/icons/icon-192.png",
             data: { url: data.url || "/" },
-        })
+        })])
     );
 });
 
