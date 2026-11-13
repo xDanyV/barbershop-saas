@@ -1278,7 +1278,8 @@
             "title": "No pudimos conectarnos",
             "text": "Hay un problema momentáneo de nuestro lado. Tu información está segura.",
             "hint": "Recarga la página en unos minutos."
-        }
+        },
+        "skipToContent": "Saltar al contenido"
     },
     "ApiErrors": {
         "EMAIL_TAKEN": "Ya existe una cuenta con este correo. Inicia sesión.",
@@ -1811,6 +1812,32 @@
         "errors": {
             "load": "No se pudieron cargar las reseñas.",
             "save": "No se pudo guardar el cambio."
+        }
+    },
+    "CreateBusiness": {
+        "title": "Registra tu barbería",
+        "subtitle": "Con estos datos se crea la página donde tus clientes reservan.",
+        "checking": "Revisando tu cuenta...",
+        "existingTitle": "Ya tienes una barbería",
+        "existingText": "Tu cuenta ya administra:",
+        "goToBusiness": "Ir a Mi negocio",
+        "viewPage": "Ver página pública",
+        "detailsTitle": "Datos de la barbería",
+        "detailsHint": "Aparecen en tu página pública. Puedes cambiarlos después.",
+        "name": "Nombre",
+        "namePlaceholder": "Barbería El Nuevo Rey",
+        "description": "Descripción (opcional)",
+        "descriptionPlaceholder": "Cortes clásicos, fades, barba y atención personalizada.",
+        "phone": "Teléfono (WhatsApp)",
+        "address": "Dirección",
+        "addressPlaceholder": "Calle, número y colonia",
+        "trial": "Empiezas con {days} días gratis. Después agregas tu logo, tus servicios, tu horario y a tu equipo.",
+        "create": "Crear barbería",
+        "creating": "Creando...",
+        "created": "Barbería creada",
+        "errors": {
+            "nameShort": "El nombre debe tener al menos 3 caracteres.",
+            "failed": "No se pudo crear la barbería."
         }
     }
 }

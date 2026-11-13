@@ -27,11 +27,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Con teclado o lector de pantalla se puede saltar el menú y llegar directo al contenido */}
+      <a
+        href="#contenido"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[10001] focus:bg-white focus:px-4 focus:py-3 focus:font-semibold focus:text-gray-900 focus:outline-2 focus:outline-gray-900"
+      >
+        {t("skipToContent")}
+      </a>
       <DashboardNavbar role={userRole} />
       {termsPending && <TermsPrompt />}
       {ownerBusinessId && <BillingBanner businessId={ownerBusinessId} />}
 
-      <main className="w-full max-w-7xl mx-auto px-4 pb-24 sm:px-8 md:pb-8 flex-1">
+      <main id="contenido" tabIndex={-1} className="w-full max-w-7xl mx-auto px-4 pb-24 sm:px-8 md:pb-8 flex-1 outline-none">
         {children}
       </main>
 

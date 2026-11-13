@@ -1,326 +1,143 @@
 "use client";
 
-import { useApiError } from "@/[locale]/components/useApiError";
-import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState, type FormEvent } from "react";
+import { Loader2, MapPin, Phone } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import toast from "react-hot-toast";
-import {
-    Building2,
-    Loader2,
-    MapPin,
-    Phone,
-    Save,
-    Store,
-} from "lucide-react";
-import { usePathname } from "next/navigation";
+import { useApiError } from "@/[locale]/components/useApiError";
+import { TRIAL_DAYS } from "@/lib/billing/periods";
+import PageHeader from "@/[locale]/components/PageHeader";
+import { card, fieldInput, fieldLabel, fieldTextarea, primaryButton, secondaryButton, sectionHint, sectionTitle } from "@/[locale]/dashboard/admin/my-business/_components/ui";
 
-type Business = {
-    id: string;
-    name: string;
-    slug: string;
-};
+type Business = { id: string; name: string; slug: string };
 
-type BusinessForm = {
-    name: string;
-    description: string;
-    phone: string;
-    address: string;
-};
-
+// Un cliente registra su barbería: con esto ya tiene página pública y pasa a ser dueño
 export default function CreateBusinessPage() {
-    const pathname = usePathname();
-
+    const t = useTranslations("CreateBusiness");
+    const locale = useLocale();
     const apiError = useApiError();
-    const [existingBusinesses, setExistingBusinesses] = useState<Business[]>([]);
-    const [checking, setChecking] = useState(true);
+    const [existing, setExisting] = useState<Business[] | null>(null);
     const [saving, setSaving] = useState(false);
-
-    const [form, setForm] = useState<BusinessForm>({
-        name: "",
-        description: "",
-        phone: "",
-        address: "",
-    });
-
-    const localePrefix = useMemo(() => {
-        const match = pathname.match(/^\/(en|es)/);
-        return match ? match[0] : "";
-    }, [pathname]);
+    const [form, setForm] = useState({ name: "", description: "", phone: "", address: "" });
 
     useEffect(() => {
-        const loadBusinesses = async () => {
-            try {
-                const res = await fetch("/api/protected/businesses");
-                const data = await res.json();
-
-                if (!res.ok) {
-                    return;
-                }
-
-                if (Array.isArray(data)) {
-                    setExistingBusinesses(data);
-                }
-            } catch {
-                // No mostramos error aquí para no bloquear el formulario si solo falla la revisión.
-            } finally {
-                setChecking(false);
-            }
-        };
-
-        loadBusinesses();
+        fetch("/api/protected/businesses")
+            .then((res) => (res.ok ? res.json() : []))
+            .then((data) => setExisting(Array.isArray(data) ? data : []))
+            // Si solo falla la revisión, el formulario sigue disponible
+            .catch(() => setExisting([]));
     }, []);
 
-    const updateField = <K extends keyof BusinessForm>(
-        key: K,
-        value: BusinessForm[K]
-    ) => {
-        setForm((prev) => ({
-            ...prev,
-            [key]: value,
-        }));
-    };
+    const update = (key: keyof typeof form, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (form.name.trim().length < 3) {
-            toast.error("El nombre del negocio debe tener al menos 3 caracteres");
-            return;
-        }
+    const submit = async (event: FormEvent) => {
+        event.preventDefault();
+        if (form.name.trim().length < 3) return void toast.error(t("errors.nameShort"));
 
         setSaving(true);
-
         try {
             const res = await fetch("/api/protected/businesses", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    name: form.name,
-                    description: form.description,
-                    phone: form.phone,
-                    address: form.address,
-                }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(form),
             });
-
-            const data = await res.json();
+            const data = await res.json().catch(() => null);
 
             if (!res.ok) {
-                toast.error(apiError(data, "No se pudo crear el negocio"));
+                toast.error(apiError(data, t("errors.failed")));
                 return;
             }
 
-            toast.success("Negocio creado correctamente");
-
+            toast.success(t("created"));
             // La sesión ya refleja el nuevo rol y negocio; no hace falta volver a iniciar sesión
-            window.location.href = `${localePrefix}/dashboard/admin`;
+            window.location.href = `/${locale}/dashboard/admin`;
         } catch {
-            toast.error("Error al crear el negocio");
+            toast.error(t("errors.failed"));
         } finally {
             setSaving(false);
         }
     };
 
-    if (checking) {
+    if (existing === null) {
         return (
-            <main className="min-h-[70vh] flex items-center justify-center bg-gray-50">
-                <div className="flex items-center gap-3 text-gray-500 font-bold text-sm">
-                    <Loader2 className="animate-spin" size={18} />
-                    Revisando tu cuenta...
-                </div>
-            </main>
+            <div className="pb-6">
+                <PageHeader title={t("title")} />
+                <p className="flex items-center gap-2 text-gray-600">
+                    <Loader2 size={18} className="animate-spin" aria-hidden="true" />
+                    {t("checking")}
+                </p>
+            </div>
         );
     }
 
-    if (existingBusinesses.length > 0) {
-        const business = existingBusinesses[0];
+    if (existing.length > 0) {
+        const business = existing[0];
 
         return (
-            <main className="min-h-screen bg-gray-50 px-4 py-8 md:px-8 md:py-12">
-                <div className="max-w-xl mx-auto bg-white border border-gray-100 rounded-3xl p-7 md:p-9 shadow-sm text-center">
-                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-5">
-                        <Store size={26} />
-                    </div>
-
-                    <h1 className="text-2xl font-black text-gray-900">
-                        Ya tienes un negocio creado
-                    </h1>
-
-                    <p className="text-sm text-gray-500 mt-3">
-                        Actualmente tienes registrado:
-                    </p>
-
-                    <p className="mt-3 text-lg font-black text-indigo-600">
-                        {business.name}
-                    </p>
-
-                    <div className="mt-7 flex flex-col sm:flex-row gap-3">
-                        <a
-                            href={`${localePrefix}/dashboard/admin/my-business`}
-                            className="flex-1 px-4 py-3 rounded-2xl bg-indigo-600 text-white text-sm font-black hover:bg-indigo-700 transition-all"
-                        >
-                            Ir a Mi negocio
+            <div className="mx-auto max-w-xl pb-6">
+                <PageHeader title={t("existingTitle")} />
+                <section className={card}>
+                    <p className="text-gray-600">{t("existingText")}</p>
+                    <p className="mt-2 break-words text-xl font-semibold text-gray-900">{business.name}</p>
+                    <div className="mt-6 grid gap-2 sm:grid-cols-2">
+                        <a href={`/${locale}/dashboard/admin/my-business`} className={primaryButton}>
+                            {t("goToBusiness")}
                         </a>
-
-                        <a
-                            href={`${localePrefix}/business/${business.slug}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-1 px-4 py-3 rounded-2xl bg-gray-100 text-gray-700 text-sm font-black hover:bg-gray-200 transition-all"
-                        >
-                            Ver página pública
+                        <a href={`/${locale}/business/${business.slug}`} target="_blank" rel="noopener noreferrer" className={secondaryButton}>
+                            {t("viewPage")}
                         </a>
                     </div>
-                </div>
-            </main>
+                </section>
+            </div>
         );
     }
 
     return (
-        <main className="min-h-screen bg-gray-50 px-4 py-6 md:px-8 md:py-10">
-            <div className="max-w-4xl mx-auto">
-                <motion.div
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-6"
-                >
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-black   mb-3">
-                        <Store size={14} />
-                        Nuevo negocio
-                    </div>
+        <div className="mx-auto max-w-3xl pb-6">
+            <PageHeader title={t("title")} subtitle={t("subtitle")} />
 
-                    <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
-                        Crea tu negocio
-                    </h1>
+            <form onSubmit={submit} className="space-y-6">
+                <section className={card}>
+                    <h2 className={sectionTitle}>{t("detailsTitle")}</h2>
+                    <p className={sectionHint}>{t("detailsHint")}</p>
 
-                    <p className="text-sm text-gray-500 mt-2 max-w-2xl">
-                        Registra los datos principales de tu barbería para generar tu página pública de reservas.
-                    </p>
-                </motion.div>
+                    <div className="mt-5 space-y-5">
+                        <label className={fieldLabel}>
+                            {t("name")}
+                            <input value={form.name} onChange={(e) => update("name", e.target.value)} required minLength={3} maxLength={100} placeholder={t("namePlaceholder")} className={fieldInput} />
+                        </label>
 
-                <form
-                    onSubmit={handleSubmit}
-                    className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6"
-                >
-                    <motion.section
-                        initial={{ opacity: 0, y: 14 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.05 }}
-                        className="bg-white border border-gray-100 rounded-3xl p-5 md:p-7 shadow-sm space-y-5"
-                    >
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                                <Building2 size={20} />
-                            </div>
+                        <label className={fieldLabel}>
+                            {t("description")}
+                            <textarea value={form.description} onChange={(e) => update("description", e.target.value)} rows={4} maxLength={1000} placeholder={t("descriptionPlaceholder")} className={fieldTextarea} />
+                        </label>
 
-                            <div>
-                                <h2 className="font-black text-gray-900">
-                                    Información del negocio
-                                </h2>
-                                <p className="text-xs text-gray-500">
-                                    Estos datos aparecerán en tu perfil público.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="text-xs font-black text-gray-500  ">
-                                Nombre del negocio
+                        <div className="grid gap-5 md:grid-cols-2">
+                            <label className={fieldLabel}>
+                                {t("phone")}
+                                <span className="relative block">
+                                    <Phone size={16} className="pointer-events-none absolute left-4 top-[calc(50%+4px)] -translate-y-1/2 text-gray-500" aria-hidden="true" />
+                                    <input type="tel" inputMode="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="6641234567" className={`${fieldInput} pl-11`} />
+                                </span>
                             </label>
-
-                            <input
-                                value={form.name}
-                                onChange={(e) => updateField("name", e.target.value)}
-                                className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                                placeholder="Barbería El Nuevo Rey"
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label className="text-xs font-black text-gray-500  ">
-                                Descripción
+                            <label className={fieldLabel}>
+                                {t("address")}
+                                <span className="relative block">
+                                    <MapPin size={16} className="pointer-events-none absolute left-4 top-[calc(50%+4px)] -translate-y-1/2 text-gray-500" aria-hidden="true" />
+                                    <input value={form.address} onChange={(e) => update("address", e.target.value)} placeholder={t("addressPlaceholder")} className={`${fieldInput} pl-11`} />
+                                </span>
                             </label>
-
-                            <textarea
-                                value={form.description}
-                                onChange={(e) => updateField("description", e.target.value)}
-                                className="mt-2 w-full min-h-32 rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 resize-none"
-                                placeholder="Ej. Cortes clásicos, modernos, barba y atención personalizada."
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="text-xs font-black text-gray-500  ">
-                                    Teléfono
-                                </label>
-
-                                <div className="relative mt-2">
-                                    <Phone
-                                        size={16}
-                                        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                                    />
-
-                                    <input
-                                        value={form.phone}
-                                        onChange={(e) => updateField("phone", e.target.value)}
-                                        className="w-full rounded-2xl border border-gray-200 pl-11 pr-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                                        placeholder="6641234567"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="text-xs font-black text-gray-500  ">
-                                    Dirección
-                                </label>
-
-                                <div className="relative mt-2">
-                                    <MapPin
-                                        size={16}
-                                        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                                    />
-
-                                    <input
-                                        value={form.address}
-                                        onChange={(e) => updateField("address", e.target.value)}
-                                        className="w-full rounded-2xl border border-gray-200 pl-11 pr-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                                        placeholder="Tijuana, Baja California"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </motion.section>
-
-                    <div className="space-y-6">
-                        <button
-                            type="submit"
-                            disabled={saving}
-                            className="w-full py-4 rounded-2xl bg-indigo-600 text-white text-sm font-black hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
-                        >
-                            {saving ? (
-                                <>
-                                    <Loader2 className="animate-spin" size={18} />
-                                    Creando negocio...
-                                </>
-                            ) : (
-                                <>
-                                    <Save size={18} />
-                                    Crear negocio
-                                </>
-                            )}
-                        </button>
-
-                        <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4">
-                            <p className="text-xs text-amber-800 font-bold leading-relaxed">
-                                Empiezas con 30 días gratis. Después podrás agregar tu logo, portada, servicios y horario.
-                            </p>
                         </div>
                     </div>
-                </form>
-            </div>
-        </main>
+                </section>
+
+                <p className="border-l-4 border-[#e8603a] bg-white p-4 text-gray-700">{t("trial", { days: TRIAL_DAYS })}</p>
+
+                <button type="submit" disabled={saving} className={`${primaryButton} w-full sm:w-auto`}>
+                    {saving && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
+                    {saving ? t("creating") : t("create")}
+                </button>
+            </form>
+        </div>
     );
 }

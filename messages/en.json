@@ -1278,7 +1278,8 @@
             "title": "We could not connect",
             "text": "There is a temporary problem on our side. Your information is safe.",
             "hint": "Reload the page in a few minutes."
-        }
+        },
+        "skipToContent": "Skip to content"
     },
     "ApiErrors": {
         "EMAIL_TAKEN": "An account with this email already exists. Sign in.",
@@ -1811,6 +1812,32 @@
         "errors": {
             "load": "The reviews couldn’t be loaded.",
             "save": "The change couldn’t be saved."
+        }
+    },
+    "CreateBusiness": {
+        "title": "Register your barbershop",
+        "subtitle": "This creates the page where your customers book.",
+        "checking": "Checking your account...",
+        "existingTitle": "You already have a barbershop",
+        "existingText": "Your account already manages:",
+        "goToBusiness": "Go to My business",
+        "viewPage": "View public page",
+        "detailsTitle": "Barbershop details",
+        "detailsHint": "They show on your public page. You can change them later.",
+        "name": "Name",
+        "namePlaceholder": "The New King Barbershop",
+        "description": "Description (optional)",
+        "descriptionPlaceholder": "Classic cuts, fades, beards and personal attention.",
+        "phone": "Phone (WhatsApp)",
+        "address": "Address",
+        "addressPlaceholder": "Street, number and neighborhood",
+        "trial": "You start with {days} free days. Then you add your logo, services, hours and team.",
+        "create": "Create barbershop",
+        "creating": "Creating...",
+        "created": "Barbershop created",
+        "errors": {
+            "nameShort": "The name must have at least 3 characters.",
+            "failed": "The barbershop couldn’t be created."
         }
     }
 }
