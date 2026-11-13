@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import {
     completePastAppointments,
     expireUnconfirmedAppointments,
+    purgeOldNotifications,
     sendDayReminders,
     updateExpiredSubscriptions,
 } from "@/lib/cron/tasks";
@@ -13,6 +14,7 @@ const TASKS = {
     billing: updateExpiredSubscriptions,
     rateLimits: purgeExpiredRateLimits,
     reminders: sendDayReminders,
+    notifications: purgeOldNotifications,
 };
 
 // Único cron diario (Vercel, 15:00 UTC = 7–8 a. m. en Tijuana): ejecuta todas las tareas; un fallo en una no detiene las demás

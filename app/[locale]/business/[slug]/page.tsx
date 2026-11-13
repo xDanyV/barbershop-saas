@@ -21,6 +21,7 @@ import { directionsUrl, hasLocation } from "@/lib/geo";
 import LocationMap from "@/[locale]/components/LocationMap";
 import ServicesTabs, { type ServiceTab } from "./components/ServicesTabs";
 import AccountShortcut from "@/[locale]/components/AccountShortcut";
+import Stars from "./components/Stars";
 
 type BusinessPageProps = {
     params: Promise<{
@@ -103,7 +104,9 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
         address: business.address,
         image: business.coverUrl || business.logoUrl,
         hours: hoursRows,
+        rating: business.rating,
     });
+    const reviewDate = (date: Date) => date.toLocaleDateString(locale === "en" ? "en-US" : "es-MX", { month: "long", year: "numeric" });
 
     const price = (min: number, max: number) =>
         min === max ? formatPriceFromCents(min) : t("services.from", { price: formatPriceFromCents(min) });
@@ -194,6 +197,15 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                     </p>
 
                     {hasHours && <OpenNow hours={hours} timezone={business.timezone} />}
+
+                    {business.rating && (
+                        <a href="#resenas" className="mt-3 inline-flex min-h-11 items-center gap-2 font-semibold underline-offset-4 hover:underline">
+                            <Stars value={business.rating.average} label={t("reviews.starsLabel", { rating: business.rating.average })} />
+                            <span>
+                                {business.rating.average.toFixed(1)} · {t("reviews.count", { count: business.rating.count })}
+                            </span>
+                        </a>
+                    )}
 
                     {business.address && (
                         <p className="mt-3 flex items-start gap-2">
@@ -310,6 +322,42 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                             );
                         })}
                     </ul>
+                </section>
+            )}
+
+            {/* Reseñas: lo que dicen quienes ya se cortaron aquí */}
+            {business.rating && business.reviews.length > 0 && (
+                <section id="resenas" className="scroll-mt-20 bg-[var(--brand-paper)]">
+                    <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 md:grid-cols-[1fr_2fr] md:px-8 md:py-16">
+                        <Reveal>
+                            <h2 className={sectionTitle}>{t("reviews.title")}</h2>
+                            <p className="mt-4 text-[length:var(--step-display)] font-semibold leading-none tabular-nums">{business.rating.average.toFixed(1)}</p>
+                            <div className="mt-3">
+                                <Stars value={business.rating.average} size={20} label={t("reviews.starsLabel", { rating: business.rating.average })} />
+                            </div>
+                            <p className="mt-2 text-[var(--brand-muted)]">{t("reviews.count", { count: business.rating.count })}</p>
+                        </Reveal>
+                        <Reveal delay={80}>
+                            <ul className="divide-y divide-[var(--brand-surface)] border-y border-[var(--brand-surface)]">
+                                {business.reviews.map((review) => (
+                                    <li key={review.id} className="py-5">
+                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                            <Stars value={review.rating} label={t("reviews.starsLabel", { rating: review.rating })} />
+                                            <span className="font-semibold">{review.author || t("reviews.anonymous")}</span>
+                                            <span className="text-[length:var(--step-small)] text-[var(--brand-muted)]">{reviewDate(review.createdAt)}</span>
+                                        </div>
+                                        {review.comment && <p className="mt-2 max-w-[65ch] whitespace-pre-line break-words">{review.comment}</p>}
+                                        {review.reply && (
+                                            <div className="mt-3 border-l-2 border-[var(--brand-accent)] pl-4">
+                                                <p className="text-[length:var(--step-small)] font-semibold">{t("reviews.reply", { business: business.name })}</p>
+                                                <p className="mt-1 max-w-[65ch] whitespace-pre-line break-words text-[var(--brand-muted)]">{review.reply}</p>
+                                            </div>
+                                        )}
+                                    </li>
+                                ))}
+                            </ul>
+                        </Reveal>
+                    </div>
                 </section>
             )}
 

@@ -33,8 +33,9 @@ export function buildBarberShopJsonLd(params: {
     address?: string | null;
     image?: string | null;
     hours: HoursRow[];
+    rating?: { average: number; count: number } | null;
 }) {
-    const { url, name, description, phone, address, image, hours } = params;
+    const { url, name, description, phone, address, image, hours, rating } = params;
 
     const openingHours = computeBusinessHours(hours)
         .filter((day) => day.open && day.close)
@@ -55,6 +56,9 @@ export function buildBarberShopJsonLd(params: {
         ...(phone ? { telephone: `+52${phone.replace(/\D/g, "").slice(-10)}` } : {}),
         ...(address ? { address: { "@type": "PostalAddress", streetAddress: address, addressCountry: "MX" } } : {}),
         ...(openingHours.length ? { openingHoursSpecification: openingHours } : {}),
+        ...(rating && rating.count > 0
+            ? { aggregateRating: { "@type": "AggregateRating", ratingValue: rating.average, reviewCount: rating.count, bestRating: 5, worstRating: 1 } }
+            : {}),
     };
 }
 

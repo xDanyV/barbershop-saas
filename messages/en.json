@@ -103,7 +103,8 @@
             "agenda": "Schedule",
             "team": "Team",
             "customers": "Customers",
-            "platform": "Platform"
+            "platform": "Platform",
+            "reviews": "Reviews"
         },
         "logout": "Sign out",
         "home": "Home",
@@ -416,7 +417,12 @@
             "confirm": "Yes, cancel",
             "keep": "Keep it"
         },
-        "withBarberOnly": "with {barber}"
+        "withBarberOnly": "with {barber}",
+        "rateTitle": "How did it go at {business}?",
+        "rateText": "{service}, {date}. Tap the stars to rate it.",
+        "rateStars": "{count, plural, one {Rate # star} other {Rate # stars}}",
+        "rate": "Rate",
+        "yourRating": "You rated {rating}/5"
     },
     "CustomersList": {
         "loadingDir": "Loading customer database...",
@@ -603,6 +609,13 @@
         "meta": {
             "title": "{name}: book your appointment",
             "description": "Book your appointment at {name} from your phone. Choose your barber, service and time."
+        },
+        "reviews": {
+            "title": "Reviews",
+            "count": "{count, plural, one {# review} other {# reviews}}",
+            "starsLabel": "{rating} out of 5 stars",
+            "anonymous": "Customer",
+            "reply": "Reply from {business}"
         }
     },
     "BookingPage": {
@@ -714,7 +727,8 @@
             "unsupported": "Your browser doesn’t share location.",
             "denied": "To see nearby barbershops, allow location access in your browser.",
             "failed": "Your location couldn’t be read. Try again."
-        }
+        },
+        "reviewCount": "{count, plural, one {# review} other {# reviews}}"
     },
     "Metadata": {
         "title": "Barbershop appointments in Tijuana",
@@ -1455,7 +1469,8 @@
             "profile": "Profile",
             "posts": "Announcements",
             "gallery": "Gallery",
-            "membership": "Membership"
+            "membership": "Membership",
+            "reviews": "Reviews"
         },
         "share": {
             "view": "View page",
@@ -1679,6 +1694,10 @@
         "reminder": {
             "title": "You have an appointment today at {time}",
             "body": "{service} with {barber} at {business}."
+        },
+        "newReview": {
+            "title": "New review: {rating} out of 5",
+            "body": "{customer} rated their {service} with {barber}."
         }
     },
     "PushSettings": {
@@ -1703,5 +1722,71 @@
         "later": "Not now",
         "close": "Close",
         "done": "Done, we’ll notify you here"
+    },
+    "Inbox": {
+        "title": "Notifications",
+        "subtitle": "What happened with your appointments, even if notifications are off.",
+        "bell": "Notifications",
+        "bellUnread": "{count, plural, one {Notifications, # unread} other {Notifications, # unread}}",
+        "new": "new",
+        "emptyTitle": "No notifications",
+        "emptyText": "Here you’ll see when an appointment is booked, confirmed, changed or cancelled, and new reviews.",
+        "failed": "Your notifications couldn’t be loaded. Reload the page.",
+        "more": "Show earlier"
+    },
+    "RateDialog": {
+        "title": "How did it go?",
+        "subtitle": "Rate your {service} at {business}.",
+        "stars": "Your rating",
+        "starLabel": "{count, plural, one {# star} other {# stars}}",
+        "level1": "Poor",
+        "level2": "Fair",
+        "level3": "Good",
+        "level4": "Very good",
+        "level5": "Excellent",
+        "comment": "Comment (optional)",
+        "commentPlaceholder": "What did you like, or what could be better?",
+        "public": "Your review appears on the barbershop’s page with your first name.",
+        "send": "Send review",
+        "sending": "Sending...",
+        "thanks": "Thanks for your review",
+        "failed": "The review couldn’t be sent.",
+        "close": "Close"
+    },
+    "ReviewsManager": {
+        "pageTitle": "Reviews",
+        "pageSubtitle": "What your customers think. You can reply or hide the ones that shouldn’t be shown.",
+        "titleOwner": "Your barbershop’s reviews",
+        "titleBarber": "Your reviews",
+        "hint": "Hidden reviews don’t show on your page and don’t count toward the average.",
+        "count": "{count, plural, one {# visible review} other {# visible reviews}}",
+        "starsLabel": "{rating} out of 5 stars",
+        "loading": "Loading reviews...",
+        "emptyTitle": "No reviews yet",
+        "emptyText": "After each completed appointment, the customer can rate it from their appointments.",
+        "anonymous": "Customer",
+        "with": "with {barber}",
+        "hiddenBadge": "Hidden",
+        "yourReply": "Your reply",
+        "reply": "Reply",
+        "editReply": "Edit reply",
+        "replyLabel": "Public reply",
+        "saveReply": "Save reply",
+        "cancel": "Cancel",
+        "replied": "Reply published",
+        "replyRemoved": "Reply removed",
+        "hide": "Hide",
+        "show": "Show",
+        "hidden": "Review hidden",
+        "shown": "Review visible again",
+        "enabledLabel": "Accept reviews",
+        "enabledOnHint": "Customers rate their appointments and reviews show on your page.",
+        "enabledOffHint": "Nobody can rate and your page shows no reviews. Existing ones are kept.",
+        "enabledOn": "Reviews turned on",
+        "enabledOff": "Reviews turned off",
+        "errors": {
+            "load": "The reviews couldn’t be loaded.",
+            "save": "The change couldn’t be saved."
+        }
     }
 }

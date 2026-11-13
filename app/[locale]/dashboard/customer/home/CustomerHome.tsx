@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { CalendarClock, MessageCircle, Plus, RotateCcw, XCircle } from "lucide-react";
+import { CalendarClock, MessageCircle, Plus, RotateCcw, Star, XCircle } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { formatPriceFromCents } from "@/lib/billing/pricing";
 import RescheduleDialog from "@/[locale]/components/RescheduleDialog";
@@ -12,6 +12,7 @@ import PageHeader from "@/[locale]/components/PageHeader";
 import { getWhatsAppUrl } from "@/[locale]/business/[slug]/lib/business-page.utils";
 import { useApiError } from "@/[locale]/components/useApiError";
 import PushInvite from "@/[locale]/components/push/PushInvite";
+import RateDialog from "./RateDialog";
 
 type Appointment = {
   id: string;
@@ -19,15 +20,18 @@ type Appointment = {
   status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
   cancelledBy: "CUSTOMER" | "BUSINESS" | "SYSTEM" | null;
   barberId: string;
-  business: { name: string; slug: string; phone: string | null };
+  business: { name: string; slug: string; phone: string | null; settings: { reviewsEnabled: boolean } | null };
   service: { id: string; name: string; duration: number; priceCents: number };
   barber: { user: { name: string | null } };
+  review: { rating: number } | null;
 };
 
 const HOUR_MS = 60 * 60 * 1000;
 // El cliente puede cancelar o mover su cita hasta 2 horas antes (igual que la API)
 const CHANGE_LIMIT_MS = 2 * HOUR_MS;
 const HISTORY_PAGE = 6;
+// Igual que la API: se califica una cita atendida, hasta 30 días después
+const REVIEW_WINDOW_MS = 30 * 24 * HOUR_MS;
 
 const isOpen = (a: Appointment) => a.status === "PENDING" || a.status === "CONFIRMED";
 
@@ -45,6 +49,7 @@ export default function CustomerHome({ isStaff = false }: { isStaff?: boolean })
   const [cancelling, setCancelling] = useState<Appointment | null>(null);
   const [working, setWorking] = useState(false);
   const [rescheduling, setRescheduling] = useState<Appointment | null>(null);
+  const [rating, setRating] = useState<{ appointment: Appointment; initial: number } | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -197,6 +202,12 @@ export default function CustomerHome({ isStaff = false }: { isStaff?: boolean })
       </div>
     );
   };
+
+  const attended = (a: Appointment) => a.status === "COMPLETED" || (a.status === "CONFIRMED" && new Date(a.date).getTime() < now);
+  const canRate = (a: Appointment) =>
+    !a.review && attended(a) && a.business.settings?.reviewsEnabled !== false && now - new Date(a.date).getTime() <= REVIEW_WINDOW_MS;
+  // La cita más reciente sin calificar: se invita a calificarla arriba del historial
+  const toRate = history.find(canRate);
 
   const [next, ...later] = upcoming;
   const lastVisited = history.find((a) => a.status === "COMPLETED" || a.status === "CONFIRMED");
@@ -351,6 +362,29 @@ export default function CustomerHome({ isStaff = false }: { isStaff?: boolean })
             </section>
           )}
 
+          {/* Calificar la última visita: un toque en las estrellas abre la reseña */}
+          {toRate && (
+            <section aria-labelledby="rate-title" className="mt-8 border border-gray-200 bg-white p-4">
+              <h2 id="rate-title" className="font-semibold text-gray-900">
+                {t("rateTitle", { business: toRate.business.name })}
+              </h2>
+              <p className="text-sm text-gray-600">{t("rateText", { service: toRate.service.name, date: shortDate(toRate.date) })}</p>
+              <div className="mt-2 flex gap-1">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setRating({ appointment: toRate, initial: n })}
+                    aria-label={t("rateStars", { count: n })}
+                    className="flex h-11 w-11 items-center justify-center text-[#c9d2d4] transition-colors hover:text-[#e8603a]"
+                  >
+                    <Star size={28} aria-hidden="true" />
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Historial: lo que ya pasó, con atajo para repetir */}
           {history.length > 0 && (
             <section aria-labelledby="history-title" className="mt-10">
@@ -370,7 +404,25 @@ export default function CustomerHome({ isStaff = false }: { isStaff?: boolean })
                           {a.business.name}
                           {a.barber.user.name ? `, ${a.barber.user.name}` : ""}
                         </p>
-                        <p className={`text-sm ${done ? "text-gray-500" : "text-[#b8431f]"}`}>{historyStatus(a)}</p>
+                        <p className={`text-sm ${done ? "text-gray-500" : "text-[#b8431f]"}`}>
+                          {historyStatus(a)}
+                          {a.review && (
+                            <span className="ml-2 inline-flex items-center gap-0.5 text-gray-700">
+                              <Star size={12} className="fill-[#e8603a] text-[#e8603a]" aria-hidden="true" />
+                              {t("yourRating", { rating: a.review.rating })}
+                            </span>
+                          )}
+                        </p>
+                        {canRate(a) && a.id !== toRate?.id && (
+                          <button
+                            type="button"
+                            onClick={() => setRating({ appointment: a, initial: 0 })}
+                            className="mt-1 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-gray-900 underline underline-offset-4"
+                          >
+                            <Star size={14} aria-hidden="true" />
+                            {t("rate")}
+                          </button>
+                        )}
                       </div>
                       <Link
                         href={rebookUrl(a)}
@@ -396,6 +448,20 @@ export default function CustomerHome({ isStaff = false }: { isStaff?: boolean })
             </section>
           )}
         </>
+      )}
+
+      {rating && (
+        <RateDialog
+          appointmentId={rating.appointment.id}
+          service={rating.appointment.service.name}
+          business={rating.appointment.business.name}
+          initialRating={rating.initial}
+          onClose={() => setRating(null)}
+          onDone={(value) => {
+            setAll((prev) => (prev ?? []).map((a) => (a.id === rating.appointment.id ? { ...a, review: { rating: value } } : a)));
+            setRating(null);
+          }}
+        />
       )}
 
       {cancelling && (

@@ -1,9 +1,9 @@
 "use client";
 
-import { Building2, CreditCard, ImageIcon, Newspaper } from "lucide-react";
+import { Building2, CreditCard, ImageIcon, Newspaper, Star } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-export type BusinessTab = "profile" | "posts" | "gallery" | "membership";
+export type BusinessTab = "profile" | "posts" | "gallery" | "reviews" | "membership";
 
 type Props = {
     activeTab: BusinessTab;
@@ -14,6 +14,7 @@ const TABS = [
     { id: "profile", icon: Building2 },
     { id: "posts", icon: Newspaper },
     { id: "gallery", icon: ImageIcon },
+    { id: "reviews", icon: Star },
     { id: "membership", icon: CreditCard },
 ] as const;
 

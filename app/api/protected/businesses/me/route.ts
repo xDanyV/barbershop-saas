@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
     try {
         const { businessId } = requireOwnerAuth(req);
-        const { isServiceActive, autoConfirm, maintenanceMessage, location, ...profile } = await parseJsonBody(
+        const { isServiceActive, autoConfirm, reviewsEnabled, maintenanceMessage, location, ...profile } = await parseJsonBody(
             req,
             updateBusinessSchema
         );
@@ -57,8 +57,8 @@ export async function PATCH(req: NextRequest) {
             // undefined deja el valor actual intacto
             prisma.businessSettings.upsert({
                 where: { businessId },
-                update: { isServiceActive, autoConfirm, maintenanceMessage },
-                create: { businessId, isServiceActive, autoConfirm, maintenanceMessage },
+                update: { isServiceActive, autoConfirm, reviewsEnabled, maintenanceMessage },
+                create: { businessId, isServiceActive, autoConfirm, reviewsEnabled, maintenanceMessage },
             }),
         ]);
 

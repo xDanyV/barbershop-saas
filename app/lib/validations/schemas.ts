@@ -189,6 +189,7 @@ export const updateBusinessSchema = createBusinessSchema.partial().extend({
         .optional(),
     isServiceActive: z.boolean().optional(),
     autoConfirm: z.boolean().optional(),
+    reviewsEnabled: z.boolean().optional(),
     maintenanceMessage: z.string().trim().max(300).optional(),
 });
 

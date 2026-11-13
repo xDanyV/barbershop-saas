@@ -103,7 +103,8 @@
             "agenda": "Agenda",
             "team": "Equipo",
             "customers": "Clientes",
-            "platform": "Plataforma"
+            "platform": "Plataforma",
+            "reviews": "Reseñas"
         },
         "logout": "Cerrar sesión",
         "home": "Inicio",
@@ -416,7 +417,12 @@
             "confirm": "Sí, cancelar",
             "keep": "Conservar"
         },
-        "withBarberOnly": "con {barber}"
+        "withBarberOnly": "con {barber}",
+        "rateTitle": "¿Cómo te fue en {business}?",
+        "rateText": "{service}, {date}. Toca las estrellas para calificar.",
+        "rateStars": "{count, plural, one {Calificar con # estrella} other {Calificar con # estrellas}}",
+        "rate": "Calificar",
+        "yourRating": "Calificaste {rating}/5"
     },
     "CustomersList": {
         "loadingDir": "Cargando base de clientes...",
@@ -603,6 +609,13 @@
         "meta": {
             "title": "{name}: reserva tu cita",
             "description": "Reserva tu cita en {name} desde tu teléfono. Elige barbero, servicio y hora."
+        },
+        "reviews": {
+            "title": "Reseñas",
+            "count": "{count, plural, one {# reseña} other {# reseñas}}",
+            "starsLabel": "{rating} de 5 estrellas",
+            "anonymous": "Cliente",
+            "reply": "Respuesta de {business}"
         }
     },
     "BookingPage": {
@@ -714,7 +727,8 @@
             "unsupported": "Tu navegador no comparte la ubicación.",
             "denied": "Para ver las barberías cercanas, permite el acceso a tu ubicación en el navegador.",
             "failed": "No se pudo obtener tu ubicación. Inténtalo de nuevo."
-        }
+        },
+        "reviewCount": "{count, plural, one {# reseña} other {# reseñas}}"
     },
     "Metadata": {
         "title": "Citas para tu barbería en Tijuana",
@@ -1455,7 +1469,8 @@
             "profile": "Perfil",
             "posts": "Avisos",
             "gallery": "Galería",
-            "membership": "Membresía"
+            "membership": "Membresía",
+            "reviews": "Reseñas"
         },
         "share": {
             "view": "Ver página",
@@ -1654,11 +1669,11 @@
         },
         "requested": {
             "title": "Nueva solicitud de {customer}",
-            "body": "{service}, {day} a las {time}. Confírmala desde tu agenda."
+            "body": "Confírmala desde tu agenda: {service}, {day} a las {time}"
         },
         "cancelledByCustomer": {
             "title": "{customer} canceló su cita",
-            "body": "{service}, {day} a las {time}. Ese horario quedó libre."
+            "body": "Se liberó el horario de {service}: {day} a las {time}"
         },
         "rescheduledByCustomer": {
             "title": "{customer} cambió su cita",
@@ -1666,11 +1681,11 @@
         },
         "confirmed": {
             "title": "Tu cita está confirmada",
-            "body": "{service} en {business}, {day} a las {time}."
+            "body": "{service} en {business}: {day} a las {time}"
         },
         "cancelledByBusiness": {
             "title": "{business} canceló tu cita",
-            "body": "{service}, {day} a las {time}. Toca para elegir otro horario."
+            "body": "Toca para elegir otro horario. Era {service}, {day} a las {time}"
         },
         "rescheduledByBusiness": {
             "title": "{business} cambió tu cita",
@@ -1679,6 +1694,10 @@
         "reminder": {
             "title": "Hoy tienes cita a las {time}",
             "body": "{service} con {barber} en {business}."
+        },
+        "newReview": {
+            "title": "Nueva reseña: {rating} de 5",
+            "body": "{customer} calificó su {service} con {barber}."
         }
     },
     "PushSettings": {
@@ -1703,5 +1722,71 @@
         "later": "Ahora no",
         "close": "Cerrar",
         "done": "Listo, te avisaremos aquí"
+    },
+    "Inbox": {
+        "title": "Avisos",
+        "subtitle": "Lo que ha pasado con tus citas, aunque no tengas activadas las notificaciones.",
+        "bell": "Avisos",
+        "bellUnread": "{count, plural, one {Avisos, # sin leer} other {Avisos, # sin leer}}",
+        "new": "nuevo",
+        "emptyTitle": "No tienes avisos",
+        "emptyText": "Aquí verás cuando se reserve, confirme, cambie o cancele una cita, y las reseñas nuevas.",
+        "failed": "No se pudieron cargar tus avisos. Recarga la página.",
+        "more": "Ver anteriores"
+    },
+    "RateDialog": {
+        "title": "¿Cómo te fue?",
+        "subtitle": "Califica tu {service} en {business}.",
+        "stars": "Tu calificación",
+        "starLabel": "{count, plural, one {# estrella} other {# estrellas}}",
+        "level1": "Mala",
+        "level2": "Regular",
+        "level3": "Buena",
+        "level4": "Muy buena",
+        "level5": "Excelente",
+        "comment": "Comentario (opcional)",
+        "commentPlaceholder": "¿Qué te gustó o qué podrían mejorar?",
+        "public": "Tu reseña aparece en la página de la barbería con tu nombre de pila.",
+        "send": "Enviar reseña",
+        "sending": "Enviando...",
+        "thanks": "Gracias por tu reseña",
+        "failed": "No se pudo enviar la reseña.",
+        "close": "Cerrar"
+    },
+    "ReviewsManager": {
+        "pageTitle": "Reseñas",
+        "pageSubtitle": "Lo que opinan tus clientes. Puedes responder u ocultar las que no deban verse.",
+        "titleOwner": "Reseñas de tu barbería",
+        "titleBarber": "Tus reseñas",
+        "hint": "Las ocultas no se ven en tu página ni cuentan en el promedio.",
+        "count": "{count, plural, one {# reseña visible} other {# reseñas visibles}}",
+        "starsLabel": "{rating} de 5 estrellas",
+        "loading": "Cargando reseñas...",
+        "emptyTitle": "Aún no hay reseñas",
+        "emptyText": "Después de cada cita atendida, el cliente puede calificarla desde sus citas.",
+        "anonymous": "Cliente",
+        "with": "con {barber}",
+        "hiddenBadge": "Oculta",
+        "yourReply": "Tu respuesta",
+        "reply": "Responder",
+        "editReply": "Editar respuesta",
+        "replyLabel": "Respuesta pública",
+        "saveReply": "Guardar respuesta",
+        "cancel": "Cancelar",
+        "replied": "Respuesta publicada",
+        "replyRemoved": "Respuesta quitada",
+        "hide": "Ocultar",
+        "show": "Mostrar",
+        "hidden": "Reseña oculta",
+        "shown": "Reseña visible otra vez",
+        "enabledLabel": "Recibir reseñas",
+        "enabledOnHint": "Los clientes califican sus citas y las reseñas se ven en tu página.",
+        "enabledOffHint": "Nadie puede calificar y tu página no muestra reseñas. Las que ya tienes se conservan.",
+        "enabledOn": "Reseñas activadas",
+        "enabledOff": "Reseñas desactivadas",
+        "errors": {
+            "load": "No se pudieron cargar las reseñas.",
+            "save": "No se pudo guardar el cambio."
+        }
     }
 }
