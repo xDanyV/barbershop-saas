@@ -363,45 +363,60 @@
     },
     "CustomerHome": {
         "title": "My appointments",
-        "subtitleUpcoming": "Your next style is waiting",
-        "subtitleHistory": "Review your past grooming sessions",
-        "tabs": {
-            "upcoming": "Upcoming",
-            "history": "History"
-        },
-        "bookNow": "Book Now",
+        "titleStaff": "My bookings",
+        "subtitleCount": "{count, plural, one {You have # upcoming appointment.} other {You have # upcoming appointments.}}",
+        "subtitleNone": "You have no upcoming appointments.",
+        "bookNow": "Book",
+        "today": "Today, {date}",
+        "tomorrow": "Tomorrow, {date}",
+        "withBarber": "with {barber} at",
+        "duration": "Duration",
+        "price": "Price",
+        "minutes": "{minutes} min",
+        "pendingNote": "The barbershop hasn’t confirmed it yet. You’ll see it here when they do.",
+        "locked": "Less than 2 hours to go: it can no longer be changed or cancelled online.",
+        "reschedule": "Change time",
         "cancel": "Cancel",
-        "empty": "No appointments found",
+        "cancelling": "Cancelling...",
+        "contactBusiness": "Message the barbershop",
+        "contactShort": "Message",
+        "contactHint": "To say you’re running late or ask about this appointment",
+        "cancelledTitle": "The barbershop cancelled your appointment",
+        "cancelledText": "Your {service} appointment at {business} for {date} at {time} was cancelled. You can pick another time.",
+        "bookAgain": "Pick another time",
+        "cancelledByBusiness": "Cancelled by the barbershop",
+        "expiredUnconfirmed": "Wasn’t confirmed in time",
+        "emptyTitle": "No upcoming appointments",
+        "emptyText": "Find your barbershop and save your spot in a minute.",
+        "findBarbershop": "Find a barbershop",
+        "repeat": "Repeat {service} at {business}",
+        "laterTitle": "Later",
+        "historyTitle": "History",
+        "repeatShort": "Repeat",
+        "repeatLabel": "Book {service} at {business} again",
+        "showMore": "Show more",
         "status": {
-            "PENDING": "Pending",
+            "PENDING": "Awaiting confirmation",
             "CONFIRMED": "Confirmed",
-            "CANCELLED": "Cancelled",
+            "CANCELLED": "Cancelled by you",
             "COMPLETED": "Completed",
-            "NO_SHOW": "No-show"
+            "NO_SHOW": "Missed"
         },
         "errors": {
-            "tooLate": "Appointments cannot be cancelled less than 2 hours before the scheduled time",
-            "cancelFailed": "Could not cancel appointment",
-            "network": "Network error, please try again",
-            "maxAppointments": "You can only have a maximum of 2 active appointments.",
-            "tooLateReschedule": "Appointments cannot be changed less than 2 hours before the scheduled time"
+            "load": "Your appointments couldn’t be loaded. Check your connection and reload the page.",
+            "cancelFailed": "The appointment couldn’t be cancelled.",
+            "network": "No connection. Try again."
         },
         "success": {
-            "cancelled": "Appointment cancelled successfully"
+            "cancelled": "Appointment cancelled"
         },
         "cancelConfirm": {
-            "title": "Cancel appointment?",
-            "description": "This will cancel your {service} appointment.",
+            "title": "Cancel this appointment?",
+            "description": "Your {service} appointment for {date} at {time} will be freed for another customer.",
             "confirm": "Yes, cancel",
             "keep": "Keep it"
         },
-        "reschedule": "Change time",
-        "cancelledByBusiness": "Canceled by the barbershop",
-        "expiredUnconfirmed": "Not confirmed in time",
-        "bookAgain": "Book another time",
-        "contactBusiness": "Message the barbershop",
-        "titleStaff": "My bookings",
-        "contactHint": "To say you are running late or ask something about this appointment"
+        "withBarberOnly": "with {barber}"
     },
     "CustomersList": {
         "loadingDir": "Loading customer database...",
