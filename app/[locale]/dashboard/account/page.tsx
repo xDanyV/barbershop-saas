@@ -7,6 +7,7 @@ import { DEFAULT_TIMEZONE } from "@/lib/time/zoned";
 import { brandFontClasses } from "../../brand";
 import AccountForms from "./AccountForms";
 import InstallAppPanel from "./InstallAppPanel";
+import PushSettings from "@/[locale]/components/push/PushSettings";
 
 export default async function AccountPage({ params }: { params: Promise<{ locale: string }> }) {
     const { locale } = await params;
@@ -33,6 +34,8 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
                 <p className="mt-3 text-[var(--brand-muted)]">{t("subtitle")}</p>
 
                 <InstallAppPanel className="mt-8 bg-[var(--brand-paper)] p-6 sm:p-8" />
+
+                <PushSettings role={role} className="mt-6 bg-[var(--brand-paper)] p-6 sm:p-8" />
 
                 <AccountForms
                     initial={{ name: user.name ?? "", email: user.email, phone: user.phone }}

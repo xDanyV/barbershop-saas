@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import {
     completePastAppointments,
     expireUnconfirmedAppointments,
+    sendDayReminders,
     updateExpiredSubscriptions,
 } from "@/lib/cron/tasks";
 import { purgeExpiredRateLimits } from "@/lib/rate-limit";
@@ -11,9 +12,10 @@ const TASKS = {
     unconfirmed: expireUnconfirmedAppointments,
     billing: updateExpiredSubscriptions,
     rateLimits: purgeExpiredRateLimits,
+    reminders: sendDayReminders,
 };
 
-// Único cron diario (Vercel): ejecuta todas las tareas; un fallo en una no detiene las demás
+// Único cron diario (Vercel, 15:00 UTC = 7–8 a. m. en Tijuana): ejecuta todas las tareas; un fallo en una no detiene las demás
 export async function GET(request: Request) {
     const authHeader = request.headers.get("authorization");
     if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {

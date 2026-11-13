@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateAppointmentStatus } from "@/lib/services/appointment.service";
+import { notifyAppointmentLater } from "@/lib/notifications/appointments";
 import { errorResponse } from "@/lib/errors";
 import { requireAuth } from "@/lib/api/auth";
 import { parseJsonBody } from "@/lib/api/validation";
@@ -18,6 +19,12 @@ export async function PATCH(
       barberId: auth.barberId,
       businessId: auth.businessId,
     });
+
+    // Confirmar o cancelar le avisa a la otra parte
+    if (updated.status === "CONFIRMED") notifyAppointmentLater(updated.id, "confirmed");
+    if (updated.status === "CANCELLED") {
+      notifyAppointmentLater(updated.id, updated.cancelledBy === "CUSTOMER" ? "cancelledByCustomer" : "cancelledByBusiness");
+    }
 
     return NextResponse.json(updated);
   } catch (error) {

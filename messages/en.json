@@ -1645,5 +1645,63 @@
     "AccountShortcut": {
         "appointments": "My appointments",
         "panel": "My panel"
+    },
+    "Push": {
+        "someone": "A customer",
+        "booked": {
+            "title": "New appointment: {customer}",
+            "body": "{service}, {day} at {time}"
+        },
+        "requested": {
+            "title": "New request from {customer}",
+            "body": "{service}, {day} at {time}. Confirm it from your schedule."
+        },
+        "cancelledByCustomer": {
+            "title": "{customer} cancelled their appointment",
+            "body": "{service}, {day} at {time}. That time is free again."
+        },
+        "rescheduledByCustomer": {
+            "title": "{customer} changed their appointment",
+            "body": "It’s now {day} at {time} ({service})."
+        },
+        "confirmed": {
+            "title": "Your appointment is confirmed",
+            "body": "{service} at {business}, {day} at {time}."
+        },
+        "cancelledByBusiness": {
+            "title": "{business} cancelled your appointment",
+            "body": "{service}, {day} at {time}. Tap to pick another time."
+        },
+        "rescheduledByBusiness": {
+            "title": "{business} changed your appointment",
+            "body": "It’s now {day} at {time} ({service})."
+        },
+        "reminder": {
+            "title": "You have an appointment today at {time}",
+            "body": "{service} with {barber} at {business}."
+        }
+    },
+    "PushSettings": {
+        "title": "Notifications on this device",
+        "whatTeam": "We let you know right away when a customer books, cancels or changes an appointment.",
+        "whatCustomer": "We let you know when the barbershop confirms, changes or cancels your appointment, and on the day of it.",
+        "on": "Notifications on",
+        "off": "Notifications off",
+        "thisDevice": "Only on this phone or computer. Turn them on on each device you use.",
+        "turnedOn": "Done, you’ll get notifications here",
+        "turnedOff": "You won’t get notifications here anymore",
+        "unsupported": "This browser doesn’t support notifications. Try an up-to-date Chrome, Edge or Safari.",
+        "needsInstall": "On iPhone and iPad notifications only work with the app installed: tap Share, then “Add to Home Screen”, and come back here from the icon.",
+        "denied": "You blocked notifications for this site. To turn them on, allow notifications in your browser settings and come back to this screen."
+    },
+    "PushInvite": {
+        "titleTeam": "Know about every appointment right away",
+        "textTeam": "Turn on notifications to get an alert when a customer books, cancels or changes an appointment.",
+        "titleCustomer": "Get notified about your appointments",
+        "textCustomer": "We’ll let you know when the barbershop confirms or changes your appointment, and remind you on the day.",
+        "accept": "Turn on notifications",
+        "later": "Not now",
+        "close": "Close",
+        "done": "Done, we’ll notify you here"
     }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAppointment } from "@/lib/services/appointment.service";
+import { notifyAppointmentLater } from "@/lib/notifications/appointments";
 import { RATE_LIMITS, consumeRateLimit } from "@/lib/rate-limit";
 import { AppError, errorResponse } from "@/lib/errors";
 import { requireAuth } from "@/lib/api/auth";
@@ -31,6 +32,9 @@ export async function POST(request: NextRequest) {
       serviceId: body.serviceId,
       date: body.date,
     });
+
+    // Al barbero: nueva cita (o solicitud, si la barbería confirma a mano)
+    notifyAppointmentLater(appointment.id, appointment.status === "PENDING" ? "requested" : "booked");
 
     return NextResponse.json(appointment, { status: 201 });
   } catch (error) {

@@ -31,6 +31,7 @@ model User {
   auditEntries     AuditLog[]
 
   favoriteBusinesses   FavoriteBusiness[]
+  pushSubscriptions    PushSubscription[]
   passwordResetTokens  PasswordResetToken[] @relation("ResetTokenUser")
   resetTokensGenerated PasswordResetToken[] @relation("ResetTokenCreator")
 }
@@ -159,10 +160,12 @@ model Appointment {
   barberId String
   barber   Barber @relation(fields: [barberId], references: [id])
 
-  status      AppointmentStatus     @default(PENDING)
+  status         AppointmentStatus     @default(PENDING)
   // Solo en citas canceladas: para explicarle al cliente qué pasó
-  cancelledBy AppointmentCanceller?
-  createdAt   DateTime              @default(now())
+  cancelledBy    AppointmentCanceller?
+  // Recordatorio push del día de la cita ya enviado
+  reminderSentAt DateTime?
+  createdAt      DateTime              @default(now())
 
   @@index([businessId])
   @@index([barberId])
@@ -412,4 +415,19 @@ model FavoriteBusiness {
 
   @@id([userId, businessId])
   @@index([businessId])
+}
+
+// Un dispositivo (navegador o app instalada) que aceptó recibir avisos push
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  // Idioma en que se escriben los avisos para este dispositivo
+  locale    String   @default("es")
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }

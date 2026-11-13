@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRescheduleSlots, rescheduleAppointment } from "@/lib/services/appointment.service";
+import { actsAsCustomer, getRescheduleSlots, rescheduleAppointment } from "@/lib/services/appointment.service";
+import { notifyAppointmentLater } from "@/lib/notifications/appointments";
 import { RATE_LIMITS, consumeRateLimit } from "@/lib/rate-limit";
 import { AppError, errorResponse } from "@/lib/errors";
 import { requireAuth } from "@/lib/api/auth";
@@ -42,7 +43,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         const { id } = await context.params;
         const { date } = await parseJsonBody(request, rescheduleAppointmentSchema);
 
-        return NextResponse.json(await rescheduleAppointment(id, date, auth));
+        const updated = await rescheduleAppointment(id, date, auth);
+        notifyAppointmentLater(updated.id, actsAsCustomer(updated, auth) ? "rescheduledByCustomer" : "rescheduledByBusiness");
+
+        return NextResponse.json(updated);
     } catch (error) {
         return errorResponse(error, "Reschedule appointment error");
     }

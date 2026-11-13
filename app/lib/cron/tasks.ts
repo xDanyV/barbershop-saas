@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { PAST_DUE_GRACE_DAYS } from "@/lib/billing/status";
+import { resolveTimezone, toDateKey } from "@/lib/time/zoned";
+import { notifyAppointment } from "@/lib/notifications/appointments";
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -68,4 +70,37 @@ export async function updateExpiredSubscriptions(now = new Date()) {
     });
 
     return { pastDue: pastDue.count, suspended: suspended.count };
+}
+
+// Recordatorio push a los clientes con cita confirmada hoy (día de la zona de la barbería).
+// Se marca antes de enviar: si el cron se repite, nadie recibe el aviso dos veces.
+export async function sendDayReminders(now = new Date()) {
+    const candidates = await prisma.appointment.findMany({
+        where: {
+            status: "CONFIRMED",
+            userId: { not: null },
+            reminderSentAt: null,
+            date: { gt: now, lt: new Date(now.getTime() + DAY_MS) },
+        },
+        select: { id: true, date: true, business: { select: { timezone: true } } },
+    });
+
+    const today = candidates.filter((a) => {
+        const timezone = resolveTimezone(a.business.timezone);
+        return toDateKey(a.date, timezone) === toDateKey(now, timezone);
+    });
+
+    if (today.length === 0) return { reminded: 0, sent: 0 };
+
+    await prisma.appointment.updateMany({
+        where: { id: { in: today.map((a) => a.id) }, reminderSentAt: null },
+        data: { reminderSentAt: now },
+    });
+
+    let sent = 0;
+    for (const appointment of today) {
+        sent += (await notifyAppointment(appointment.id, "reminder")).sent;
+    }
+
+    return { reminded: today.length, sent };
 }

@@ -1645,5 +1645,63 @@
     "AccountShortcut": {
         "appointments": "Mis citas",
         "panel": "Mi panel"
+    },
+    "Push": {
+        "someone": "Un cliente",
+        "booked": {
+            "title": "Nueva cita: {customer}",
+            "body": "{service}, {day} a las {time}"
+        },
+        "requested": {
+            "title": "Nueva solicitud de {customer}",
+            "body": "{service}, {day} a las {time}. Confírmala desde tu agenda."
+        },
+        "cancelledByCustomer": {
+            "title": "{customer} canceló su cita",
+            "body": "{service}, {day} a las {time}. Ese horario quedó libre."
+        },
+        "rescheduledByCustomer": {
+            "title": "{customer} cambió su cita",
+            "body": "Ahora es {day} a las {time} ({service})."
+        },
+        "confirmed": {
+            "title": "Tu cita está confirmada",
+            "body": "{service} en {business}, {day} a las {time}."
+        },
+        "cancelledByBusiness": {
+            "title": "{business} canceló tu cita",
+            "body": "{service}, {day} a las {time}. Toca para elegir otro horario."
+        },
+        "rescheduledByBusiness": {
+            "title": "{business} cambió tu cita",
+            "body": "Ahora es {day} a las {time} ({service})."
+        },
+        "reminder": {
+            "title": "Hoy tienes cita a las {time}",
+            "body": "{service} con {barber} en {business}."
+        }
+    },
+    "PushSettings": {
+        "title": "Avisos en este dispositivo",
+        "whatTeam": "Te avisamos al instante cuando un cliente reserva, cancela o cambia una cita.",
+        "whatCustomer": "Te avisamos cuando la barbería confirma, cambia o cancela tu cita, y el día de tu cita.",
+        "on": "Avisos activados",
+        "off": "Avisos desactivados",
+        "thisDevice": "Solo en este celular o computadora. Actívalos en cada dispositivo que uses.",
+        "turnedOn": "Listo, recibirás avisos aquí",
+        "turnedOff": "Ya no recibirás avisos aquí",
+        "unsupported": "Este navegador no permite avisos. Prueba con Chrome, Edge o Safari actualizado.",
+        "needsInstall": "En iPhone y iPad los avisos solo funcionan con la app instalada: toca Compartir, luego “Agregar a pantalla de inicio”, y vuelve aquí desde el ícono.",
+        "denied": "Bloqueaste los avisos para este sitio. Para activarlos, permite las notificaciones en la configuración del navegador y vuelve a esta pantalla."
+    },
+    "PushInvite": {
+        "titleTeam": "Entérate de cada cita al instante",
+        "textTeam": "Activa los avisos y te llega una notificación cuando un cliente reserva, cancela o cambia su cita.",
+        "titleCustomer": "Recibe avisos de tus citas",
+        "textCustomer": "Te avisamos cuando la barbería confirme o cambie tu cita, y el mismo día como recordatorio.",
+        "accept": "Activar avisos",
+        "later": "Ahora no",
+        "close": "Cerrar",
+        "done": "Listo, te avisaremos aquí"
     }
 }

@@ -531,7 +531,7 @@ function assertTeamAccess(appointment: { barberId: string; businessId: string },
 }
 
 // Un dueño o barbero que reservó en otra barbería es ahí un cliente más, con sus mismas reglas
-function actsAsCustomer(
+export function actsAsCustomer(
     appointment: { userId: string | null; barberId: string; businessId: string },
     actor: Actor
 ) {
