@@ -12,9 +12,9 @@ export const sectionTitle = "text-lg font-semibold text-gray-900";
 export const sectionHint = "mt-1 text-sm text-gray-600";
 export const fieldLabel = "block text-sm font-semibold text-gray-900";
 export const fieldInput =
-    "mt-2 block min-h-12 w-full border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-gray-900";
+    "mt-2 block min-h-12 w-full border border-gray-200 bg-white px-4 text-base font-normal text-gray-900 outline-none transition-colors placeholder:font-normal placeholder:text-gray-500 focus:border-gray-900";
 export const fieldTextarea =
-    "mt-2 block w-full resize-y border border-gray-200 bg-white px-4 py-3 text-base text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-gray-900";
+    "mt-2 block w-full resize-y border border-gray-200 bg-white px-4 py-3 text-base font-normal text-gray-900 outline-none transition-colors placeholder:font-normal placeholder:text-gray-500 focus:border-gray-900";
 export const primaryButton =
     "inline-flex min-h-11 items-center justify-center gap-2 bg-gray-900 px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50";
 export const secondaryButton =
