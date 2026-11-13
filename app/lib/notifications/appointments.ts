@@ -18,7 +18,7 @@ export type AppointmentEvent =
     | "rescheduledByBusiness"
     | "reminder";
 
-export type NotificationEvent = AppointmentEvent | "newReview";
+export type NotificationEvent = AppointmentEvent | "newReview" | "barberRequest" | "barberReady" | "barberReadyTeam";
 
 // Datos guardados con cada aviso: el texto se escribe en el idioma de quien lo lee
 export type NotificationData = {
@@ -151,4 +151,73 @@ export function notifyAppointmentLater(appointmentId: string, event: Appointment
 
 export function notifyReviewLater(reviewId: string) {
     sendPushLater(() => notifyReview(reviewId));
+}
+
+// ---------- Equipo ----------
+
+// Un barbero se registró con el enlace de invitación: el dueño lo revisa en Equipo
+export async function notifyBarberRequest(barberUserId: string) {
+    const barber = await prisma.barber.findUnique({
+        where: { userId: barberUserId },
+        select: { user: { select: { name: true } }, business: { select: { name: true, ownerId: true, timezone: true } } },
+    });
+    if (!barber) return { sent: 0 };
+
+    const data: NotificationData = {
+        customer: "",
+        service: "",
+        business: barber.business.name,
+        barber: barber.user.name ?? "",
+        date: new Date().toISOString(),
+        timeZone: resolveTimezone(barber.business.timezone),
+    };
+
+    return deliver(barber.business.ownerId, "barberRequest", data, "/dashboard/admin/team", `barber-request-${barberUserId}`);
+}
+
+// Con servicios y horario el barbero ya aparece para reservar: se le avisa una sola vez (y al dueño)
+export async function notifyBarberReadyIfComplete(barberId: string) {
+    const barber = await prisma.barber.findUnique({
+        where: { id: barberId },
+        select: {
+            userId: true,
+            status: true,
+            active: true,
+            readyNotifiedAt: true,
+            user: { select: { name: true } },
+            business: { select: { name: true, ownerId: true, timezone: true } },
+            _count: { select: { services: { where: { active: true } }, availability: true } },
+        },
+    });
+
+    if (!barber || barber.readyNotifiedAt || barber.status !== "APPROVED" || !barber.active) return { sent: 0 };
+    if (barber._count.services === 0 || barber._count.availability === 0) return { sent: 0 };
+
+    // Solo quien logra marcarlo envía: dos guardados casi al mismo tiempo no duplican el aviso
+    const claimed = await prisma.barber.updateMany({ where: { id: barberId, readyNotifiedAt: null }, data: { readyNotifiedAt: new Date() } });
+    if (claimed.count !== 1) return { sent: 0 };
+
+    const data: NotificationData = {
+        customer: "",
+        service: "",
+        business: barber.business.name,
+        barber: barber.user.name ?? "",
+        date: new Date().toISOString(),
+        timeZone: resolveTimezone(barber.business.timezone),
+    };
+
+    let sent = (await deliver(barber.userId, "barberReady", data, "/dashboard/barber", `barber-ready-${barberId}`)).sent;
+    if (barber.business.ownerId !== barber.userId) {
+        sent += (await deliver(barber.business.ownerId, "barberReadyTeam", data, "/dashboard/admin/team", `barber-ready-${barberId}`)).sent;
+    }
+
+    return { sent };
+}
+
+export function notifyBarberRequestLater(barberUserId: string) {
+    sendPushLater(() => notifyBarberRequest(barberUserId));
+}
+
+export function notifyBarberReadyLater(barberId: string) {
+    sendPushLater(() => notifyBarberReadyIfComplete(barberId));
 }

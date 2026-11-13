@@ -161,7 +161,8 @@
             "blocked": "Día libre",
             "busy": "Con citas",
             "nonWorking": "Día libre",
-            "today": "Hoy"
+            "today": "Hoy",
+            "working": "Día de trabajo"
         },
         "previousMonth": "Mes anterior",
         "nextMonth": "Mes siguiente"
@@ -406,7 +407,8 @@
         "errors": {
             "load": "No se pudieron cargar tus citas. Revisa tu conexión y recarga la página.",
             "cancelFailed": "No se pudo cancelar la cita.",
-            "network": "Sin conexión. Inténtalo de nuevo."
+            "network": "Sin conexión. Inténtalo de nuevo.",
+            "remove": "No se pudo quitar la cita."
         },
         "success": {
             "cancelled": "Cita cancelada"
@@ -422,7 +424,10 @@
         "rateText": "{service}, {date}. Toca las estrellas para calificar.",
         "rateStars": "{count, plural, one {Calificar con # estrella} other {Calificar con # estrellas}}",
         "rate": "Calificar",
-        "yourRating": "Calificaste {rating}/5"
+        "yourRating": "Calificaste {rating}/5",
+        "remove": "Quitar del historial",
+        "removeLabel": "Quitar {service} del {date} del historial",
+        "removed": "Cita quitada del historial"
     },
     "CustomersList": {
         "loadingDir": "Cargando base de clientes...",
@@ -1698,6 +1703,18 @@
         "newReview": {
             "title": "Nueva reseña: {rating} de 5",
             "body": "{customer} calificó su {service} con {barber}."
+        },
+        "barberRequest": {
+            "title": "{barber} quiere unirse a tu equipo",
+            "body": "Revisa su solicitud en Equipo para que pueda empezar a recibir citas."
+        },
+        "barberReady": {
+            "title": "Ya puedes recibir citas",
+            "body": "Tu perfil en {business} está completo: los clientes ya pueden reservar contigo."
+        },
+        "barberReadyTeam": {
+            "title": "{barber} ya puede recibir citas",
+            "body": "Completó sus servicios y su horario, y ya aparece para reservar."
         }
     },
     "PushSettings": {

@@ -113,22 +113,10 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
     const duration = (min: number, max: number) =>
         min === max ? t("services.minutes", { min }) : t("services.minutesRange", { min, max });
 
-    // "Todos" junta servicios iguales; cada barbero tiene su pestaña con sus precios exactos
+    // Con un barbero, una sola lista; con varios, una pestaña por barbero con sus precios exactos
     const bookableServices = business.services.filter((service) => bookableBarberIds.has(service.barber.id));
-    const serviceTabs: ServiceTab[] = [
-        {
-            id: "all",
-            label: t("services.all"),
-            rows: services.map((service) => ({
-                key: service.key,
-                name: service.name,
-                meta: `${duration(service.minDuration, service.maxDuration)}${business.barbers.length > 1 ? ` · ${t("services.with", { names: service.barberNames.join(", ") })}` : ""}`,
-                price: price(service.minPriceCents, service.maxPriceCents),
-                href: isServiceActive ? `${bookUrl}?service=${encodeURIComponent(service.name)}` : null,
-                ariaLabel: t("services.bookLabel", { name: service.name }),
-            })),
-        },
-        ...(business.barbers.length > 1
+    const serviceTabs: ServiceTab[] =
+        business.barbers.length > 1
             ? business.barbers.map((barber) => ({
                   id: barber.id,
                   label: barber.user.name ?? t("team.fallbackName"),
@@ -144,8 +132,20 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                           ariaLabel: t("services.bookWith", { name: service.name, barber: barber.user.name ?? "" }),
                       })),
               }))
-            : []),
-    ];
+            : [
+                  {
+                      id: "all",
+                      label: t("services.all"),
+                      rows: services.map((service) => ({
+                          key: service.key,
+                          name: service.name,
+                          meta: duration(service.minDuration, service.maxDuration),
+                          price: price(service.minPriceCents, service.maxPriceCents),
+                          href: isServiceActive ? `${bookUrl}?service=${encodeURIComponent(service.name)}` : null,
+                          ariaLabel: t("services.bookLabel", { name: service.name }),
+                      })),
+                  },
+              ];
 
     return (
         <main className={`brand ${brandFontClasses} min-h-screen pb-24 md:pb-0`} style={businessThemeStyle(business.themePrimary, business.themeAccent)}>
@@ -269,7 +269,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                     {services.length === 0 ? (
                         <p className="text-[var(--brand-muted)]">{t("services.empty")}</p>
                     ) : (
-                        <Reveal delay={80}>
+                        <Reveal delay={80} className="min-w-0">
                             <ServicesTabs tabs={serviceTabs} label={t("services.tabsLabel")} />
                             <p className="mt-4 text-[length:var(--step-small)] text-[var(--brand-muted)]">{t("services.note")}</p>
                         </Reveal>

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { CalendarClock, MessageCircle, Plus, RotateCcw, Star, XCircle } from "lucide-react";
+import { CalendarClock, MessageCircle, Plus, RotateCcw, Star, X, XCircle } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { formatPriceFromCents } from "@/lib/billing/pricing";
 import RescheduleDialog from "@/[locale]/components/RescheduleDialog";
@@ -50,6 +50,22 @@ export default function CustomerHome({ isStaff = false }: { isStaff?: boolean })
   const [working, setWorking] = useState(false);
   const [rescheduling, setRescheduling] = useState<Appointment | null>(null);
   const [rating, setRating] = useState<{ appointment: Appointment; initial: number } | null>(null);
+  const [removing, setRemoving] = useState<string | null>(null);
+
+  // Quita una cita pasada o cancelada de la lista del cliente (la barbería conserva su registro)
+  const removeFromHistory = async (a: Appointment) => {
+    setRemoving(a.id);
+    try {
+      const res = await fetch(`/api/protected/appointments/${a.id}/hide`, { method: "POST" });
+      if (!res.ok) throw new Error();
+      setAll((prev) => (prev ?? []).filter((item) => item.id !== a.id));
+      toast.success(t("removed"));
+    } catch {
+      toast.error(t("errors.remove"));
+    } finally {
+      setRemoving(null);
+    }
+  };
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -169,11 +185,11 @@ export default function CustomerHome({ isStaff = false }: { isStaff?: boolean })
     }
 
     return (
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={() => setRescheduling(a)}
-          className="inline-flex min-h-11 items-center gap-2 bg-[#0f2733] px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          className="inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap bg-[#0f2733] px-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 sm:px-4"
         >
           <CalendarClock size={16} aria-hidden="true" />
           {t("reschedule")}
@@ -181,7 +197,7 @@ export default function CustomerHome({ isStaff = false }: { isStaff?: boolean })
         <button
           type="button"
           onClick={() => setCancelling(a)}
-          className="inline-flex min-h-11 items-center gap-2 px-3 text-sm font-semibold text-[#b8431f] hover:underline"
+          className="inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap px-2 text-sm font-semibold text-[#b8431f] hover:underline sm:px-3"
         >
           <XCircle size={16} aria-hidden="true" />
           {t("cancel")}
@@ -193,7 +209,7 @@ export default function CustomerHome({ isStaff = false }: { isStaff?: boolean })
             rel="noopener noreferrer"
             title={t("contactHint")}
             aria-label={t("contactBusiness")}
-            className={`ml-auto inline-flex min-h-11 min-w-11 items-center justify-center gap-2 px-2 text-sm font-semibold ${quiet}`}
+            className={`ml-auto inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 px-2 text-sm font-semibold ${quiet}`}
           >
             <MessageCircle size={18} aria-hidden="true" />
             <span className="hidden sm:inline">{t("contactShort")}</span>
@@ -396,7 +412,7 @@ export default function CustomerHome({ isStaff = false }: { isStaff?: boolean })
                   const done = a.status === "COMPLETED" || (a.status === "CONFIRMED" && new Date(a.date).getTime() < now);
 
                   return (
-                    <li key={a.id} className="flex items-center gap-4 py-3">
+                    <li key={a.id} className="flex items-start gap-3 py-3 sm:gap-4">
                       <span className="w-14 shrink-0 text-sm font-semibold tabular-nums text-gray-500">{shortDate(a.date)}</span>
                       <div className="min-w-0 flex-1">
                         <p className="break-words font-medium text-gray-900">{a.service.name}</p>
@@ -432,6 +448,16 @@ export default function CustomerHome({ isStaff = false }: { isStaff?: boolean })
                         <RotateCcw size={16} aria-hidden="true" />
                         <span className="hidden sm:inline">{t("repeatShort")}</span>
                       </Link>
+                      <button
+                        type="button"
+                        onClick={() => removeFromHistory(a)}
+                        disabled={removing === a.id}
+                        aria-label={t("removeLabel", { service: a.service.name, date: shortDate(a.date) })}
+                        title={t("remove")}
+                        className="-mr-2 inline-flex h-11 w-11 shrink-0 items-center justify-center text-gray-500 hover:text-[#b8431f] disabled:opacity-40"
+                      >
+                        <X size={18} aria-hidden="true" />
+                      </button>
                     </li>
                   );
                 })}

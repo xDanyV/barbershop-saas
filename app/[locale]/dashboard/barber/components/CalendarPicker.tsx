@@ -80,10 +80,12 @@ export default function CalendarPicker({
     const nonWorking = Boolean(workingDays?.length) && !workingDays?.includes(date.getDay());
     const tooltip = getTooltip(exception, nonWorking, count);
 
-    let tone = "text-gray-900 hover:bg-gray-100";
+    // Días de trabajo como casilla llena; los libres y los pasados quedan apagados, sin fondo
+    let tone = "bg-[#e6eae8] font-semibold text-gray-900 hover:bg-[#d5dcda]";
     if (isSelected) tone = "bg-gray-900 font-semibold text-white";
     else if (exception) tone = "bg-amber-50 text-amber-700";
-    else if (nonWorking || isPast) tone = "text-gray-400 hover:bg-gray-100";
+    else if (nonWorking) tone = "text-gray-400 hover:bg-gray-100";
+    else if (isPast) tone = "text-gray-500 hover:bg-gray-100";
 
     days.push(
       <button
@@ -135,6 +137,10 @@ export default function CalendarPicker({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 border-t border-gray-100 pt-3 text-xs text-gray-500">
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden="true" className="h-3 w-3 bg-[#e6eae8]" />
+          {t("legend.working")}
+        </span>
         <span className="flex items-center gap-1.5">
           <span aria-hidden="true" className="h-1 w-1 rounded-full bg-gray-900" />
           {t("legend.busy")}

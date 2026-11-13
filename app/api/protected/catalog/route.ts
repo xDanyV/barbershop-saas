@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireBarberAuth } from "@/lib/api/auth";
 import { parseJsonBody } from "@/lib/api/validation";
 import { createServiceSchema, toCents } from "@/lib/validations/schemas";
+import { notifyBarberReadyLater } from "@/lib/notifications/appointments";
 
 export async function POST(request: NextRequest) {
     try {
@@ -13,7 +14,9 @@ export async function POST(request: NextRequest) {
         const data = { name, priceCents: toCents(price), duration };
 
         if (!applyToTeam) {
-            return NextResponse.json(await createCatalogService(data, auth.barberId), { status: 201 });
+            const service = await createCatalogService(data, auth.barberId);
+            notifyBarberReadyLater(auth.barberId);
+            return NextResponse.json(service, { status: 201 });
         }
 
         if (auth.role !== "OWNER" || !auth.businessId) {
@@ -31,6 +34,7 @@ export async function POST(request: NextRequest) {
         for (const barber of team) {
             try {
                 await createCatalogService(data, barber.id);
+                notifyBarberReadyLater(barber.id);
                 created++;
             } catch (error) {
                 if (!(error instanceof AppError && error.status === 409)) throw error;

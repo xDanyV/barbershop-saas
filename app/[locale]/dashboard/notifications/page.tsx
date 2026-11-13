@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, CalendarCheck, CalendarClock, CalendarPlus, CalendarX, Star } from "lucide-react";
+import { Bell, CalendarCheck, CalendarClock, CalendarPlus, CalendarX, CircleCheck, Star, UserPlus } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import PageHeader from "@/[locale]/components/PageHeader";
 
@@ -26,6 +26,9 @@ const ICONS: Record<string, typeof Bell> = {
     rescheduledByCustomer: CalendarClock,
     rescheduledByBusiness: CalendarClock,
     newReview: Star,
+    barberRequest: UserPlus,
+    barberReady: CircleCheck,
+    barberReadyTeam: CircleCheck,
 };
 
 // Bandeja: lo mismo que llega como notificación push, para revisarlo cuando quieras

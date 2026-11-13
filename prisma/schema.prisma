@@ -166,12 +166,14 @@ model Appointment {
   barberId String
   barber   Barber @relation(fields: [barberId], references: [id])
 
-  status         AppointmentStatus     @default(PENDING)
+  status           AppointmentStatus     @default(PENDING)
   // Solo en citas canceladas: para explicarle al cliente qué pasó
-  cancelledBy    AppointmentCanceller?
+  cancelledBy      AppointmentCanceller?
   // Recordatorio push del día de la cita ya enviado
-  reminderSentAt DateTime?
-  createdAt      DateTime              @default(now())
+  reminderSentAt   DateTime?
+  // El cliente la quitó de su historial; la barbería la conserva en sus registros
+  customerHiddenAt DateTime?
+  createdAt        DateTime              @default(now())
 
   @@index([businessId])
   @@index([barberId])
@@ -210,6 +212,8 @@ model Barber {
 
   appointments    Appointment[]
   reviews         Review[]
+  // Ya se le avisó que su perfil quedó listo (servicios y horario): el aviso sale una sola vez
+  readyNotifiedAt DateTime?
   availability    Availability[]
   exceptions      BarberException[]
   services        Service[]
