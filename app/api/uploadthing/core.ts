@@ -45,6 +45,18 @@ async function getAuthFromRequest(req: Request) {
     };
 }
 
+// La foto de perfil la sube el propio barbero (o el dueño, que también atiende), sin importar a quién gestione
+async function getOwnBarberAuth(req: Request) {
+    const session = await getSessionFromToken(getCookieValue(req.headers.get("cookie"), SESSION_COOKIE) ?? undefined).catch(() => null);
+
+    if (!session) throw new UploadThingError("Invalid or expired session");
+    if (!session.barberId || (session.role !== "BARBER" && session.role !== "OWNER")) {
+        throw new UploadThingError("Only barbers can upload a profile photo");
+    }
+
+    return { userId: session.userId, role: session.role, businessId: session.businessId ?? undefined };
+}
+
 function assertOwner(role: string) {
     if (role !== "OWNER") {
         throw new UploadThingError("Only business owners can upload this image");
@@ -59,7 +71,7 @@ export const ourFileRouter = {
         },
     })
         .middleware(async ({ req }) => {
-            const auth = await getAuthFromRequest(req);
+            const auth = await getOwnBarberAuth(req);
 
             return {
                 userId: auth.userId,

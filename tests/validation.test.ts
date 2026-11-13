@@ -6,6 +6,7 @@ import {
     registerSchema,
     toCents,
     updateBarberAdminSchema,
+    barberPhotoSchema,
 } from "@/lib/validations/schemas";
 
 describe("availabilitySchema", () => {
@@ -70,14 +71,17 @@ describe("registerSchema", () => {
 });
 
 describe("updateBarberAdminSchema", () => {
-    it("does not clear the photo when only the status changes", () => {
-        const parsed = updateBarberAdminSchema.parse({ barberId: "b1", status: "APPROVED" });
-        expect(parsed.profileImageUrl).toBeUndefined();
+    it("no longer lets the owner change a barber photo", () => {
+        const parsed = updateBarberAdminSchema.parse({ barberId: "b1", status: "APPROVED", profileImageUrl: "https://x.ufs.sh/f/a" });
+        expect("profileImageUrl" in parsed).toBe(false);
+        expect(updateBarberAdminSchema.safeParse({ barberId: "b1", profileImageUrl: "https://x.ufs.sh/f/a" }).success).toBe(false);
     });
+});
 
-    it("only accepts https images", () => {
-        expect(
-            updateBarberAdminSchema.safeParse({ barberId: "b1", profileImageUrl: "http://x.com/a.png" }).success
-        ).toBe(false);
+describe("barberPhotoSchema", () => {
+    it("accepts an https image or null to remove it", () => {
+        expect(barberPhotoSchema.safeParse({ url: "https://x.ufs.sh/f/a" }).success).toBe(true);
+        expect(barberPhotoSchema.safeParse({ url: null }).success).toBe(true);
+        expect(barberPhotoSchema.safeParse({ url: "http://x.com/a.png" }).success).toBe(false);
     });
 });

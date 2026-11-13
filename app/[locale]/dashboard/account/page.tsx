@@ -7,6 +7,7 @@ import { DEFAULT_TIMEZONE } from "@/lib/time/zoned";
 import { brandFontClasses } from "../../brand";
 import AccountForms from "./AccountForms";
 import InstallAppPanel from "./InstallAppPanel";
+import ProfilePhotoPanel from "./ProfilePhotoPanel";
 import PushSettings from "@/[locale]/components/push/PushSettings";
 
 export default async function AccountPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -20,8 +21,10 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
     const t = await getTranslations({ locale, namespace: "Account" });
     const user = await prisma.user.findUniqueOrThrow({
         where: { id: userId },
-        select: { name: true, email: true, phone: true, termsAcceptedAt: true },
+        select: { name: true, email: true, phone: true, termsAcceptedAt: true, barberProfile: { select: { profileImageUrl: true } } },
     });
+    // Solo quien atiende tiene foto de perfil: el cliente no aparece en ninguna página pública
+    const showPhoto = (role === "BARBER" || role === "OWNER") && Boolean(user.barberProfile);
 
     const acceptedOn = user.termsAcceptedAt
         ? new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", { dateStyle: "long", timeZone: DEFAULT_TIMEZONE }).format(user.termsAcceptedAt)
@@ -33,7 +36,15 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
                 <h1 className="brand-display text-[length:clamp(2rem,1.5rem+2vw,3rem)]">{t("title")}</h1>
                 <p className="mt-3 text-[var(--brand-muted)]">{t("subtitle")}</p>
 
-                <InstallAppPanel className="mt-8 bg-[var(--brand-paper)] p-6 sm:p-8" />
+                {showPhoto && (
+                    <ProfilePhotoPanel
+                        initialUrl={user.barberProfile?.profileImageUrl ?? null}
+                        name={user.name ?? ""}
+                        className="mt-8 bg-[var(--brand-paper)] p-6 sm:p-8"
+                    />
+                )}
+
+                <InstallAppPanel className={`${showPhoto ? "mt-6" : "mt-8"} bg-[var(--brand-paper)] p-6 sm:p-8`} />
 
                 <PushSettings role={role} className="mt-6 bg-[var(--brand-paper)] p-6 sm:p-8" />
 
