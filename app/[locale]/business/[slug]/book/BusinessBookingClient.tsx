@@ -13,6 +13,7 @@ import { formatPriceFromCents } from "@/lib/billing/pricing";
 import { addDaysToKey, dayOfWeekFromKey, toDateKey } from "@/lib/time/zoned";
 import { getInitials } from "../lib/business-page.utils";
 import LocaleSwitch from "@/[locale]/components/LocaleSwitch";
+import AccountShortcut from "@/[locale]/components/AccountShortcut";
 
 type Service = { id: string; name: string; priceCents: number; duration: number };
 
@@ -283,7 +284,10 @@ export default function BusinessBookingClient({ business, initial }: Props) {
                     </Link>
                     {business.logoUrl && <img src={business.logoUrl} alt="" className="h-8 w-8 shrink-0 object-cover" />}
                     <span className="truncate font-semibold">{business.name}</span>
-                    <LocaleSwitch className="-mr-2 ml-auto shrink-0" />
+                    <div className="-mr-2 ml-auto flex shrink-0 items-center">
+                        <AccountShortcut />
+                        <LocaleSwitch />
+                    </div>
                 </div>
             </header>
 

@@ -4,9 +4,9 @@ import { getBookingBusiness } from "@/lib/cache/business-pages";
 import { canBusinessAcceptBookings, getBillingStatus } from "@/lib/billing/status";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { SESSION_COOKIE, getSessionFromToken } from "@/lib/auth/session";
-import { isBusinessStaff } from "@/lib/services/appointment.service";
+import { MAX_ACTIVE_APPOINTMENTS, countActiveAppointments, isBannedFromBusiness, isBusinessStaff } from "@/lib/services/appointment.service";
 import { getTranslations } from "next-intl/server";
 import { brandFontClasses } from "@/[locale]/brand";
 import { businessThemeStyle } from "@/lib/theme";
@@ -114,6 +114,41 @@ export default async function BusinessBookPage({ params, searchParams }: BookPag
         return (
             <Notice title={business.name} text={t("noBarbers")} theme={theme}>
                 {contactLinks}
+            </Notice>
+        );
+    }
+
+    // Sin cuenta no se empieza a elegir: primero se crea la cuenta y luego vuelve aquí con lo que traía
+    if (!session) {
+        const params = new URLSearchParams();
+        for (const key of ["barber", "service", "date", "time"]) {
+            const value = single(query[key]);
+            if (value) params.set(key, value);
+        }
+        const back = `/${locale}/business/${business.slug}/book${params.size ? `?${params}` : ""}`;
+        redirect(`/${locale}/register?redirectTo=${encodeURIComponent(back)}`);
+    }
+
+    if (await isBannedFromBusiness(session.userId, business.id)) {
+        return (
+            <Notice title={business.name} text={t("banned")} theme={theme}>
+                <Link href={`/${locale}/dashboard/customer/home`} className={primaryLink}>
+                    {t("myAppointments")}
+                </Link>
+            </Notice>
+        );
+    }
+
+    // Con el límite de citas activas alcanzado se avisa antes de elegir, no al confirmar
+    if ((await countActiveAppointments(session.userId, business.id)) >= MAX_ACTIVE_APPOINTMENTS) {
+        return (
+            <Notice title={t("limit.title")} text={t("limit.text", { count: MAX_ACTIVE_APPOINTMENTS, name: business.name })} theme={theme}>
+                <Link href={`/${locale}/dashboard/customer/home`} className={primaryLink}>
+                    {t("myAppointments")}
+                </Link>
+                <Link href={profileUrl} className={secondaryLink}>
+                    {t("backToProfile")}
+                </Link>
             </Notice>
         );
     }

@@ -651,7 +651,13 @@
         "successConfirmed": "Listo, tu cita quedó confirmada.",
         "daysPrevious": "Semanas anteriores",
         "daysNext": "Siguientes semanas",
-        "noDaysHere": "No hay días disponibles en estas semanas. Prueba con las siguientes."
+        "noDaysHere": "No hay días disponibles en estas semanas. Prueba con las siguientes.",
+        "banned": "Esta barbería no está recibiendo reservas tuyas en línea. Si crees que es un error, comunícate con ella.",
+        "myAppointments": "Ver mis citas",
+        "limit": {
+            "title": "Ya tienes citas pendientes aquí",
+            "text": "Puedes tener hasta {count} citas activas en {name}. Cuando pase una o si cancelas alguna, podrás reservar otra."
+        }
     },
     "BusinessDirectory": {
         "title": "Reservar",
@@ -1620,5 +1626,9 @@
         "hint": "Para crear otra cuenta, cierra sesión primero.",
         "goToPanel": "Ir a mi panel",
         "logout": "Cerrar sesión"
+    },
+    "AccountShortcut": {
+        "appointments": "Mis citas",
+        "panel": "Mi panel"
     }
 }

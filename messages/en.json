@@ -651,7 +651,13 @@
         "successConfirmed": "Done, your appointment is confirmed.",
         "daysPrevious": "Previous weeks",
         "daysNext": "Next weeks",
-        "noDaysHere": "No days available in these weeks. Try the next ones."
+        "noDaysHere": "No days available in these weeks. Try the next ones.",
+        "banned": "This barbershop isn’t taking online bookings from you. If you think this is a mistake, contact them.",
+        "myAppointments": "See my appointments",
+        "limit": {
+            "title": "You already have upcoming appointments here",
+            "text": "You can have up to {count} active appointments at {name}. Once one has passed, or if you cancel one, you can book another."
+        }
     },
     "BusinessDirectory": {
         "title": "Book",
@@ -1620,5 +1626,9 @@
         "hint": "To create another account, sign out first.",
         "goToPanel": "Go to my panel",
         "logout": "Sign out"
+    },
+    "AccountShortcut": {
+        "appointments": "My appointments",
+        "panel": "My panel"
     }
 }

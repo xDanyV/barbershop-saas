@@ -5,9 +5,25 @@ import { AppError } from "@/lib/errors";
 import { checkWorkingHours, getBarberDay, hasScheduleConflict, lockKeys } from "@/lib/services/booking.service";
 import { addDaysToKey, resolveTimezone, toDateKey, zonedToUtc } from "@/lib/time/zoned";
 
-const MAX_ACTIVE_APPOINTMENTS = 2;
+export const MAX_ACTIVE_APPOINTMENTS = 2;
 const USER_APPOINTMENTS_LIMIT = 100;
 const MAX_RANGE_DAYS = 93;
+
+// Citas próximas que aún cuentan para el límite de reservas en una barbería
+export function countActiveAppointments(userId: string, businessId: string) {
+    return prisma.appointment.count({
+        where: { userId, businessId, status: { in: ["PENDING", "CONFIRMED"] }, date: { gt: new Date() } },
+    });
+}
+
+// ¿La barbería bloqueó a este cliente?
+export async function isBannedFromBusiness(userId: string, businessId: string) {
+    const ban = await prisma.businessCustomerBan.findUnique({
+        where: { businessId_userId: { businessId, userId } },
+        select: { id: true },
+    });
+    return Boolean(ban);
+}
 
 // El cliente puede cancelar o mover su cita hasta 2 horas antes
 const CUSTOMER_CHANGE_LIMIT_MS = 2 * 60 * 60 * 1000;
