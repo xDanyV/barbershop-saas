@@ -20,6 +20,7 @@ import LocaleSwitch from "@/[locale]/components/LocaleSwitch";
 import { directionsUrl, hasLocation } from "@/lib/geo";
 import LocationMap from "@/[locale]/components/LocationMap";
 import ServicesTabs, { type ServiceTab } from "./components/ServicesTabs";
+import AccountShortcut from "@/[locale]/components/AccountShortcut";
 
 type BusinessPageProps = {
     params: Promise<{
@@ -177,6 +178,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                                 {t("nav.book")}
                             </Link>
                         )}
+                        <AccountShortcut />
                         <LocaleSwitch className="ml-1" />
                     </nav>
                 </div>
