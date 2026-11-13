@@ -363,45 +363,60 @@
     },
     "CustomerHome": {
         "title": "Mis citas",
-        "subtitleUpcoming": "Tu próximo estilo te espera",
-        "subtitleHistory": "Revisa tus sesiones pasadas",
-        "tabs": {
-            "upcoming": "Próximas",
-            "history": "Historial"
-        },
+        "titleStaff": "Mis reservas",
+        "subtitleCount": "{count, plural, one {Tienes # cita próxima.} other {Tienes # citas próximas.}}",
+        "subtitleNone": "No tienes citas próximas.",
         "bookNow": "Reservar",
-        "cancel": "Cancelar",
-        "empty": "No se encontraron citas",
-        "status": {
-            "PENDING": "Pendiente",
-            "CONFIRMED": "Confirmada",
-            "CANCELLED": "Cancelada",
-            "COMPLETED": "Completada",
-            "NO_SHOW": "No asistió"
-        },
-        "errors": {
-            "tooLate": "No se pueden cancelar citas con menos de 2 horas de anticipación",
-            "cancelFailed": "No se pudo cancelar la cita",
-            "network": "Error de red, por favor intenta de nuevo",
-            "maxAppointments": "Solo puedes tener un máximo de 2 citas activas.",
-            "tooLateReschedule": "No se pueden cambiar citas con menos de 2 horas de anticipación"
-        },
-        "success": {
-            "cancelled": "Cita cancelada correctamente"
-        },
-        "cancelConfirm": {
-            "title": "¿Cancelar cita?",
-            "description": "Esto cancelará tu cita de {service}.",
-            "confirm": "Sí, cancelar",
-            "keep": "Mantener"
-        },
+        "today": "Hoy, {date}",
+        "tomorrow": "Mañana, {date}",
+        "withBarber": "con {barber} en",
+        "duration": "Duración",
+        "price": "Precio",
+        "minutes": "{minutes} min",
+        "pendingNote": "La barbería todavía no la confirma. Te avisaremos aquí cuando lo haga.",
+        "locked": "Falta menos de 2 horas: ya no se puede cambiar ni cancelar en línea.",
         "reschedule": "Cambiar horario",
+        "cancel": "Cancelar",
+        "cancelling": "Cancelando...",
+        "contactBusiness": "Escribir a la barbería",
+        "contactShort": "Escribir",
+        "contactHint": "Para avisar si llegas tarde o preguntar algo sobre esta cita",
+        "cancelledTitle": "La barbería canceló tu cita",
+        "cancelledText": "Tu cita de {service} en {business} para {date} a las {time} se canceló. Puedes elegir otro horario.",
+        "bookAgain": "Elegir otro horario",
         "cancelledByBusiness": "Cancelada por la barbería",
         "expiredUnconfirmed": "No se confirmó a tiempo",
-        "bookAgain": "Reservar otra hora",
-        "contactBusiness": "Escribir a la barbería",
-        "titleStaff": "Mis reservas",
-        "contactHint": "Para avisar si llegas tarde o preguntar algo sobre esta cita"
+        "emptyTitle": "No tienes citas próximas",
+        "emptyText": "Busca tu barbería y aparta tu lugar en un minuto.",
+        "findBarbershop": "Buscar barbería",
+        "repeat": "Repetir {service} en {business}",
+        "laterTitle": "Después",
+        "historyTitle": "Historial",
+        "repeatShort": "Repetir",
+        "repeatLabel": "Reservar de nuevo {service} en {business}",
+        "showMore": "Ver más",
+        "status": {
+            "PENDING": "Por confirmar",
+            "CONFIRMED": "Confirmada",
+            "CANCELLED": "Cancelada por ti",
+            "COMPLETED": "Completada",
+            "NO_SHOW": "No asististe"
+        },
+        "errors": {
+            "load": "No se pudieron cargar tus citas. Revisa tu conexión y recarga la página.",
+            "cancelFailed": "No se pudo cancelar la cita.",
+            "network": "Sin conexión. Inténtalo de nuevo."
+        },
+        "success": {
+            "cancelled": "Cita cancelada"
+        },
+        "cancelConfirm": {
+            "title": "¿Cancelar esta cita?",
+            "description": "Tu cita de {service} para {date} a las {time} quedará libre para otro cliente.",
+            "confirm": "Sí, cancelar",
+            "keep": "Conservar"
+        },
+        "withBarberOnly": "con {barber}"
     },
     "CustomersList": {
         "loadingDir": "Cargando base de clientes...",
