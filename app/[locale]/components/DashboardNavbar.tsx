@@ -15,6 +15,7 @@ import {
     Menu as MenuIcon,
     Scissors,
     ShieldCheck,
+    Star,
     Store,
     UserRound,
     type LucideIcon,
@@ -23,6 +24,7 @@ import { useLocale, useTranslations } from "next-intl";
 import BrandMark from "@/[locale]/components/BrandMark";
 import BrandDialog from "@/[locale]/components/BrandDialog";
 import LocaleSwitch from "@/[locale]/components/LocaleSwitch";
+import NotificationBell from "@/[locale]/components/NotificationBell";
 
 type NavItem = { label: string; path: string; icon: LucideIcon };
 
@@ -63,9 +65,11 @@ export default function DashboardNavbar({ role }: { role: string }) {
         menu = [bookings, account];
         homePath = home.path;
     } else if (role === "BARBER") {
+        const reviews: NavItem = { label: t("menu.reviews"), path: "/dashboard/barber/reviews", icon: Star };
+
         primary = [agenda, catalog];
         mobile = [agenda, catalog];
-        menu = [bookings, account];
+        menu = [reviews, bookings, account];
         homePath = agenda.path;
     } else {
         const myAppointments: NavItem = { label: t("menu.myAppointments"), path: "/dashboard/customer/home", icon: CalendarDays };
@@ -115,7 +119,10 @@ export default function DashboardNavbar({ role }: { role: string }) {
                         </nav>
                     </div>
 
-                    <LocaleSwitch tone="dark" className="ml-auto -mr-2 md:mr-0" />
+                    <div className="ml-auto -mr-2 flex items-center md:mr-0">
+                        <LocaleSwitch tone="dark" />
+                        <NotificationBell />
+                    </div>
 
                     <Menu as="div" className="relative hidden md:block">
                         <MenuButton className="flex min-h-11 items-center gap-2 px-3 text-sm text-[#a9b7bc] transition-colors hover:text-white data-[open]:text-white">

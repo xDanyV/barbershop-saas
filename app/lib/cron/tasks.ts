@@ -104,3 +104,9 @@ export async function sendDayReminders(now = new Date()) {
 
     return { reminded: today.length, sent };
 }
+
+// La bandeja guarda dos meses: lo más viejo ya no le sirve a nadie
+export async function purgeOldNotifications(now = new Date()) {
+    const { count } = await prisma.notification.deleteMany({ where: { createdAt: { lt: new Date(now.getTime() - 60 * DAY_MS) } } });
+    return { purged: count };
+}

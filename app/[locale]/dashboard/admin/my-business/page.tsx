@@ -17,6 +17,7 @@ import BusinessPostsManager from "./_components/BusinessPostsManager";
 import BusinessGalleryManager from "./_components/BusinessGalleryManager";
 import MyBusinessTabs, { type BusinessTab } from "./_components/MyBusinessTabs";
 import BusinessBillingCard from "./_components/BusinessBillingCard";
+import ReviewsManager from "@/[locale]/components/reviews/ReviewsManager";
 import { primaryButton, secondaryButton } from "./_components/ui";
 
 type Business = {
@@ -63,10 +64,11 @@ export default function MyBusinessPage() {
     const [failed, setFailed] = useState(false);
     const [saving, setSaving] = useState(false);
     const [showQr, setShowQr] = useState(false);
-    // El aviso de membresía enlaza directo a esta pestaña (?tab=membership)
-    const [activeTab, setActiveTab] = useState<BusinessTab>(() =>
-        typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab") === "membership" ? "membership" : "profile"
-    );
+    // Los avisos enlazan directo a una pestaña (?tab=membership, ?tab=reviews)
+    const [activeTab, setActiveTab] = useState<BusinessTab>(() => {
+        const requested = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tab") : null;
+        return requested === "membership" || requested === "reviews" ? requested : "profile";
+    });
 
     const publicUrl = business && typeof window !== "undefined" ? `${window.location.origin}/${locale}/business/${business.slug}` : "";
 
@@ -206,6 +208,7 @@ export default function MyBusinessPage() {
             )}
             {activeTab === "posts" && <BusinessPostsManager />}
             {activeTab === "gallery" && <BusinessGalleryManager />}
+            {activeTab === "reviews" && <ReviewsManager owner />}
             {activeTab === "membership" && (
                 <BusinessBillingCard billingStatus={business.billingStatus} billingPlan={business.billingPlan} subscriptionEndsAt={business.subscriptionEndsAt} />
             )}

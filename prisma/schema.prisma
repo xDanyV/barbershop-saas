@@ -23,6 +23,8 @@ model User {
   sessionVersion  Int                   @default(0)
   barberProfile   Barber?
   appointments    Appointment[]
+  reviews         Review[]
+  notifications   Notification[]
   ownedBusinesses Business[]            @relation("BusinessOwner")
   businessBans    BusinessCustomerBan[]
   createdAt       DateTime              @default(now())
@@ -84,6 +86,7 @@ model Business {
   barbers      Barber[]
   services     Service[]
   appointments Appointment[]
+  reviews      Review[]
   gallery      BusinessGallery[]
   posts        BusinessPost[]
   customerBans BusinessCustomerBan[]
@@ -135,13 +138,16 @@ model BusinessSettings {
   isServiceActive    Boolean  @default(true)
   // Las reservas en línea quedan confirmadas al instante; si no, el barbero las confirma
   autoConfirm        Boolean  @default(true)
+  // Los clientes pueden calificar sus citas y las reseñas se ven en la página pública
+  reviewsEnabled     Boolean  @default(true)
   maintenanceMessage String   @default("El servicio está temporalmente inactivo. Por favor, vuelve más tarde.")
   updatedAt          DateTime @updatedAt
 }
 
 model Appointment {
-  id   String   @id @default(uuid())
-  date DateTime
+  id     String   @id @default(uuid())
+  review Review?
+  date   DateTime
 
   businessId String
   business   Business @relation(fields: [businessId], references: [id])
@@ -203,6 +209,7 @@ model Barber {
   createdAt DateTime     @default(now())
 
   appointments    Appointment[]
+  reviews         Review[]
   availability    Availability[]
   exceptions      BarberException[]
   services        Service[]
@@ -430,4 +437,42 @@ model PushSubscription {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+// Calificación de un cliente a una cita ya atendida (una por cita)
+model Review {
+  id            String      @id @default(uuid())
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  businessId    String
+  business      Business    @relation(fields: [businessId], references: [id])
+  barberId      String
+  barber        Barber      @relation(fields: [barberId], references: [id])
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating        Int
+  comment       String?
+  // La barbería puede ocultarla de su página (ofensiva, equivocada) sin borrarla
+  hidden        Boolean     @default(false)
+  reply         String?
+  repliedAt     DateTime?
+  createdAt     DateTime    @default(now())
+
+  @@index([businessId, hidden, createdAt])
+  @@index([barberId])
+}
+
+// Bandeja de avisos dentro de la app: lo mismo que llega como notificación push, guardado para consultarlo
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Qué pasó (booked, confirmed, reminder, newReview...) y los datos para escribir el texto en el idioma de quien lo lee
+  event     String
+  data      Json
+  url       String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { publicBusinessWhere } from "@/lib/billing/status";
 import { computeBusinessHours } from "@/lib/business-hours";
+import { getBusinessRatings } from "@/lib/services/review.service";
 
 export async function GET() {
     try {
@@ -54,7 +55,10 @@ export async function GET() {
             },
         });
 
+        const ratings = await getBusinessRatings(businesses.map((business) => business.id));
+
         const formattedBusinesses = businesses.map((business) => ({
+            rating: ratings.get(business.id) ?? null,
             id: business.id,
             name: business.name,
             slug: business.slug,

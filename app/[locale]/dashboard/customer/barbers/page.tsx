@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Heart, Loader2, MapPin, Navigation, Search, X } from "lucide-react";
+import { Heart, Loader2, MapPin, Navigation, Search, Star, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import toast from "react-hot-toast";
 import { Link } from "../../../../../i18n/routing";
@@ -23,6 +23,7 @@ type Business = {
     longitude: number | null;
     hours: DayHours[];
     bookable: boolean;
+    rating: { average: number; count: number } | null;
     settings: { isServiceActive: boolean } | null;
 };
 
@@ -258,7 +259,16 @@ export default function BusinessesPage() {
                                     <div className="flex flex-1 flex-col p-4">
                                         <div className="flex items-center gap-3">
                                             {business.logoUrl && <img src={business.logoUrl} alt="" className="h-10 w-10 shrink-0 border border-gray-100 object-cover" />}
-                                            <h2 className="min-w-0 break-words text-lg font-semibold text-gray-900">{business.name}</h2>
+                                            <div className="min-w-0">
+                                                <h2 className="break-words text-lg font-semibold text-gray-900">{business.name}</h2>
+                                                {business.rating && (
+                                                    <p className="flex items-center gap-1 text-sm text-gray-700">
+                                                        <Star size={14} className="fill-[#e8603a] text-[#e8603a]" aria-hidden="true" />
+                                                        <span className="font-semibold">{business.rating.average.toFixed(1)}</span>
+                                                        <span className="text-gray-500">({t("reviewCount", { count: business.rating.count })})</span>
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
 
                                         {(business.address || here) && (
