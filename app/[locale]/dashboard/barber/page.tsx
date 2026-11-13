@@ -5,6 +5,7 @@ import DashboardHeader from "./components/DashboardHeader";
 import CalendarPicker from "./components/CalendarPicker";
 import AppointmentList from "./components/AppointmentList";
 import WalkInDialog from "./components/WalkInDialog";
+import PushInvite from "@/[locale]/components/push/PushInvite";
 
 
 type RawAppointment = {
@@ -201,6 +202,8 @@ export default function BarberDashboard() {
   return (
     <div className="w-full">
       <DashboardHeader onExceptionAdded={refreshExceptions} managedName={managedName} />
+
+      {!managedName && <PushInvite audience="team" />}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         <div className="w-full lg:col-span-5">

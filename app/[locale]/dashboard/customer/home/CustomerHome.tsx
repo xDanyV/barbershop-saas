@@ -11,6 +11,7 @@ import BrandDialog, { brandPrimaryButton } from "@/[locale]/components/BrandDial
 import PageHeader from "@/[locale]/components/PageHeader";
 import { getWhatsAppUrl } from "@/[locale]/business/[slug]/lib/business-page.utils";
 import { useApiError } from "@/[locale]/components/useApiError";
+import PushInvite from "@/[locale]/components/push/PushInvite";
 
 type Appointment = {
   id: string;
@@ -215,6 +216,9 @@ export default function CustomerHome({ isStaff = false }: { isStaff?: boolean })
           </Link>
         }
       />
+
+      {/* Solo tiene sentido con algo que avisar: al menos una cita próxima */}
+      {upcoming.some(isOpen) && <PushInvite audience="customer" />}
 
       {all === null ? (
         <div className="space-y-3" aria-busy="true">
