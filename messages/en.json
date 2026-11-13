@@ -987,6 +987,21 @@
             "button": "Install",
             "ios": "On iPhone: open this site in Safari, tap Share and choose \"Add to Home Screen\".",
             "manual": "In your browser menu, choose \"Install app\" or \"Add to Home Screen\"."
+        },
+        "photo": {
+            "title": "Profile photo",
+            "text": "Customers see it on the barbershop page and when choosing who to book with.",
+            "alt": "Photo of {name}",
+            "add": "Upload photo",
+            "change": "Change photo",
+            "remove": "Remove",
+            "uploading": "Uploading...",
+            "hint": "A front-facing, well-lit photo works best. Up to {mb} MB.",
+            "saved": "Photo updated",
+            "removed": "Photo removed",
+            "notImage": "Choose an image.",
+            "tooBig": "The image must be {mb} MB or less.",
+            "failed": "The photo couldn’t be saved."
         }
     },
     "Reschedule": {
@@ -1335,15 +1350,11 @@
         "noName": "No name",
         "you": "You",
         "inactive": "Removed",
-        "uploading": "Uploading photo...",
         "summary": "{services, plural, =0 {No services} one {# service} other {# services}} · {days, plural, =0 {no hours} one {works # day} other {works # days}} · {upcoming, plural, =0 {no upcoming bookings} one {# upcoming booking} other {# upcoming bookings}}",
         "missingServices": "Needs services",
         "missingHours": "Needs hours",
         "notBookable": "Not bookable for now",
         "actions": "Actions for {name}",
-        "addPhoto": "Add photo",
-        "changePhoto": "Change photo",
-        "removePhoto": "Remove photo",
         "remove": "Remove from team",
         "reactivate": "Reactivate",
         "keep": "Keep",
@@ -1354,13 +1365,9 @@
         "removeTextWithAppointments": "{count, plural, one {They have # upcoming booking that will be canceled; the customer will see it.} other {They have # upcoming bookings that will be canceled; customers will see it.}} You can reactivate them later.",
         "removed": "{name} is no longer on the team. {count, plural, =0 {} one {# booking was canceled.} other {# bookings were canceled.}}",
         "reactivated": "{name} is back on the team.",
-        "photoSaved": "Photo updated",
         "errors": {
             "load": "Could not load the team.",
             "status": "Could not update the barber.",
-            "photo": "Could not save the photo.",
-            "notImage": "Choose an image.",
-            "tooBig": "The image must be under {mb} MB.",
             "resetLink": "The link couldn't be created."
         },
         "resetLink": "New password link"

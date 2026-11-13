@@ -1,15 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
-import { CalendarDays, ImageIcon, KeyRound, MoreVertical, Scissors, Trash2, UserMinus, UserPlus } from "lucide-react";
+import { CalendarDays, KeyRound, MoreVertical, Scissors, UserMinus, UserPlus } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import toast from "react-hot-toast";
 import BrandDialog, { brandPrimaryButton } from "@/[locale]/components/BrandDialog";
 import { useApiError } from "@/[locale]/components/useApiError";
-import { useUploadThing } from "@/lib/uploadthing";
-import { compressImage } from "@/lib/compress-image";
 import ResetLinkDialog from "@/[locale]/components/ResetLinkDialog";
 import { TEAM_CHANGED } from "../components/PendingBarbersList";
 
@@ -24,7 +22,6 @@ type Member = {
     upcomingCount: number;
 };
 
-const MAX_PHOTO_MB = 4;
 const menuItemClass = "flex min-h-11 w-full items-center gap-3 px-4 text-left data-[focus]:bg-[#f1f3f2]";
 
 // Equipo de la barbería: quién está activo, qué le falta para recibir citas y acciones de cada barbero
@@ -36,10 +33,7 @@ export default function TeamList() {
     const [members, setMembers] = useState<Member[] | null>(null);
     const [leaving, setLeaving] = useState<Member | null>(null);
     const [working, setWorking] = useState(false);
-    const [uploadingId, setUploadingId] = useState<string | null>(null);
     const [resetLink, setResetLink] = useState<{ member: Member; token: string; expiresAt: string } | null>(null);
-    const uploadTarget = useRef<string | null>(null);
-    const fileInput = useRef<HTMLInputElement>(null);
 
     const load = useCallback(async () => {
         const res = await fetch("/api/admin/barbers/active").catch(() => null);
@@ -104,49 +98,6 @@ export default function TeamList() {
         }
     };
 
-    const { startUpload } = useUploadThing("barberProfileImage", {
-        onClientUploadComplete: async (res) => {
-            const url = res?.[0]?.serverData?.url ?? res?.[0]?.url;
-            const id = uploadTarget.current;
-            uploadTarget.current = null;
-            setUploadingId(null);
-
-            if (id && url && (await patch({ barberId: id, profileImageUrl: url }, t("errors.photo")))) {
-                toast.success(t("photoSaved"));
-                load();
-            }
-        },
-        onUploadError: () => {
-            uploadTarget.current = null;
-            setUploadingId(null);
-            toast.error(t("errors.photo"));
-        },
-    });
-
-    const pickPhoto = (id: string) => {
-        uploadTarget.current = id;
-        fileInput.current?.click();
-    };
-
-    const onFile = async (event: ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        event.target.value = "";
-
-        if (!file || !uploadTarget.current) return;
-        if (!file.type.startsWith("image/")) return void toast.error(t("errors.notImage"));
-        // Se sube una versión más ligera; el límite se revisa sobre ella
-        const upload = await compressImage(file, { maxSize: 800 });
-
-        if (upload.size > MAX_PHOTO_MB * 1024 * 1024) return void toast.error(t("errors.tooBig", { mb: MAX_PHOTO_MB }));
-
-        setUploadingId(uploadTarget.current);
-        await startUpload([upload]);
-    };
-
-    const removePhoto = async (id: string) => {
-        if (await patch({ barberId: id, profileImageUrl: "" }, t("errors.photo"))) load();
-    };
-
     const setActive = async (member: Member, active: boolean) => {
         const data = await patch({ barberId: member.id, active }, t("errors.status"));
         if (!data) return;
@@ -175,7 +126,6 @@ export default function TeamList() {
 
     return (
         <>
-            <input ref={fileInput} type="file" accept="image/*" className="hidden" onChange={onFile} />
 
             <ul className="space-y-3">
                 {members.map((member) => {
@@ -200,7 +150,6 @@ export default function TeamList() {
                                         <span className="break-words">{name}</span>
                                         {member.isSelf && <span className="bg-gray-100 px-1.5 py-0.5 text-xs">{t("you")}</span>}
                                         {!member.active && <span className="bg-red-100 px-1.5 py-0.5 text-xs text-red-700">{t("inactive")}</span>}
-                                        {uploadingId === member.id && <span className="text-xs font-normal text-gray-500">{t("uploading")}</span>}
                                     </p>
                                     <p className="truncate text-xs text-gray-500">
                                         {member.user.phone} · {member.user.email}
@@ -217,6 +166,7 @@ export default function TeamList() {
                                     )}
                                 </div>
 
+                                {!member.isSelf && (
                                 <Menu as="div" className="relative shrink-0">
                                     <MenuButton
                                         aria-label={t("actions", { name })}
@@ -225,20 +175,6 @@ export default function TeamList() {
                                         <MoreVertical size={20} aria-hidden="true" />
                                     </MenuButton>
                                     <MenuItems anchor="bottom end" className="z-50 mt-1 w-60 border border-[#dbe0de] bg-white py-1 text-sm text-[#0f2733] outline-none">
-                                        <MenuItem>
-                                            <button type="button" onClick={() => pickPhoto(member.id)} className={menuItemClass}>
-                                                <ImageIcon size={18} aria-hidden="true" />
-                                                {member.profileImageUrl ? t("changePhoto") : t("addPhoto")}
-                                            </button>
-                                        </MenuItem>
-                                        {member.profileImageUrl && (
-                                            <MenuItem>
-                                                <button type="button" onClick={() => removePhoto(member.id)} className={menuItemClass}>
-                                                    <Trash2 size={18} aria-hidden="true" />
-                                                    {t("removePhoto")}
-                                                </button>
-                                            </MenuItem>
-                                        )}
                                         {!member.isSelf && member.active && (
                                             <MenuItem>
                                                 <button type="button" onClick={() => createResetLink(member)} disabled={working} className={menuItemClass}>
@@ -264,6 +200,7 @@ export default function TeamList() {
                                         )}
                                     </MenuItems>
                                 </Menu>
+                                )}
                             </div>
 
                             {member.active && (

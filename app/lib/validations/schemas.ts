@@ -216,10 +216,13 @@ export const updateBarberAdminSchema = z
         status: z.enum(["PENDING", "APPROVED", "REJECTED"]).optional(),
         // false = dar de baja del equipo; true = reactivar
         active: z.boolean().optional(),
-        // undefined = no tocar la foto; "" o null = quitarla
-        profileImageUrl: z.union([httpsUrl, z.literal(""), z.null()]).optional(),
     })
-    .refine((v) => v.status !== undefined || v.active !== undefined || v.profileImageUrl !== undefined, { message: "No data to update" });
+    .refine((v) => v.status !== undefined || v.active !== undefined, { message: "No data to update" });
+
+// Foto de perfil que el barbero pone desde Mi cuenta; null la quita
+export const barberPhotoSchema = z.object({
+    url: z.union([httpsUrl, z.null()]),
+});
 
 export const updateCustomerBanSchema = z.object({
     customerId: z.string().min(1),

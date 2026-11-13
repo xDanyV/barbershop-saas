@@ -1,5 +1,3 @@
-import { cleanUpUploads } from "@/lib/uploads";
-import { replacedUrls } from "@/lib/upload-keys";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { AppError, errorResponse } from "@/lib/errors";
@@ -60,11 +58,11 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
     try {
         const auth = requireBarberManager(request);
-        const { barberId, status, active, profileImageUrl } = await parseJsonBody(request, updateBarberAdminSchema);
+        const { barberId, status, active } = await parseJsonBody(request, updateBarberAdminSchema);
 
         const existingBarber = await prisma.barber.findUnique({
             where: { id: barberId },
-            select: { businessId: true, userId: true, status: true, profileImageUrl: true },
+            select: { businessId: true, userId: true, status: true },
         });
 
         if (!existingBarber) {
@@ -91,7 +89,6 @@ export async function PATCH(request: NextRequest) {
                     status,
                     active,
                     // undefined = no tocar; "" o null = quitar la foto
-                    ...(profileImageUrl !== undefined ? { profileImageUrl: profileImageUrl || null } : {}),
                 },
                 select: {
                     id: true,
@@ -123,7 +120,6 @@ export async function PATCH(request: NextRequest) {
         });
 
         await revalidateBusinessPages(existingBarber.businessId);
-        cleanUpUploads(replacedUrls([[existingBarber.profileImageUrl, profileImageUrl === undefined ? undefined : profileImageUrl || null]]));
 
         const { cancelledCount, ...barber } = updatedBarber;
         // Aprobado o reactivado con todo listo: ya puede recibir citas
