@@ -180,6 +180,11 @@ const optionalHexColor = z
 export const updateBusinessSchema = createBusinessSchema.partial().extend({
     themePrimary: optionalHexColor,
     themeAccent: optionalHexColor,
+    // Pin en el mapa; null lo quita
+    location: z
+        .object({ latitude: z.number().min(-90).max(90), longitude: z.number().min(-180).max(180) })
+        .nullable()
+        .optional(),
     isServiceActive: z.boolean().optional(),
     autoConfirm: z.boolean().optional(),
     maintenanceMessage: z.string().trim().max(300).optional(),

@@ -17,6 +17,8 @@ import BusinessPosts from "./components/BusinessPosts";
 import OpenNow from "./components/OpenNow";
 import { getInitials, getMapsUrl, getWhatsAppUrl, groupServicesByName } from "./lib/business-page.utils";
 import LocaleSwitch from "@/[locale]/components/LocaleSwitch";
+import { directionsUrl, hasLocation } from "@/lib/geo";
+import LocationMap from "@/[locale]/components/LocationMap";
 
 type BusinessPageProps = {
     params: Promise<{
@@ -86,7 +88,9 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
     }
 
     const whatsappUrl = business.phone ? getWhatsAppUrl(business.phone, t("hero.whatsappMessage", { name: business.name })) : null;
-    const mapsUrl = business.address ? getMapsUrl(business.address) : null;
+    const pin = hasLocation(business) ? { latitude: business.latitude, longitude: business.longitude } : null;
+    // Con pin, la ruta llega al punto exacto; sin pin, se busca la dirección
+    const mapsUrl = pin ? directionsUrl(pin) : business.address ? getMapsUrl(business.address) : null;
     const hasHours = hours.some((day) => day.open);
 
     const jsonLd = buildBarberShopJsonLd({
@@ -350,6 +354,12 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                     {hasHours && (
                         <Reveal delay={80}>
                             <BusinessHours hours={hours} timezone={business.timezone} />
+                        </Reveal>
+                    )}
+
+                    {pin && (
+                        <Reveal className="md:col-span-2">
+                            <LocationMap value={pin} label={t("visit.mapLabel", { name: business.name })} className="h-72 md:h-96" />
                         </Reveal>
                     )}
                 </div>

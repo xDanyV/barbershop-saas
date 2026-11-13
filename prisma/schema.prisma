@@ -70,6 +70,9 @@ model Business {
   // Colores que el dueño elige para su página pública (#rrggbb); null usa los de la plataforma
   themePrimary String?
   themeAccent  String?
+  // Pin del local en el mapa (lo pone el dueño): para "cerca de mí" y el mapa de su página
+  latitude     Float?
+  longitude    Float?
   active       Boolean @default(true)
   timezone     String  @default("America/Tijuana")
 

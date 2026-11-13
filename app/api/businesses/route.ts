@@ -17,6 +17,8 @@ export async function GET() {
                 logoUrl: true,
                 coverUrl: true,
                 timezone: true,
+                latitude: true,
+                longitude: true,
                 settings: {
                     select: {
                         isServiceActive: true,
@@ -65,6 +67,8 @@ export async function GET() {
             barberCount: business.barbers.length,
             serviceCount: business.services.length,
             timezone: business.timezone,
+            latitude: business.latitude,
+            longitude: business.longitude,
             // Horario de la barbería (para "Abierto ahora") y si alguien ya se puede reservar
             hours: computeBusinessHours(business.barbers.flatMap((barber) => barber.availability)),
             bookable: business.barbers.some((barber) => barber.availability.length > 0 && barber._count.services > 0),

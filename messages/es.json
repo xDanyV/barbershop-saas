@@ -554,8 +554,9 @@
         },
         "visit": {
             "title": "Visítanos",
-            "map": "Abrir en Google Maps",
-            "call": "Llamar al {phone}"
+            "map": "Cómo llegar",
+            "call": "Llamar al {phone}",
+            "mapLabel": "Mapa con la ubicación de {name}"
         },
         "hours": {
             "title": "Horario",
@@ -677,7 +678,16 @@
         "view": "Ver página",
         "book": "Reservar",
         "paused": "Reservas pausadas",
-        "notYet": "Aún sin reservas"
+        "notYet": "Aún sin reservas",
+        "near": {
+            "label": "Cerca de mí",
+            "locating": "Buscando...",
+            "results": "{count, plural, one {# barbería, la más cercana primero} other {# barberías, las más cercanas primero}}",
+            "noPin": "Sin ubicación en el mapa",
+            "unsupported": "Tu navegador no comparte la ubicación.",
+            "denied": "Para ver las barberías cercanas, permite el acceso a tu ubicación en el navegador.",
+            "failed": "No se pudo obtener tu ubicación. Inténtalo de nuevo."
+        }
     },
     "Metadata": {
         "title": "Citas para tu barbería en Tijuana",
@@ -1571,6 +1581,23 @@
                 "create": "No se pudo agregar la foto.",
                 "delete": "No se pudo eliminar la foto."
             }
+        },
+        "location": {
+            "title": "Ubicación en el mapa",
+            "hint": "Marca dónde está tu local. Así apareces cuando un cliente busca barberías cerca de él, y tu página muestra el mapa.",
+            "search": "Buscar mi dirección",
+            "here": "Usar mi ubicación actual",
+            "mapLabel": "Mapa para marcar la ubicación del local",
+            "placed": "Ubicación marcada. Se guarda con \"Guardar cambios\".",
+            "missing": "Aún no marcas tu ubicación.",
+            "remove": "Quitar del mapa",
+            "tapHint": "Toca el mapa o arrastra el pin para ajustarlo a la entrada de tu local.",
+            "noAddress": "Escribe tu dirección arriba primero.",
+            "notFound": "No encontramos esa dirección. Toca el mapa para marcarla a mano.",
+            "found": "Dirección encontrada. Revisa que el pin quede en tu local.",
+            "searchFailed": "No se pudo buscar la dirección.",
+            "noGeolocation": "Tu navegador no comparte la ubicación.",
+            "denied": "No se pudo obtener tu ubicación. Revisa el permiso del navegador."
         }
     }
 }

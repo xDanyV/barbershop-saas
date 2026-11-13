@@ -14,7 +14,8 @@ const contentSecurityPolicy = [
   "img-src 'self' data: blob: https:",
   "font-src 'self'",
   // Subidas de imágenes con UploadThing
-  "connect-src 'self' https://*.uploadthing.com https://*.ufs.sh https://utfs.io",
+  // Buscar la dirección en el mapa (OpenStreetMap)
+  "connect-src 'self' https://*.uploadthing.com https://*.ufs.sh https://utfs.io https://nominatim.openstreetmap.org",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -26,7 +27,7 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self), payment=()" },
   // Solo HTTPS durante dos años (Vercel ya sirve todo por HTTPS)
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
   { key: "Content-Security-Policy-Report-Only", value: contentSecurityPolicy },
