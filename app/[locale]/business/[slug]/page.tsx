@@ -19,6 +19,7 @@ import { getInitials, getMapsUrl, getWhatsAppUrl, groupServicesByName } from "./
 import LocaleSwitch from "@/[locale]/components/LocaleSwitch";
 import { directionsUrl, hasLocation } from "@/lib/geo";
 import LocationMap from "@/[locale]/components/LocationMap";
+import ServicesTabs, { type ServiceTab } from "./components/ServicesTabs";
 
 type BusinessPageProps = {
     params: Promise<{
@@ -107,6 +108,40 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
         min === max ? formatPriceFromCents(min) : t("services.from", { price: formatPriceFromCents(min) });
     const duration = (min: number, max: number) =>
         min === max ? t("services.minutes", { min }) : t("services.minutesRange", { min, max });
+
+    // "Todos" junta servicios iguales; cada barbero tiene su pestaña con sus precios exactos
+    const bookableServices = business.services.filter((service) => bookableBarberIds.has(service.barber.id));
+    const serviceTabs: ServiceTab[] = [
+        {
+            id: "all",
+            label: t("services.all"),
+            rows: services.map((service) => ({
+                key: service.key,
+                name: service.name,
+                meta: `${duration(service.minDuration, service.maxDuration)}${business.barbers.length > 1 ? ` · ${t("services.with", { names: service.barberNames.join(", ") })}` : ""}`,
+                price: price(service.minPriceCents, service.maxPriceCents),
+                href: isServiceActive ? `${bookUrl}?service=${encodeURIComponent(service.name)}` : null,
+                ariaLabel: t("services.bookLabel", { name: service.name }),
+            })),
+        },
+        ...(business.barbers.length > 1
+            ? business.barbers.map((barber) => ({
+                  id: barber.id,
+                  label: barber.user.name ?? t("team.fallbackName"),
+                  rows: bookableServices
+                      .filter((service) => service.barber.id === barber.id)
+                      .sort((a, b) => a.priceCents - b.priceCents)
+                      .map((service) => ({
+                          key: service.id,
+                          name: service.name,
+                          meta: t("services.minutes", { min: service.duration }),
+                          price: formatPriceFromCents(service.priceCents),
+                          href: isServiceActive ? `${bookUrl}?barber=${barber.id}&service=${service.id}` : null,
+                          ariaLabel: t("services.bookWith", { name: service.name, barber: barber.user.name ?? "" }),
+                      })),
+              }))
+            : []),
+    ];
 
     return (
         <main className={`brand ${brandFontClasses} min-h-screen pb-24 md:pb-0`} style={businessThemeStyle(business.themePrimary, business.themeAccent)}>
@@ -221,45 +256,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                         <p className="text-[var(--brand-muted)]">{t("services.empty")}</p>
                     ) : (
                         <Reveal delay={80}>
-                            <ul className="divide-y divide-[var(--brand-surface)] border-y border-[var(--brand-surface)]">
-                                {services.map((service) => {
-                                    const content = (
-                                        <>
-                                            <span className="min-w-0 flex-1">
-                                                <span className="block font-semibold">{service.name}</span>
-                                                <span className="mt-1 block text-[length:var(--step-small)] text-[var(--brand-muted)]">
-                                                    {duration(service.minDuration, service.maxDuration)}
-                                                    {business.barbers.length > 1 && ` · ${t("services.with", { names: service.barberNames.join(", ") })}`}
-                                                </span>
-                                            </span>
-                                            <span className="tabular shrink-0 text-right font-semibold">
-                                                {price(service.minPriceCents, service.maxPriceCents)}
-                                            </span>
-                                        </>
-                                    );
-
-                                    return (
-                                        <li key={service.key}>
-                                            {isServiceActive ? (
-                                                <Link
-                                                    href={`${bookUrl}?service=${encodeURIComponent(service.name)}`}
-                                                    className="group flex min-h-16 items-center gap-4 py-4 transition-colors hover:bg-[var(--brand-bg)] md:px-3"
-                                                    aria-label={t("services.bookLabel", { name: service.name })}
-                                                >
-                                                    {content}
-                                                    <ArrowRight
-                                                        size={18}
-                                                        className="shrink-0 text-[var(--brand-muted)] transition-transform group-hover:translate-x-1 group-hover:text-[var(--brand-ink)]"
-                                                        aria-hidden="true"
-                                                    />
-                                                </Link>
-                                            ) : (
-                                                <div className="flex min-h-16 items-center gap-4 py-4 md:px-3">{content}</div>
-                                            )}
-                                        </li>
-                                    );
-                                })}
-                            </ul>
+                            <ServicesTabs tabs={serviceTabs} label={t("services.tabsLabel")} />
                             <p className="mt-4 text-[length:var(--step-small)] text-[var(--brand-muted)]">{t("services.note")}</p>
                         </Reveal>
                     )}

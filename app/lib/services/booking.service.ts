@@ -215,3 +215,43 @@ export async function lockKeys(tx: Prisma.TransactionClient, ...keys: string[]) 
         await tx.$queryRaw`SELECT 1 AS locked FROM (SELECT pg_advisory_xact_lock(hashtext(${key}))) AS l`;
     }
 }
+
+export type WorkingHoursCheck = "inside" | "dayOff" | "outsideHours" | "onBreak";
+
+// ¿La cita cae dentro del horario del barbero? (para citas manuales: se avisa, no se bloquea)
+export async function checkWorkingHours(
+    db: Db,
+    barberId: string,
+    dateKey: string,
+    start: Date,
+    durationMinutes: number,
+    timezoneInput?: string | null
+): Promise<WorkingHoursCheck> {
+    const timezone = resolveTimezone(timezoneInput);
+    const end = new Date(start.getTime() + durationMinutes * MINUTE_MS);
+
+    const [schedule, exception] = await Promise.all([
+        db.availability.findFirst({
+            where: { barberId, dayOfWeek: dayOfWeekFromKey(dateKey) },
+            select: { startTime: true, endTime: true, breakStart: true, breakEnd: true },
+        }),
+        db.barberException.findFirst({
+            where: { barberId, startDate: { lt: end }, endDate: { gte: start } },
+            select: { id: true },
+        }),
+    ]);
+
+    if (!schedule || exception) return "dayOff";
+
+    const open = zonedToUtc(dateKey, schedule.startTime, timezone);
+    const close = zonedToUtc(dateKey, schedule.endTime, timezone);
+    if (start < open || end > close) return "outsideHours";
+
+    if (schedule.breakStart && schedule.breakEnd) {
+        const breakStart = zonedToUtc(dateKey, schedule.breakStart, timezone);
+        const breakEnd = zonedToUtc(dateKey, schedule.breakEnd, timezone);
+        if (start < breakEnd && breakStart < end) return "onBreak";
+    }
+
+    return "inside";
+}

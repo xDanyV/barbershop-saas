@@ -43,6 +43,8 @@ export default function BarberDashboard() {
   const [loading, setLoading] = useState(true);
   const [exceptions, setExceptions] = useState<Exception[]>([]);
   const [barberId, setBarberId] = useState<string | null>(null);
+  // Nombre del barbero que el dueño está gestionando (null si es su propia agenda)
+  const [managedName, setManagedName] = useState<string | null>(null);
   const [workingDays, setWorkingDays] = useState<number[]>([]);
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const now = new Date();
@@ -57,6 +59,7 @@ export default function BarberDashboard() {
       .then((res) => res.json())
       .then((data) => {
         setBarberId(data.barberId);
+        setManagedName(data.managing ? data.name ?? null : null);
         if (!data.barberId) setLoading(false);
       })
       .catch(() => {
@@ -197,7 +200,7 @@ export default function BarberDashboard() {
 
   return (
     <div className="w-full">
-      <DashboardHeader onExceptionAdded={refreshExceptions} />
+      <DashboardHeader onExceptionAdded={refreshExceptions} managedName={managedName} />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         <div className="w-full lg:col-span-5">

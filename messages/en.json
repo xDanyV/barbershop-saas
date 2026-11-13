@@ -172,7 +172,8 @@
             "services": "Services",
             "availability": "Hours"
         },
-        "title": "My schedule"
+        "title": "My schedule",
+        "titleOf": "{name}’s schedule"
     },
     "AppointmentList": {
         "title": "Appointments",
@@ -303,7 +304,9 @@
         "buttons": {
             "createService": "Create service",
             "backToList": "Back to the list"
-        }
+        },
+        "titleOf": "{name}’s services",
+        "subtitleOf": "What you add or change here applies only to {name}."
     },
     "ServiceList": {
         "empty": "No services yet. Create your first service to start building your catalog.",
@@ -543,7 +546,10 @@
             "with": "with {names}",
             "bookLabel": "Book {name}",
             "note": "Prices in Mexican pesos. You pay at the barbershop.",
-            "empty": "The barbershop hasn't published its services yet."
+            "empty": "The barbershop hasn't published its services yet.",
+            "all": "All",
+            "tabsLabel": "Services by barber",
+            "bookWith": "Book {name} with {barber}"
         },
         "team": {
             "title": "Team",
@@ -979,6 +985,14 @@
             "phone": "Enter a 10-digit Mexican phone number.",
             "conflict": "That time is not available: there is another appointment or you marked it as a day off.",
             "failed": "Could not save the appointment. Check the details."
+        },
+        "outside": {
+            "dayOff": "You don’t work that day: it isn’t in your hours or you marked it as a day off.",
+            "outsideHours": "That time is outside your working hours.",
+            "onBreak": "That time falls in your break.",
+            "question": "Add it anyway? Customers still can’t book online outside your hours.",
+            "confirm": "Add anyway",
+            "change": "Change date or time"
         }
     },
     "Billing": {
@@ -1599,5 +1613,12 @@
             "noGeolocation": "Your browser doesn’t share location.",
             "denied": "Your location couldn’t be read. Check the browser permission."
         }
+    },
+    "SignedInNotice": {
+        "asName": "You’re already signed in as {name}.",
+        "generic": "You’re already signed in.",
+        "hint": "To create another account, sign out first.",
+        "goToPanel": "Go to my panel",
+        "logout": "Sign out"
     }
 }

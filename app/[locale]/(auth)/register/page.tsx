@@ -9,6 +9,7 @@ import { useApiError } from "@/[locale]/components/useApiError";
 import { normalizeMxPhone } from "@/lib/phone";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 import LocaleSwitch from "@/[locale]/components/LocaleSwitch";
+import SignedInNotice from "@/[locale]/components/SignedInNotice";
 
 type Path = "owner" | "barber" | "customer";
 
@@ -120,6 +121,8 @@ export default function RegisterPage({ searchParams }: { searchParams: Promise<S
                         <BrandMark iconClassName="h-12 w-12 rounded-xl bg-[#e4dccb] text-[#0f2733]" iconSize={22} />
                     </Link>
                 </div>
+
+                <SignedInNotice />
 
                 <div className={`grid items-start gap-6 ${showChooser ? "lg:grid-cols-2" : ""}`}>
                     {showChooser && (

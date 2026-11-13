@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-export default function CatalogPage({ isOwner = false }: { isOwner?: boolean }) {
+export default function CatalogPage({ isOwner = false, managedName = null }: { isOwner?: boolean; managedName?: string | null }) {
   const t = useTranslations("CatalogPage");
   const [view, setView] = useState<"list" | "create" | "edit">("list");
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -20,10 +20,10 @@ export default function CatalogPage({ isOwner = false }: { isOwner?: boolean }) 
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 border-b border-gray-100 pb-6 gap-6">
         <div className="flex-1">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
-            {t("title")}
+            {managedName ? t("titleOf", { name: managedName }) : t("title")}
           </h1>
           <p className="text-gray-500 text-xs md:text-sm mt-1">
-            {t("subtitle")}
+            {managedName ? t("subtitleOf", { name: managedName }) : t("subtitle")}
           </p>
         </div>
 

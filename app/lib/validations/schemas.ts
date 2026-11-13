@@ -103,6 +103,8 @@ export const createManualAppointmentSchema = z.object({
     time: timeString,
     name: z.string().trim().min(1, "Name is required").max(100),
     phone: optionalMxPhone,
+    // El barbero ya vio el aviso de que la cita queda fuera de su horario y la quiere de todos modos
+    allowOutsideHours: z.boolean().optional(),
 });
 
 export const rescheduleAppointmentSchema = z.object({
